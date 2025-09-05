@@ -1,0 +1,110 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+
+/* Estilos globales */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f8fafc;
+    margin: 0;
+    padding: 0;
+}
+
+/* Contenedor del gráfico */
+#graphic {
+    position: sticky; /* La clave para que el gráfico se "pegue" */
+    top: 0;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #e2e8f0;
+    border-bottom: 2px solid #94a3b8;
+}
+
+/* Contenedor del mapa Mapbox */
+#mapa-container {
+    width: 90%;
+    height: 90%;
+}
+
+/* Estilos para la capa D3 sobre Mapbox */
+.mapbox-d3-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.mapbox-d3-layer svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* Estilos para visualizaciones específicas */
+.population-change {
+    stroke-opacity: 0.8;
+    mix-blend-mode: multiply;
+}
+
+.forest-loss-bar {
+    stroke: #064e3b;
+    stroke-width: 1;
+}
+
+.vehicle-bar {
+    stroke: #1e40af;
+    stroke-width: 1;
+}
+
+.density-circle {
+    mix-blend-mode: multiply;
+}
+
+.density-label {
+    font-family: 'Inter', sans-serif;
+    text-shadow: 0px 0px 3px white;
+}
+
+/* Contenedor del texto (scroller) */
+#scroller {
+    position: relative;
+    z-index: 10;
+}
+
+/* Cada paso individual de la historia */
+.step {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+}
+
+/* Contenido del texto de cada paso */
+.step-content {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    max-width: 650px;
+    text-align: center;
+}
+
+.step-content h2 {
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: #1e293b;
+}
+
+.step-content p {
+    font-size: 1rem;
+    color: #475569;
+    line-height: 1.8;
+    margin-top: 1rem;
+}

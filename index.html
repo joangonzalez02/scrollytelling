@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historia de Crecimiento en Cancún</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
+    
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+    <script src="https://unpkg.com/scrollama"></script>
+</head>
+<body>
+    <div id="graphic">
+        <div id="mapa-container"></div>
+    </div>
+
+    <main id="scroller">
+        <section class="step" data-step="0">
+            <div class="step-content">
+                <h2>Portada / Hook</h2>
+                <p>Cancún, destino internacional de primer nivel, es también un territorio urbano en tensión. Su crecimiento poblacional y territorial ha sido explosivo, generando retos de movilidad, sostenibilidad y justicia urbana que hoy marcan su futuro.</p>
+            </div>
+        </section>
+        
+        <section class="step" data-step="1">
+            <div class="step-content">
+                <h2>Digging in (Introducción al caso)</h2>
+                <p>A diferencia de la mayoría de las ciudades costeras de América Latina, Cancún no surgió de manera gradual, sino como un proyecto planificado en los años setenta bajo el modelo de los Centros Integralmente Planeados de FONATUR. Este origen trazó dos sistemas en tensión: la franja turística frente al Caribe y la ciudad continental separada por la laguna de Nichupté, con ecosistemas frágiles bajo presión.</p>
+            </div>
+        </section>
+
+        <section class="step" data-step="2">
+            <div class="step-content">
+                <h2>Población en perspectiva</h2>
+                <p>En apenas cinco décadas, la población de Benito Juárez pasó de 6,867 habitantes en 1970 a más de 911 mil en 2020. Mientras México crecía un 38% en los setenta y la población mundial un 21%, Cancún aumentó un 441%. Incluso en los noventa, su crecimiento fue de 375%, muy por encima del promedio nacional (21%). Cancún es un caso excepcional de urbanización acelerada en América Latina.</p>
+            </div>
+        </section>
+
+        <section class="step" data-step="3">
+            <div class="step-content">
+                <h2>Expansión urbana sin freno</h2>
+                <p>El crecimiento poblacional se reflejó en la ciudad. Entre 1984 y 1990 la superficie urbana casi se duplicó (+90%). El punto crítico llegó entre 2000 y 2010, cuando la mancha urbana se expandió un 145%. Aunque en la última década la tasa bajó al 34%, la ciudad siguió consumiendo suelo más rápido que su población, confirmando un patrón de dispersión urbana.</p>
+            </div>
+        </section>
+        
+        <section class="step" data-step="4">
+            <div class="step-content">
+                <h2>Dispersión poblacional y abandono del centro</h2>
+                <p>La población crece cada vez más lento, pero la ciudad ocupa más territorio. Entre 2010 y 2020, las zonas centrales perdieron más del 10% de su población, mientras que las periferias aumentaron hasta 30%. Esto refleja un fenómeno de dispersión: más suelo para menos personas, con mayores costos de infraestructura y movilidad.</p>
+            </div>
+        </section>
+
+        <section class="step" data-step="5">
+            <div class="step-content">
+                <h2>Impacto ambiental</h2>
+                <p>La expansión urbana ha ejercido presión sobre selvas y manglares. En 2006 se perdió más de 90 km² de vegetación, el nivel más alto registrado. Estos ecosistemas son clave para la recarga de acuíferos, la protección ante huracanes y la captura de carbono, pero siguen en riesgo por la presión del crecimiento urbano.</p>
+            </div>
+        </section>
+
+        <section class="step" data-step="6">
+            <div class="step-content">
+                <h2>Desigualdad territorial</h2>
+                <p>El municipio está organizado en 22 distritos con densidades muy contrastantes. Mientras que los distritos 11 y 4 superan los 100 habitantes por hectárea, varios de la periferia registran menos de 10. La baja densidad en zonas alejadas implica un acceso desigual a servicios y altos costos de mantenimiento urbano.</p>
+            </div>
+        </section>
+
+        <section class="step" data-step="7">
+            <div class="step-content">
+                <h2>Motorización acelerada</h2>
+                <p>La dispersión y el crecimiento poblacional se acompañan de una motorización desbordada. En 2010 había 186 mil autos; en 2023 ya eran más de 452 mil (+142%). En 2010 existían 0.41 autos por vivienda; en 2020, casi 0.7, lo que equivale a un auto por cada dos hogares. La expansión del parque vehicular supera al crecimiento poblacional y tensiona la movilidad urbana.</p>
+            </div>
+        </section>
+
+        <section class="step" data-step="8">
+            <div class="step-content">
+                <h2>Consecuencias sociales y urbanas</h2>
+                <p>El resultado es una ciudad más costosa y desigual: mayores tiempos de traslado, dependencia del automóvil, presión sobre el transporte público, y acceso limitado a salud, educación y recreación en la periferia. El crecimiento disperso incrementa la inversión en vialidades y reduce la calidad de vida cotidiana.</p>
+            </div>
+        </section>
+
+        <section class="step" data-step="9">
+            <div class="step-content">
+                <h2>Sustainable Solutions (Estrategias de futuro)</h2>
+                <p>El reto de Cancún no es crecer, sino cómo hacerlo. Desde el IMPLAN se impulsan estrategias para consolidar y densificar zonas urbanas existentes, proteger selvas y manglares, invertir en infraestructura verde y movilidad sustentable, y planificar con criterios sociales, ambientales y económicos. Un Cancún más ordenado es posible.</p>
+            </div>
+        </section>
+
+        <section class="step" data-step="10">
+            <div class="step-content">
+                <h2>Looking ahead (Cierre / Call to action)</h2>
+                <p>Cancún seguirá creciendo. La diferencia está en cómo lo hagamos: ¿una ciudad dispersa, desigual y dependiente del automóvil, o un Cancún ordenado, resiliente y justo para vivir? La decisión está en nuestras manos.</p>
+            </div>
+        </section>
+    </main>
+
+    <script src="main.js"></script>
+</body>
+</html>
