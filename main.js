@@ -533,13 +533,127 @@ function handleStepEnter(response) {
 }
 
 // Inicializamos Scrollama y el mapa una vez que la página carga
+// --- Multimedia y gráficos sintéticos ---
+const multimediaSteps = {
+    2: { // Población en perspectiva
+        tipo: 'grafico-barras',
+        datos: [
+            { categoria: '1970', valor: 6867, color: '#D4A373' },
+            { categoria: '1980', valor: 30000, color: '#D4A373' },
+            { categoria: '1990', valor: 167730, color: '#D4A373' },
+            { categoria: '2000', valor: 397191, color: '#D4A373' },
+            { categoria: '2010', valor: 628306, color: '#D4A373' },
+            { categoria: '2020', valor: 911000, color: '#D4A373' }
+        ]
+    },
+    3: { // Expansión urbana sin freno
+        tipo: 'video',
+        url: 'public/videos/1.mp4'
+    },
+    7: { // Motorización acelerada
+        tipo: 'grafico-barras',
+        datos: [
+            { categoria: '2010', valor: 186000, color: '#D4A373' },
+            { categoria: '2015', valor: 300000, color: '#D4A373' },
+            { categoria: '2020', valor: 400000, color: '#D4A373' },
+            { categoria: '2023', valor: 452000, color: '#D4A373' }
+        ]
+    },
+    8: { // Consecuencias sociales y urbanas
+        tipo: 'video',
+        url: 'public/videos/3.mp4'
+    }
+};
+
+function limpiarVisuals() {
+    document.getElementById('chart-container').style.opacity = 0;
+    document.getElementById('image-container').style.opacity = 0;
+    document.getElementById('video-container').style.opacity = 0;
+    document.getElementById('mapa-container').style.opacity = 1;
+}
+
+function dibujarGraficoBarras(datos) {
+        limpiarVisuals();
+        document.getElementById('mapa-container').style.opacity = 0;
+        const chartContainer = document.getElementById('chart-container');
+        chartContainer.style.opacity = 1;
+        const svg = d3.select(chartContainer).select('svg');
+        svg.selectAll('*').remove();
+        const width = chartContainer.offsetWidth;
+        const height = chartContainer.offsetHeight;
+        const margin = 40;
+        const chartWidth = width - margin * 2;
+        const chartHeight = height - margin * 2;
+        const x = d3.scaleBand().domain(datos.map(d => d.categoria)).range([0, chartWidth]).padding(0.1);
+        const y = d3.scaleLinear().domain([0, d3.max(datos, d => d.valor)]).range([chartHeight, 0]);
+        const g = svg.append('g').attr('transform', `translate(${margin},${margin})`);
+        g.selectAll('.bar')
+            .data(datos)
+            .join('rect')
+            .attr('class', 'bar')
+            .attr('x', d => x(d.categoria))
+            .attr('y', chartHeight)
+            .attr('width', x.bandwidth())
+            .attr('fill', d => d.color)
+            .transition()
+            .duration(750)
+            .attr('y', d => y(d.valor))
+            .attr('height', d => chartHeight - y(d.valor));
+        g.append('g').attr('transform', `translate(0,${chartHeight})`).call(d3.axisBottom(x));
+        g.append('g').call(d3.axisLeft(y));
+}
+
+function showVideo(url) {
+    limpiarVisuals();
+    document.getElementById('mapa-container').style.opacity = 0;
+    const videoContainer = document.getElementById('video-container');
+    videoContainer.style.opacity = 1;
+    const video = videoContainer.querySelector('video');
+    video.src = url;
+    video.play();
+}
+
+// --- Modifica handleStepEnter para mostrar multimedia ---
+const originalHandleStepEnter = handleStepEnter;
+function enhancedHandleStepEnter(response) {
+    // Primero ejecuta la lógica original
+    originalHandleStepEnter(response);
+
+    // Lógica para ocultar la nota sticky cuando hay multimedia
+    document.querySelectorAll('.step').forEach(el => el.classList.remove('is-out'));
+    const config = multimediaSteps[response.index];
+    if (!config) {
+        limpiarVisuals();
+        document.getElementById('mapa-container').style.opacity = 1;
+        return;
+    }
+    
+    if (response.index !== 7 && response.index !== 8) {
+        const currentStep = response.element;
+        currentStep.classList.add('is-out');
+    }
+    switch (config.tipo) {
+        case 'grafico-barras':
+            dibujarGraficoBarras(config.datos);
+            break;
+        case 'video':
+            showVideo(config.url);
+            break;
+        // Puedes agregar más tipos si lo necesitas
+        default:
+            limpiarVisuals();
+            document.getElementById('mapa-container').style.opacity = 1;
+    }
+}
+
+// Reemplaza el evento de Scrollama por la versión mejorada
 window.addEventListener('load', () => {
     setupMap();
     scroller.setup({
         step: ".step",
         offset: 0.5,
     })
-    .onStepEnter(handleStepEnter)
+    .onStepEnter(enhancedHandleStepEnter)
     .onStepExit(response => {
         console.log(`Saliendo del paso: ${response.index}. Acción: ${response.direction}`);
     });
