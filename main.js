@@ -14,14 +14,53 @@ const populationClusters = [
     [-86.98, 21.02], [-87.01, 21.03], [-87.04, 21.01]
 ];
 
-// Datos simulados de crecimiento urbano por décadas
+// Datos simulados de crecimiento urbano por décadas con más puntos para morphing suave
 const urbanGrowth = {
-    '1970': { type: "Polygon", coordinates: [[[-86.82, 21.11], [-86.81, 21.10], [-86.82, 21.09], [-86.83, 21.10], [-86.82, 21.11]]] },
-    '1990': { type: "Polygon", coordinates: [[[-86.83, 21.12], [-86.80, 21.11], [-86.81, 21.10], [-86.82, 21.10], [-86.83, 21.12]]] },
-    '2000': { type: "Polygon", coordinates: [[[-86.83, 21.12], [-86.78, 21.13], [-86.75, 21.10], [-86.80, 21.05], [-86.85, 21.07], [-86.83, 21.12]]] },
-    '2010': { type: "Polygon", coordinates: [[[-86.83, 21.12], [-86.77, 21.14], [-86.72, 21.08], [-86.80, 21.02], [-86.90, 21.04], [-86.83, 21.12]]] },
-    '2020': { type: "Polygon", coordinates: [[[-86.83, 21.12], [-86.75, 21.15], [-86.70, 21.05], [-86.85, 20.98], [-86.95, 21.05], [-86.83, 21.12]]] }
+    '1970': { type: "Polygon", coordinates: [[[-86.82, 21.11], [-86.815, 21.105], [-86.81, 21.10], [-86.815, 21.095], [-86.82, 21.09], [-86.825, 21.095], [-86.83, 21.10], [-86.825, 21.105], [-86.82, 21.11]]] },
+    '1990': { type: "Polygon", coordinates: [[[-86.83, 21.12], [-86.815, 21.115], [-86.80, 21.11], [-86.805, 21.105], [-86.81, 21.10], [-86.815, 21.105], [-86.82, 21.10], [-86.825, 21.115], [-86.83, 21.12]]] },
+    '2000': { type: "Polygon", coordinates: [[[-86.83, 21.12], [-86.805, 21.125], [-86.78, 21.13], [-86.765, 21.115], [-86.75, 21.10], [-86.775, 21.075], [-86.80, 21.05], [-86.825, 21.06], [-86.85, 21.07], [-86.84, 21.095], [-86.83, 21.12]]] },
+    '2010': { type: "Polygon", coordinates: [[[-86.83, 21.12], [-86.80, 21.13], [-86.77, 21.14], [-86.745, 21.11], [-86.72, 21.08], [-86.76, 21.05], [-86.80, 21.02], [-86.85, 21.03], [-86.90, 21.04], [-86.865, 21.08], [-86.83, 21.12]]] },
+    '2020': { type: "Polygon", coordinates: [[[-86.83, 21.12], [-86.79, 21.135], [-86.75, 21.15], [-86.725, 21.10], [-86.70, 21.05], [-86.775, 21.015], [-86.85, 20.98], [-86.90, 21.015], [-86.95, 21.05], [-86.89, 21.085], [-86.83, 21.12]]] }
 };
+
+// Función para morphing suave entre polígonos
+function createPolygonMorph(fromGeometry, toGeometry) {
+    const fromCoords = fromGeometry.coordinates[0];
+    const toCoords = toGeometry.coordinates[0];
+    
+    // Normalizar número de puntos
+    const maxPoints = Math.max(fromCoords.length, toCoords.length);
+    const normalizedFrom = normalizePolygonPoints(fromCoords, maxPoints);
+    const normalizedTo = normalizePolygonPoints(toCoords, maxPoints);
+    
+    return function(t) {
+        const interpolatedCoords = normalizedFrom.map((fromPoint, i) => {
+            const toPoint = normalizedTo[i];
+            return [
+                fromPoint[0] + (toPoint[0] - fromPoint[0]) * t,
+                fromPoint[1] + (toPoint[1] - fromPoint[1]) * t
+            ];
+        });
+        return { type: "Polygon", coordinates: [interpolatedCoords] };
+    };
+}
+
+function normalizePolygonPoints(coords, targetLength) {
+    if (coords.length >= targetLength) return coords.slice(0, targetLength);
+    
+    const normalized = [...coords];
+    while (normalized.length < targetLength) {
+        // Insertar puntos intermedios
+        for (let i = 0; i < normalized.length - 1 && normalized.length < targetLength; i += 2) {
+            const midPoint = [
+                (normalized[i][0] + normalized[i + 1][0]) / 2,
+                (normalized[i][1] + normalized[i + 1][1]) / 2
+            ];
+            normalized.splice(i + 1, 0, midPoint);
+        }
+    }
+    return normalized.slice(0, targetLength);
+}
 
 // Datos simulados de distritos con densidad poblacional
 const densityDistricts = [
@@ -75,7 +114,7 @@ function setupMap() {
         style: streetStyle,
         center: [-86.85, 21.05], // Coordenadas aproximadas de Cancún
         zoom: 10,
-        interactive: true
+        interactive: false // Desactivar interactividad para evitar conflictos con scroll
     });
 
     // Esperar a que el mapa cargue antes de añadir elementos
@@ -137,7 +176,8 @@ function handleStepEnter(response) {
     
     switch (response.index) {
         case 0:
-            // Paso 0: Estado inicial
+            // Paso 0: Estado inicial - limpiar todo y resetear mapa
+            map.setStyle(streetStyle); // Asegurar estilo de calles
             map.flyTo({
                 center: [-86.85, 21.05],
                 zoom: 10,
@@ -145,59 +185,72 @@ function handleStepEnter(response) {
                 bearing: 0,
                 duration: 2000
             });
-            g.selectAll("circle").transition().duration(500).remove();
-            g.selectAll(".urban-sprawl").transition().duration(500).style("opacity", 0).remove();
+            
+            // Limpiar todos los elementos D3
+            if (g) {
+                g.selectAll('*').transition().duration(500).style('opacity', 0).remove();
+            }
+            
+            // Limpiar capas de Mapbox
+            if (map.getLayer('nichupte-layer')) {
+                map.removeLayer('nichupte-layer');
+                map.removeSource('nichupte-source');
+            }
             break;
         case 1:
-            // Paso 1: Crecimiento Poblacional
+            // Paso 1: Introducción al caso - mostrar imagen
+            // La imagen se maneja en enhancedHandleStepEnter
+            // Mantener el mapa en estado inicial y asegurar estilo correcto
+            map.setStyle(streetStyle);
             map.flyTo({
                 center: [-86.85, 21.05],
-                zoom: 11,
+                zoom: 10,
+                pitch: 0,
+                bearing: 0,
                 duration: 1500
             });
-            g.selectAll("circle").remove();
-            g.selectAll("circle")
-                .data(populationClusters)
-                .enter()
-                .append("circle")
-                .attr("cx", d => project(d)[0])
-                .attr("cy", d => project(d)[1])
-                .attr("r", 0)
-                .attr("fill", "#2563eb")
-                .attr("opacity", 0.8)
-                .transition()
-                .duration(1000)
-                .attr("r", 15);
+            // Limpiar elementos anteriores
+            if (g) {
+                g.selectAll("circle, .urban-sprawl, .urban-morph").transition().duration(500).style("opacity", 0).remove();
+            }
             break;
         case 2:
-            // Paso 2: Expansión de la Mancha Urbana
+            // Paso 2: Expansión de la Mancha Urbana con morphing fluido
             map.flyTo({
                 center: [-86.85, 21.05],
                 zoom: 10.5,
-                pitch: 30,
+                pitch: 45, // Mayor pitch para efecto 3D
                 bearing: 15,
                 duration: 2000
             });
-            g.selectAll(".urban-sprawl").remove();
             
-            // Función para proyectar coordenadas en el path
-            const pathProjection = d => d3.geoPath().projection(project)(d);
-            
-            g.append("path")
-                .datum(urbanGrowth['1990'])
-                .attr("class", "urban-sprawl")
-                .attr("d", pathProjection)
-                .attr("fill", "#dc2626")
-                .attr("opacity", 0.5)
+            // Limpiar elementos anteriores con transición
+            g.selectAll(".urban-sprawl, .urban-morph")
                 .transition()
-                .duration(2000)
-                .ease(d3.easeCubic)
-                .attrTween("d", function() {
-                    const initialPath = pathProjection(urbanGrowth['1990']);
-                    const finalPath = pathProjection(urbanGrowth['2020']);
-                    const interpolate = d3.interpolateString(initialPath, finalPath);
-                    return t => interpolate(t);
-                });
+                .duration(500)
+                .style('opacity', 0)
+                .remove();
+            
+            setTimeout(() => {
+                const pathGenerator = d3.geoPath().projection(project);
+                const morphFunction = createPolygonMorph(urbanGrowth['1990'], urbanGrowth['2020']);
+                
+                // Crear elemento para morphing progresivo
+                g.append("path")
+                    .datum(urbanGrowth['1990'])
+                    .attr("class", "urban-morph")
+                    .attr("d", pathGenerator)
+                    .attr("fill", "#dc2626")
+                    .attr("stroke", "#991b1b")
+                    .attr("stroke-width", 2)
+                    .attr("fill-opacity", 0)
+                    .attr("stroke-opacity", 0)
+                    .style('filter', 'drop-shadow(0 0 10px rgba(220, 38, 38, 0.5))')
+                    .transition()
+                    .duration(1000)
+                    .attr("fill-opacity", 0.3)
+                    .attr("stroke-opacity", 0.8);
+            }, 600);
             break;
         case 3:
             // Paso 3: Aumento de Vehículos
@@ -277,19 +330,19 @@ function handleStepEnter(response) {
             break;
             
         case 5:
-            // Paso 5: Impacto ambiental
+            // Paso 5: Impacto ambiental con efectos 3D
             map.flyTo({
                 center: [-86.80, 21.08],
                 zoom: 11.5,
-                pitch: 45,
-                bearing: 15,
+                pitch: 70, // Pitch más pronunciado para efecto 3D
+                bearing: 25,
                 duration: 2000
             });
             
             // Limpiar visualizaciones anteriores
             g.selectAll(".population-change").transition().duration(500).remove();
             
-            // Mostrar la laguna de Nichupté
+            // Mostrar la laguna de Nichupté con animación
             if (!map.getSource('nichupte-source')) {
                 map.addSource('nichupte-source', {
                     'type': 'geojson',
@@ -306,47 +359,27 @@ function handleStepEnter(response) {
                     'layout': {},
                     'paint': {
                         'fill-color': '#0ea5e9',
-                        'fill-opacity': 0.8
+                        'fill-opacity': 0
                     }
                 });
+                
+                // Animar la aparición de la laguna
+                setTimeout(() => {
+                    map.setPaintProperty('nichupte-layer', 'fill-opacity', 0.8);
+                }, 1000);
             }
             
-            // Mostrar gráfico de pérdida de vegetación
-            const maxForestLoss = d3.max(forestLossData, d => d.area);
-            const forestLossScale = d3.scaleLinear()
-                .domain([0, maxForestLoss])
-                .range([0, 80]);
-                
-            const barWidth = 30;
-            const barSpacing = 15;
-            const point = map.project(new mapboxgl.LngLat(-86.95, 21.10));
-            const startX = point.x;
-            const baseY = point.y;
-            
-            g.selectAll(".forest-loss-bar")
-                .data(forestLossData)
-                .enter()
-                .append("rect")
-                .attr("class", "forest-loss-bar")
-                .attr("x", (d, i) => startX + i * (barWidth + barSpacing))
-                .attr("y", d => baseY - forestLossScale(d.area))
-                .attr("width", barWidth)
-                .attr("height", d => forestLossScale(d.area))
-                .attr("fill", "#16a34a")
-                .attr("opacity", 0)
-                .transition()
-                .delay((d, i) => i * 200)
-                .duration(800)
-                .attr("opacity", 0.8);
-                
+            setTimeout(() => {
+                create3DForestLossBars();
+            }, 1500);
             break;
             
         case 6:
-            // Paso 6: Desigualdad territorial
+            // Paso 6: Desigualdad territorial con efectos de pulso
             map.flyTo({
                 center: [-86.88, 21.06],
                 zoom: 10.5,
-                pitch: 30,
+                pitch: 60, // Mayor pitch para efecto 3D
                 bearing: 0,
                 duration: 2000
             });
@@ -359,67 +392,13 @@ function handleStepEnter(response) {
                 map.removeSource('nichupte-source');
             }
             
-            // Mostrar densidad por distritos
-            const densityScale = d3.scaleLinear()
-                .domain([0, d3.max(densityDistricts, d => d.density)])
-                .range([5, 30]);
-                
-            const densityColorScale = d3.scaleLinear()
-                .domain([0, 50, 100])
-                .range(["#fef3c7", "#fb923c", "#b91c1c"]);
-                
-            g.selectAll(".density-circle")
-                .data(densityDistricts)
-                .enter()
-                .append("circle")
-                .attr("class", "density-circle")
-                .attr("cx", d => {
-                    const point = map.project(new mapboxgl.LngLat(d.center[0], d.center[1]));
-                    return point.x;
-                })
-                .attr("cy", d => {
-                    const point = map.project(new mapboxgl.LngLat(d.center[0], d.center[1]));
-                    return point.y;
-                })
-                .attr("r", 0)
-                .attr("fill", d => densityColorScale(d.density))
-                .attr("stroke", "#334155")
-                .attr("stroke-width", 1)
-                .attr("opacity", 0.8)
-                .transition()
-                .delay((d, i) => i * 150)
-                .duration(1000)
-                .attr("r", d => densityScale(d.density));
-                
-            // Añadir etiquetas de densidad
-            g.selectAll(".density-label")
-                .data(densityDistricts)
-                .enter()
-                .append("text")
-                .attr("class", "density-label")
-                .attr("x", d => {
-                    const point = map.project(new mapboxgl.LngLat(d.center[0], d.center[1]));
-                    return point.x;
-                })
-                .attr("y", d => {
-                    const point = map.project(new mapboxgl.LngLat(d.center[0], d.center[1]));
-                    return point.y + 5;
-                })
-                .attr("text-anchor", "middle")
-                .attr("fill", "#1e293b")
-                .attr("font-size", "10px")
-                .attr("font-weight", "bold")
-                .attr("opacity", 0)
-                .text(d => d.density)
-                .transition()
-                .delay((d, i) => i * 150 + 500)
-                .duration(500)
-                .attr("opacity", 1);
-                
+            setTimeout(() => {
+                createDensityVisualizationWithPulse();
+            }, 1000);
             break;
             
         case 7:
-            // Paso 7: Motorización acelerada
+            // Paso 7: Motorización acelerada con transición fluida
             map.flyTo({
                 center: [-86.85, 21.05],
                 zoom: 10,
@@ -428,57 +407,17 @@ function handleStepEnter(response) {
                 duration: 2000
             });
             
-            // Limpiar visualizaciones anteriores
-            g.selectAll(".density-circle").transition().duration(500).remove();
+            // Transición fluida de elementos del mapa a gráfico
+            const vehiclePoints = g.selectAll(".density-circle");
+            if (!vehiclePoints.empty()) {
+                setTimeout(() => {
+                    const chartContainer = d3.select('#chart-container');
+                    createMapToChartTransition(vehiclePoints, chartContainer, vehicleData);
+                }, 1000);
+            }
+            
+            // Limpiar etiquetas
             g.selectAll(".density-label").transition().duration(500).remove();
-            
-            // Mostrar gráfico de crecimiento vehicular
-            const maxVehicles = d3.max(vehicleData, d => d.count);
-            const vehicleScale = d3.scaleLinear()
-                .domain([0, maxVehicles])
-                .range([0, 100]);
-                
-            const vBarWidth = 40;
-            const vBarSpacing = 20;
-            const vPoint = map.project(new mapboxgl.LngLat(-86.95, 21.10));
-            const vStartX = vPoint.x;
-            const vBaseY = vPoint.y;
-            
-            g.selectAll(".vehicle-bar")
-                .data(vehicleData)
-                .enter()
-                .append("rect")
-                .attr("class", "vehicle-bar")
-                .attr("x", (d, i) => vStartX + i * (vBarWidth + vBarSpacing))
-                .attr("y", d => vBaseY - vehicleScale(d.count))
-                .attr("width", vBarWidth)
-                .attr("height", d => vehicleScale(d.count))
-                .attr("fill", "#3b82f6")
-                .attr("opacity", 0)
-                .transition()
-                .delay((d, i) => i * 300)
-                .duration(1000)
-                .attr("opacity", 0.8);
-                
-            // Añadir etiquetas de años
-            g.selectAll(".vehicle-year-label")
-                .data(vehicleData)
-                .enter()
-                .append("text")
-                .attr("class", "vehicle-year-label")
-                .attr("x", (d, i) => vStartX + i * (vBarWidth + vBarSpacing) + vBarWidth/2)
-                .attr("y", vBaseY + 15)
-                .attr("text-anchor", "middle")
-                .attr("fill", "#1e293b")
-                .attr("font-size", "10px")
-                .attr("font-weight", "bold")
-                .attr("opacity", 0)
-                .text(d => d.year)
-                .transition()
-                .delay((d, i) => i * 300 + 500)
-                .duration(500)
-                .attr("opacity", 1);
-                
             break;
             
         case 8:
@@ -494,9 +433,10 @@ function handleStepEnter(response) {
             // Cambiar a estilo satelital para mostrar la realidad urbana
             map.setStyle(satelliteStyle);
             
-            // Limpiar visualizaciones anteriores
-            g.selectAll(".vehicle-bar").transition().duration(500).remove();
-            g.selectAll(".vehicle-year-label").transition().duration(500).remove();
+            // Limpiar completamente visualizaciones anteriores
+            if (g) {
+                g.selectAll('.vehicle-bar, .vehicle-year-label, .density-circle, .density-label').transition().duration(500).remove();
+            }
             
             break;
             
@@ -513,6 +453,11 @@ function handleStepEnter(response) {
             // Cambiar a estilo outdoors para representar un futuro más verde
             map.setStyle('mapbox://styles/mapbox/outdoors-v12');
             
+            // Limpiar elementos restantes
+            if (g) {
+                g.selectAll('*').transition().duration(500).style('opacity', 0).remove();
+            }
+            
             break;
             
         case 10:
@@ -528,6 +473,11 @@ function handleStepEnter(response) {
             // Volver al estilo de calles para una vista panorámica final
             map.setStyle(streetStyle);
             
+            // Limpiar completamente todos los elementos
+            if (g) {
+                g.selectAll('*').remove();
+            }
+            
             break;
     }
 }
@@ -535,6 +485,10 @@ function handleStepEnter(response) {
 // Inicializamos Scrollama y el mapa una vez que la página carga
 // --- Multimedia y gráficos sintéticos ---
 const multimediaSteps = {
+    1: { // Introducción al caso - Digging in
+        tipo: 'imagen',
+        url: 'assets/img_1.png'
+    },
     2: { // Población en perspectiva
         tipo: 'grafico-barras',
         datos: [
@@ -570,47 +524,426 @@ function limpiarVisuals() {
     document.getElementById('image-container').style.opacity = 0;
     document.getElementById('video-container').style.opacity = 0;
     document.getElementById('mapa-container').style.opacity = 1;
+    
+    // Limpiar completamente el contenido de los contenedores
+    const chartContainer = d3.select('#chart-container').select('svg');
+    chartContainer.selectAll('*').remove();
+    
+    // Limpiar elementos D3 del mapa
+    if (typeof g !== 'undefined' && g) {
+        g.selectAll('.forest-loss-bar, .forest-year-label, .vehicle-bar, .vehicle-year-label').remove();
+    }
 }
 
+function transicionarVisual(contenedor, mostrar = true, duracion = 1000) {
+    const elemento = document.getElementById(contenedor);
+    if (mostrar) {
+        elemento.style.transition = `opacity ${duracion}ms ease-in-out, transform ${duracion}ms ease-in-out`;
+        elemento.style.opacity = 1;
+        elemento.style.transform = 'scale(1)';
+    } else {
+        elemento.style.transition = `opacity ${duracion}ms ease-in-out, transform ${duracion}ms ease-in-out`;
+        elemento.style.opacity = 0;
+        elemento.style.transform = 'scale(0.95)';
+    }
+}
+
+// Función mejorada con patrón data().join() y transiciones fluidas
 function dibujarGraficoBarras(datos) {
-        limpiarVisuals();
-        document.getElementById('mapa-container').style.opacity = 0;
-        const chartContainer = document.getElementById('chart-container');
-        chartContainer.style.opacity = 1;
-        const svg = d3.select(chartContainer).select('svg');
-        svg.selectAll('*').remove();
-        const width = chartContainer.offsetWidth;
-        const height = chartContainer.offsetHeight;
-        const margin = 40;
-        const chartWidth = width - margin * 2;
-        const chartHeight = height - margin * 2;
-        const x = d3.scaleBand().domain(datos.map(d => d.categoria)).range([0, chartWidth]).padding(0.1);
-        const y = d3.scaleLinear().domain([0, d3.max(datos, d => d.valor)]).range([chartHeight, 0]);
-        const g = svg.append('g').attr('transform', `translate(${margin},${margin})`);
-        g.selectAll('.bar')
-            .data(datos)
-            .join('rect')
-            .attr('class', 'bar')
-            .attr('x', d => x(d.categoria))
-            .attr('y', chartHeight)
-            .attr('width', x.bandwidth())
-            .attr('fill', d => d.color)
+    // NO limpiar visuals para mantener el texto visible
+    transicionarVisual('mapa-container', false);
+    const chartContainer = document.getElementById('chart-container');
+    transicionarVisual('chart-container', true);
+    
+    const svg = d3.select(chartContainer).select('svg');
+    const width = chartContainer.offsetWidth;
+    const height = chartContainer.offsetHeight;
+    const margin = 60; // Mayor margen para mejor legibilidad
+    const chartWidth = width - margin * 2;
+    const chartHeight = height - margin * 2;
+    
+    const x = d3.scaleBand().domain(datos.map(d => d.categoria)).range([0, chartWidth]).padding(0.15);
+    const y = d3.scaleLinear().domain([0, d3.max(datos, d => d.valor)]).range([chartHeight, 0]);
+    
+    // Limpiar solo el contenido del SVG, no todo
+    svg.selectAll('g').remove();
+    
+    const g = svg.append('g').attr('transform', `translate(${margin},${margin})`);
+    
+    // Usar patrón data().join() optimizado
+    const bars = g.selectAll('.bar')
+        .data(datos, d => d.categoria)
+        .join(
+            enter => enter.append('rect')
+                .attr('class', 'bar')
+                .attr('x', d => x(d.categoria))
+                .attr('y', chartHeight)
+                .attr('width', x.bandwidth())
+                .attr('height', 0)
+                .attr('fill', d => d.color)
+                .attr('stroke', '#8B5A2B')
+                .attr('stroke-width', 1)
+                .style('opacity', 0),
+            update => update,
+            exit => exit.transition().duration(300).style('opacity', 0).remove()
+        );
+    
+    // Animación de entrada más suave
+    bars.transition()
+        .delay((d, i) => i * 150)
+        .duration(1000)
+        .ease(d3.easeBackOut.overshoot(1.2))
+        .attr('y', d => y(d.valor))
+        .attr('height', d => chartHeight - y(d.valor))
+        .style('opacity', 0.9);
+    
+    // Ejes con mejor formato
+    const xAxis = g.append('g')
+        .attr('transform', `translate(0,${chartHeight})`)
+        .call(d3.axisBottom(x))
+        .style('font-size', '12px')
+        .style('font-weight', 'bold');
+        
+    const yAxis = g.append('g')
+        .call(d3.axisLeft(y).tickFormat(d3.format('.2s')))
+        .style('font-size', '11px');
+    
+    // Etiquetas de valores en las barras
+    g.selectAll('.value-label')
+        .data(datos)
+        .join('text')
+        .attr('class', 'value-label')
+        .attr('x', d => x(d.categoria) + x.bandwidth()/2)
+        .attr('y', d => y(d.valor) - 5)
+        .attr('text-anchor', 'middle')
+        .style('font-size', '10px')
+        .style('font-weight', 'bold')
+        .style('fill', '#2D1810')
+        .style('opacity', 0)
+        .text(d => d3.format('.2s')(d.valor))
+        .transition()
+        .delay((d, i) => i * 150 + 800)
+        .duration(500)
+        .style('opacity', 1);
+}
+
+// Función para crear visualización de densidad con efectos de pulso
+function createDensityVisualizationWithPulse() {
+    const densityScale = d3.scaleLinear()
+        .domain([0, d3.max(densityDistricts, d => d.density)])
+        .range([8, 35]);
+        
+    const densityColorScale = d3.scaleLinear()
+        .domain([0, 50, 100])
+        .range(["#fef3c7", "#fb923c", "#b91c1c"]);
+    
+    // Crear círculos principales con data().join()
+    const circles = g.selectAll(".density-circle")
+        .data(densityDistricts, d => d.id)
+        .join(
+            enter => enter.append("circle")
+                .attr("class", "density-circle")
+                .attr("cx", d => {
+                    const point = map.project(new mapboxgl.LngLat(d.center[0], d.center[1]));
+                    return point.x;
+                })
+                .attr("cy", d => {
+                    const point = map.project(new mapboxgl.LngLat(d.center[0], d.center[1]));
+                    return point.y;
+                })
+                .attr("r", 0)
+                .attr("fill", d => densityColorScale(d.density))
+                .attr("stroke", "#334155")
+                .attr("stroke-width", 2)
+                .style("opacity", 0),
+            update => update,
+            exit => exit.transition().duration(500).style("opacity", 0).remove()
+        );
+    
+    // Animación de entrada con pulsos
+    circles.transition()
+        .delay((d, i) => i * 200)
+        .duration(1000)
+        .ease(d3.easeElasticOut)
+        .attr("r", d => densityScale(d.density))
+        .style("opacity", 0.8)
+        .on("end", function(d) {
+            // Crear efecto de pulso continuo para densidades altas
+            if (d.density > 80) {
+                createPulseEffect(d3.select(this), d);
+            }
+        });
+    
+    // Etiquetas con animación
+    const labels = g.selectAll(".density-label")
+        .data(densityDistricts, d => d.id)
+        .join(
+            enter => enter.append("text")
+                .attr("class", "density-label")
+                .attr("x", d => {
+                    const point = map.project(new mapboxgl.LngLat(d.center[0], d.center[1]));
+                    return point.x;
+                })
+                .attr("y", d => {
+                    const point = map.project(new mapboxgl.LngLat(d.center[0], d.center[1]));
+                    return point.y + 5;
+                })
+                .attr("text-anchor", "middle")
+                .attr("fill", "#1e293b")
+                .attr("font-size", "11px")
+                .attr("font-weight", "bold")
+                .style("text-shadow", "0 0 3px white")
+                .style("opacity", 0)
+                .text(d => d.density),
+            update => update,
+            exit => exit.transition().duration(300).style("opacity", 0).remove()
+        );
+    
+    labels.transition()
+        .delay((d, i) => i * 200 + 800)
+        .duration(600)
+        .style("opacity", 1);
+}
+
+// Función para crear efecto de pulso
+function createPulseEffect(selection, data) {
+    const pulseCircle = g.append("circle")
+        .attr("cx", selection.attr("cx"))
+        .attr("cy", selection.attr("cy"))
+        .attr("r", selection.attr("r"))
+        .attr("fill", "none")
+        .attr("stroke", selection.attr("fill"))
+        .attr("stroke-width", 3)
+        .style("opacity", 0.8);
+    
+    function pulse() {
+        pulseCircle
+            .attr("r", selection.attr("r"))
+            .style("opacity", 0.8)
             .transition()
-            .duration(750)
-            .attr('y', d => y(d.valor))
-            .attr('height', d => chartHeight - y(d.valor));
-        g.append('g').attr('transform', `translate(0,${chartHeight})`).call(d3.axisBottom(x));
-        g.append('g').call(d3.axisLeft(y));
+            .duration(2000)
+            .ease(d3.easeCircleOut)
+            .attr("r", parseFloat(selection.attr("r")) * 2.5)
+            .style("opacity", 0)
+            .on("end", pulse);
+    }
+    
+    pulse();
 }
 
 function showVideo(url) {
     limpiarVisuals();
-    document.getElementById('mapa-container').style.opacity = 0;
+    transicionarVisual('mapa-container', false);
     const videoContainer = document.getElementById('video-container');
-    videoContainer.style.opacity = 1;
+    transicionarVisual('video-container', true);
     const video = videoContainer.querySelector('video');
     video.src = url;
     video.play();
+}
+
+// Función para crear barras 3D de pérdida forestal
+function create3DForestLossBars() {
+    const maxForestLoss = d3.max(forestLossData, d => d.area);
+    const forestLossScale = d3.scaleLinear()
+        .domain([0, maxForestLoss])
+        .range([0, 120]); // Barras más altas para efecto 3D
+        
+    const barWidth = 35;
+    const barSpacing = 20;
+    const point = map.project(new mapboxgl.LngLat(-86.95, 21.10));
+    const startX = point.x;
+    const baseY = point.y;
+    
+    // Crear barras con efecto 3D usando gradientes
+    const bars = g.selectAll(".forest-loss-bar")
+        .data(forestLossData, d => d.year)
+        .join(
+            enter => enter.append("rect")
+                .attr("class", "forest-loss-bar")
+                .attr("x", (d, i) => startX + i * (barWidth + barSpacing))
+                .attr("y", baseY)
+                .attr("width", barWidth)
+                .attr("height", 0)
+                .attr("fill", "url(#forestGradient)")
+                .attr("stroke", "#065f46")
+                .attr("stroke-width", 2)
+                .style("filter", "drop-shadow(3px 3px 6px rgba(0,0,0,0.3))")
+                .style("opacity", 0),
+            update => update,
+            exit => exit.transition().duration(500).style("opacity", 0).remove()
+        );
+    
+    // Crear gradiente para efecto 3D
+    const defs = g.append("defs");
+    const gradient = defs.append("linearGradient")
+        .attr("id", "forestGradient")
+        .attr("x1", "0%")
+        .attr("y1", "0%")
+        .attr("x2", "100%")
+        .attr("y2", "100%");
+    
+    gradient.append("stop")
+        .attr("offset", "0%")
+        .attr("stop-color", "#22c55e")
+        .attr("stop-opacity", 1);
+    
+    gradient.append("stop")
+        .attr("offset", "100%")
+        .attr("stop-color", "#15803d")
+        .attr("stop-opacity", 1);
+    
+    // Animación de crecimiento con rebote
+    bars.transition()
+        .delay((d, i) => i * 300)
+        .duration(1200)
+        .ease(d3.easeElasticOut.amplitude(1).period(0.4))
+        .attr("y", d => baseY - forestLossScale(d.area))
+        .attr("height", d => forestLossScale(d.area))
+        .style("opacity", 0.9);
+    
+    // Etiquetas de años con animación
+    const labels = g.selectAll(".forest-year-label")
+        .data(forestLossData, d => d.year)
+        .join(
+            enter => enter.append("text")
+                .attr("class", "forest-year-label")
+                .attr("x", (d, i) => startX + i * (barWidth + barSpacing) + barWidth/2)
+                .attr("y", baseY + 20)
+                .attr("text-anchor", "middle")
+                .attr("fill", "#1e293b")
+                .attr("font-size", "10px")
+                .attr("font-weight", "bold")
+                .style("opacity", 0)
+                .text(d => d.year),
+            update => update,
+            exit => exit.transition().duration(300).style("opacity", 0).remove()
+        );
+    
+    labels.transition()
+        .delay((d, i) => i * 300 + 800)
+        .duration(600)
+        .style("opacity", 1);
+}
+
+function showImage(url) {
+    limpiarVisuals();
+    transicionarVisual('mapa-container', false);
+    const imageContainer = document.getElementById('image-container');
+    transicionarVisual('image-container', true);
+    const img = imageContainer.querySelector('img');
+    img.src = url;
+    // Agregar efecto blur al fondo
+    img.style.filter = 'blur(2px)';
+    img.style.transform = 'scale(1.05)';
+}
+
+// Sistema avanzado de transiciones fluidas
+function createMapToChartTransition(mapElements, chartContainer, chartData) {
+    const elements = mapElements.nodes();
+    const chartBars = chartContainer.selectAll('.bar').data(chartData);
+    
+    // Fase 1: Recoger elementos del mapa
+    mapElements.transition()
+        .duration(800)
+        .ease(d3.easeBackIn)
+        .attr('r', 3)
+        .style('opacity', 0.3)
+        .on('end', function(d, i) {
+            if (i === elements.length - 1) {
+                // Fase 2: Transformar en barras
+                setTimeout(() => {
+                    dibujarGraficoBarrasAnimado(chartData, chartContainer);
+                }, 200);
+            }
+        });
+}
+
+function dibujarGraficoBarrasAnimado(datos, container) {
+    const svg = container.select('svg');
+    const width = container.node().offsetWidth;
+    const height = container.node().offsetHeight;
+    const margin = 40;
+    const chartWidth = width - margin * 2;
+    const chartHeight = height - margin * 2;
+    
+    const x = d3.scaleBand().domain(datos.map(d => d.categoria)).range([0, chartWidth]).padding(0.1);
+    const y = d3.scaleLinear().domain([0, d3.max(datos, d => d.valor)]).range([chartHeight, 0]);
+    
+    const g = svg.append('g').attr('transform', `translate(${margin},${margin})`);
+    
+    // Barras aparecen desde el centro con efecto de explosión
+    g.selectAll('.bar')
+        .data(datos)
+        .join('rect')
+        .attr('class', 'bar')
+        .attr('x', d => x(d.categoria) + x.bandwidth()/2)
+        .attr('y', chartHeight/2)
+        .attr('width', 0)
+        .attr('height', 0)
+        .attr('fill', d => d.color)
+        .transition()
+        .delay((d, i) => i * 150)
+        .duration(800)
+        .ease(d3.easeElasticOut)
+        .attr('x', d => x(d.categoria))
+        .attr('y', d => y(d.valor))
+        .attr('width', x.bandwidth())
+        .attr('height', d => chartHeight - y(d.valor));
+}
+
+// Función mejorada para manejar transiciones progresivas
+function handleStepProgress(response) {
+    const progress = response.progress || 0;
+    const config = multimediaSteps[response.index];
+    
+    // Manejo específico por paso para animaciones granulares
+    switch(response.index) {
+        case 2: // Expansión urbana progresiva
+            if (g && g.select('.urban-morph').node()) {
+                const morphFunction = createPolygonMorph(urbanGrowth['1990'], urbanGrowth['2020']);
+                const pathGenerator = d3.geoPath().projection(project);
+                const interpolatedGeometry = morphFunction(progress);
+                
+                g.select('.urban-morph')
+                    .datum(interpolatedGeometry)
+                    .attr('d', pathGenerator)
+                    .attr('fill-opacity', 0.3 + (progress * 0.4));
+            }
+            break;
+            
+        case 6: // Densidad con pulsos progresivos
+            if (g && progress > 0.3) {
+                const pulseIntensity = (progress - 0.3) / 0.7;
+                g.selectAll('.density-circle')
+                    .style('filter', `drop-shadow(0 0 ${pulseIntensity * 10}px rgba(255,0,0,0.6))`);
+            }
+            break;
+    }
+    
+    // Efectos generales de multimedia
+    if (config) {
+        const elemento = document.getElementById(
+            config.tipo === 'grafico-barras' ? 'chart-container' :
+            config.tipo === 'video' ? 'video-container' :
+            config.tipo === 'imagen' ? 'image-container' : 'mapa-container'
+        );
+        
+        if (elemento) {
+            const scale = 0.85 + (progress * 0.15);
+            const opacity = Math.max(0, Math.min(1, progress * 1.8));
+            const blur = config.tipo === 'imagen' ? Math.max(0, 6 - (progress * 4)) : 0;
+            
+            elemento.style.transform = `scale(${scale}) translateZ(0)`;
+            elemento.style.opacity = opacity;
+            
+            if (config.tipo === 'imagen') {
+                const img = elemento.querySelector('img');
+                if (img) {
+                    img.style.filter = `blur(${blur}px) brightness(${0.7 + progress * 0.3})`;
+                }
+            }
+        }
+    }
 }
 
 // --- Modifica handleStepEnter para mostrar multimedia ---
@@ -624,26 +957,32 @@ function enhancedHandleStepEnter(response) {
     const config = multimediaSteps[response.index];
     if (!config) {
         limpiarVisuals();
-        document.getElementById('mapa-container').style.opacity = 1;
+        transicionarVisual('mapa-container', true);
         return;
     }
     
-    if (response.index !== 7 && response.index !== 8) {
+    if (response.index !== 7 && response.index !== 8 && response.index !== 1 && response.index !== 3 && response.index !== 2) {
         const currentStep = response.element;
         currentStep.classList.add('is-out');
     }
-    switch (config.tipo) {
-        case 'grafico-barras':
-            dibujarGraficoBarras(config.datos);
-            break;
-        case 'video':
-            showVideo(config.url);
-            break;
-        // Puedes agregar más tipos si lo necesitas
-        default:
-            limpiarVisuals();
-            document.getElementById('mapa-container').style.opacity = 1;
-    }
+    
+    // Aplicar transiciones suaves con mejor timing
+    setTimeout(() => {
+        switch (config.tipo) {
+            case 'grafico-barras':
+                dibujarGraficoBarras(config.datos);
+                break;
+            case 'video':
+                showVideo(config.url);
+                break;
+            case 'imagen':
+                showImage(config.url);
+                break;
+            default:
+                limpiarVisuals();
+                transicionarVisual('mapa-container', true);
+        }
+    }, 300); // Timing optimizado para transiciones más fluidas
 }
 
 // Reemplaza el evento de Scrollama por la versión mejorada
@@ -652,10 +991,46 @@ window.addEventListener('load', () => {
     scroller.setup({
         step: ".step",
         offset: 0.5,
+        progress: true // Habilitar seguimiento de progreso
     })
     .onStepEnter(enhancedHandleStepEnter)
+    .onStepProgress(handleStepProgress) // Manejar progreso durante el scroll
     .onStepExit(response => {
         console.log(`Saliendo del paso: ${response.index}. Acción: ${response.direction}`);
+        
+        // Limpiar elementos específicos al salir de cada paso
+        switch(response.index) {
+            case 2: // Saliendo del paso de población
+                // Asegurar que el gráfico se oculte completamente
+                const chartContainer = d3.select('#chart-container').select('svg');
+                chartContainer.selectAll('*').transition().duration(300).style('opacity', 0).remove();
+                document.getElementById('chart-container').style.opacity = 0;
+                break;
+            case 5: // Saliendo del paso ambiental
+                if (g) {
+                    g.selectAll('.forest-loss-bar, .forest-year-label').transition().duration(300).remove();
+                }
+                break;
+            case 7: // Saliendo del paso vehicular
+                if (g) {
+                    g.selectAll('.vehicle-bar, .vehicle-year-label').transition().duration(300).remove();
+                }
+                break;
+            case 8: // Saliendo del paso satelital - resetear estilo
+                if (response.direction === 'up') {
+                    map.setStyle(streetStyle);
+                }
+                break;
+        }
+        
+        // Transición suave al salir
+        const config = multimediaSteps[response.index];
+        if (config) {
+            const contenedor = config.tipo === 'grafico-barras' ? 'chart-container' :
+                             config.tipo === 'video' ? 'video-container' :
+                             config.tipo === 'imagen' ? 'image-container' : 'mapa-container';
+            transicionarVisual(contenedor, false, 300);
+        }
     });
 
     window.addEventListener('resize', scroller.resize);
