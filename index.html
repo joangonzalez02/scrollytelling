@@ -6,6 +6,9 @@
     <title>Scrollytelling Qu</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Krona+One&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
     
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
@@ -83,11 +86,16 @@
         </section>
 
         <section class="step" data-step="8">
-            <div class="step-content">
-                <h2>Consecuencias sociales y urbanas</h2>
-                <p>“El modelo expansivo se refleja en la vida cotidiana: más horas en traslados, servicios lejanos, menor convivencia comunitaria. La ciudad se encarece al mantener colonias lejanas y pierde cohesión social. Pero este rumbo puede cambiar: priorizar calidad sobre extensión, proximidad sobre distancia, equidad sobre desigualdad. Estamos a tiempo de transformar los costos invisibles en oportunidades de bienestar compartido.”</p>
-            </div>
+                <div class="card-chart-container">
+                    <!-- El div donde D3 dibujará la gráfica dinámica -->
+                    <div id="bar-chart-dynamic"></div>
+                    <div class="step-content">
+                        <h2>Consecuencias sociales y urbanas</h2>
+                        <p>“El modelo expansivo se refleja en la vida cotidiana: más horas en traslados, servicios lejanos, menor convivencia comunitaria. La ciudad se encarece al mantener colonias lejanas y pierde cohesión social. Pero este rumbo puede cambiar: priorizar calidad sobre extensión, proximidad sobre distancia, equidad sobre desigualdad. Estamos a tiempo de transformar los costos invisibles en oportunidades de bienestar compartido.”</p>
+                    </div>
+                </div>
         </section>
+
 
         <section class="step" data-step="9">
             <div class="step-content">

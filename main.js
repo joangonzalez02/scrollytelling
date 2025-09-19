@@ -487,7 +487,8 @@ function handleStepEnter(response) {
 const multimediaSteps = {
     1: { // Introducción al caso - Digging in
         tipo: 'imagen',
-        url: 'assets/img_1.png'
+        url: 'assets/img_1.png',
+        layout: 'layout-right-panel'
     },
     2: { // Población en perspectiva
         tipo: 'grafico-barras',
@@ -498,11 +499,13 @@ const multimediaSteps = {
             { categoria: '2000', valor: 397191, color: '#D4A373' },
             { categoria: '2010', valor: 628306, color: '#D4A373' },
             { categoria: '2020', valor: 911000, color: '#D4A373' }
-        ]
+        ],
+        layout: 'layout-top-left'
     },
     3: { // Expansión urbana sin freno
         tipo: 'video',
-        url: 'public/videos/1.mp4'
+        url: 'public/videos/1.mp4',
+        layout: 'layout-left-panel'
     },
     7: { // Motorización acelerada
         tipo: 'grafico-barras',
@@ -514,10 +517,16 @@ const multimediaSteps = {
         ]
     },
     8: { // Consecuencias sociales y urbanas
-        tipo: 'video',
-        url: 'public/videos/3.mp4'
+        tipo: 'grafico-poblacion-dinamico',
+        poster: 'assets/img_1.png',
+        loop: true,
+        layout: 'layout-top-left'
     }
 };
+
+let populationData = [];
+
+
 
 function limpiarVisuals() {
     document.getElementById('chart-container').style.opacity = 0;
@@ -918,6 +927,13 @@ function handleStepProgress(response) {
                     .style('filter', `drop-shadow(0 0 ${pulseIntensity * 10}px rgba(255,0,0,0.6))`);
             }
             break;
+        case 8:
+            if (response.index === 9 && populationData.length > 0) {
+            const yearIndex = Math.floor(response.progress * (populationData.length - 1));
+            const currentYearIndex = Math.max(0, Math.min(yearIndex, populationData.length - 1));
+            dibujarGraficoPoblacion(populationData[currentYearIndex]);
+            break;
+}
     }
     
     // Efectos generales de multimedia
@@ -952,10 +968,30 @@ function enhancedHandleStepEnter(response) {
     // Primero ejecuta la lógica original
     originalHandleStepEnter(response);
 
+    const stepElement = response.element;
+    const stepIndex = response.index;
+    const config = multimediaSteps[stepIndex];
+
+    // Limpiar clases de layout anteriores
+    document.querySelectorAll('.step').forEach(el => {
+        el.classList.remove('layout-fullscreen', 'layout-overlay', 'layout-side-text');
+    });
+
+    if (!config) {
+        limpiarVisuals();
+        transicionarVisual('mapa-container', true);
+        return;
+    }
+
+    // Aplicar la nueva clase de layout
+    if (config.layout && config.layout !== 'default') {
+        stepElement.classList.add(config.layout);
+    }
+
     // Lógica para ocultar la nota sticky cuando hay multimedia
     document.querySelectorAll('.step').forEach(el => el.classList.remove('is-out'));
-    const config = multimediaSteps[response.index];
-    if (!config) {
+    const configStep = multimediaSteps[response.index];
+    if (!configStep) {
         limpiarVisuals();
         transicionarVisual('mapa-container', true);
         return;
@@ -965,73 +1001,315 @@ function enhancedHandleStepEnter(response) {
         const currentStep = response.element;
         currentStep.classList.add('is-out');
     }
+    if (response.index === 8) {
+        limpiarVisuals();
+        transicionarVisual('mapa-container', true);
+        chartInitialized = false;
+        return;
+    }
+    if (response.index === 9) {
+        limpiarVisuals();
+        // Oculta el mapa y muestra solo la gráfica
+        document.getElementById('mapa-container').style.opacity = 0;
+        transicionarVisual('chart-container', true);
+        if (populationData.length > 0) {
+            dibujarGraficoPoblacion(populationData[0]);
+        }
+        return;
+    }
+
     
     // Aplicar transiciones suaves con mejor timing
     setTimeout(() => {
-        switch (config.tipo) {
+        switch (configStep.tipo) {
             case 'grafico-barras':
-                dibujarGraficoBarras(config.datos);
+                dibujarGraficoBarras(configStep.datos);
+                break;
+            case 'grafico-barras-csv':
+                dibujarGraficoBarrasCSV(configStep.datos, response.index);
                 break;
             case 'video':
-                showVideo(config.url);
+                showVideo(configStep.url);
                 break;
             case 'imagen':
-                showImage(config.url);
+                showImage(configStep.url);
                 break;
             default:
                 limpiarVisuals();
                 transicionarVisual('mapa-container', true);
         }
     }, 300); // Timing optimizado para transiciones más fluidas
+// Nueva función para dibujar gráfico de barras desde CSV
+function dibujarGraficoBarrasCSV(csvPath) {
+function dibujarGraficoBarrasCSV(csvPath, stepIndex) {
+    transicionarVisual('mapa-container', false);
+    const chartContainer = document.getElementById('chart-container');
+    transicionarVisual('chart-container', true);
+    const svg = d3.select(chartContainer).select('svg');
+    const width = chartContainer.offsetWidth;
+    const height = chartContainer.offsetHeight;
+    const margin = 60;
+    const chartWidth = width - margin * 2;
+    const chartHeight = height - margin * 2;
+
+    d3.csv(csvPath).then(data => {
+        // Filtrar años válidos y convertir valores numéricos
+        const years = data.map(d => d['Año']).filter(y => y && !isNaN(parseInt(y)));
+        const series = [
+            { key: 'Poblacion México', color: '#3b82f6' },
+            { key: 'Poblacion Mundo', color: '#6366f1' },
+            { key: 'Población Benito Juárez', color: '#dc2626' },
+            { key: 'Población Resto de Quintana Roo', color: '#f59e42' },
+            { key: 'Población Todo de Quintana Roo', color: '#16a34a' }
+        ];
+
+        // Determinar el año a mostrar según el paso
+        // El primer paso de gráfica CSV es el index donde está multimediaSteps[8]
+        // Los siguientes años corresponden a los siguientes pasos
+        const firstStepIndex = 8;
+        const yearIdx = stepIndex - firstStepIndex;
+        const year = years[yearIdx] || years[0];
+        const yearData = data.find(d => d['Año'] === year);
+
+        // Limpiar SVG
+        svg.selectAll('*').remove();
+        const g = svg.append('g').attr('transform', `translate(${margin},${margin})`);
+
+        // Preparar datos para las barras, solo columnas con datos
+        const barData = series.map(s => {
+            let valor = yearData[s.key];
+            if (valor && valor.trim() !== '') {
+                valor = parseInt(valor.replace(/\./g, '').replace(/,/g, ''));
+                return {
+                    key: s.key,
+                    valor: valor,
+                    color: s.color
+                };
+            }
+            return null;
+        }).filter(d => d !== null);
+
+        // Eje X: nombres de columna
+        const x = d3.scaleBand().domain(barData.map(d => d.key)).range([0, chartWidth]).padding(0.15);
+        // Eje Y
+        const y = d3.scaleLinear().domain([0, d3.max(barData, d => d.valor)]).range([chartHeight, 0]);
+
+        // Dibujar barras
+        g.selectAll('.bar')
+            .data(barData)
+            .join('rect')
+            .attr('class', 'bar')
+            .attr('x', d => x(d.key))
+            .attr('y', chartHeight)
+            .attr('width', x.bandwidth())
+            .attr('height', 0)
+            .attr('fill', d => d.color)
+            .attr('stroke', '#334155')
+            .attr('stroke-width', 1)
+            .style('opacity', 0)
+            .transition()
+            .duration(900)
+            .attr('y', d => y(d.valor))
+            .attr('height', d => chartHeight - y(d.valor))
+            .style('opacity', 0.9);
+
+        // Eje X con nombres de columna
+        g.append('g')
+            .attr('transform', `translate(0,${chartHeight})`)
+            .call(d3.axisBottom(x).tickFormat(d => d))
+            .style('font-size', '13px')
+            .style('font-weight', 'bold');
+
+        // Eje Y
+        g.append('g')
+            .call(d3.axisLeft(y).tickFormat(d3.format('.2s')))
+            .style('font-size', '11px');
+
+        // Título del año
+        svg.append('text')
+            .attr('x', width/2)
+            .attr('y', margin/2)
+            .attr('text-anchor', 'middle')
+            .style('font-size', '22px')
+            .style('font-weight', 'bold')
+            .style('fill', '#334155')
+            .text(`Año: ${year}`);
+    });
+}
+}
+    const configPop = multimediaSteps[response.index];
+    if (configPop && configPop.tipo === 'grafico-poblacion-dinamico') {
+        limpiarVisuals();
+        transicionarVisual('chart-container', true);
+        
+        // Dibuja el primer año de la gráfica
+        if (populationData.length > 0) {
+            dibujarGraficoPoblacion(populationData[0]);
+        }
+    } else {
+         chartInitialized = false; // Resetea el estado si no es la gráfica
+    }
 }
 
-// Reemplaza el evento de Scrollama por la versión mejorada
+let chartInitialized = false; // Controla si el SVG de la gráfica ya fue creado
+
+function dibujarGraficoPoblacion(yearData) {
+    if (!yearData) return;
+
+    // --- 1. Preparación del contenedor y escalas ---
+    const chartContainer = d3.select('#chart-container');
+    const svg = chartContainer.select('svg');
+    const width = chartContainer.node().offsetWidth;
+    const height = chartContainer.node().offsetHeight;
+    const margin = { top: 80, right: 40, bottom: 80, left: 80 };
+    const chartWidth = width - margin.left - margin.right;
+    const chartHeight = height - margin.top - margin.bottom;
+
+    // Filtra las columnas que no sean 'Año' y que tengan valor en el año actual
+    const categories = Object.keys(yearData).filter(key => key !== 'Año' && yearData[key] !== null);
+    const values = categories.map(cat => yearData[cat]);
+
+    // Limpiamos el SVG si es la primera vez o si cambiamos de visualización
+    if (!chartInitialized) {
+        svg.selectAll('*').remove();
+    }
+
+    const g = svg.selectAll('.chart-group').data([null]);
+    const gEnter = g.enter().append('g').attr('class', 'chart-group');
+    gEnter.merge(g).attr('transform', `translate(${margin.left},${margin.top})`);
+    
+    // --- 2. Definición de Ejes y Escalas ---
+    const x = d3.scaleBand()
+        .domain(categories)
+        .range([0, chartWidth])
+        .padding(0.2);
+
+    const y = d3.scaleLinear()
+        .domain([0, d3.max(populationData.flatMap(d => Object.values(d).slice(1)))]) // Dominio máximo de todos los años
+        .range([chartHeight, 0]);
+
+    // --- 3. Dibujar/Actualizar Ejes ---
+    gEnter.append('g').attr('class', 'x-axis');
+    g.select('.x-axis')
+        .attr('transform', `translate(0,${chartHeight})`)
+        .transition().duration(200)
+        .call(d3.axisBottom(x));
+
+    gEnter.append('g').attr('class', 'y-axis');
+    g.select('.y-axis')
+        .transition().duration(200)
+        .call(d3.axisLeft(y).ticks(5).tickFormat(d3.format('.2s')));
+
+    // --- 4. Dibujar/Actualizar Barras (la magia está aquí) ---
+    const bars = g.select('.chart-group').selectAll('.bar')
+        .data(categories, d => d); // Usar la categoría como key
+
+    bars.exit()
+        .transition().duration(200)
+        .attr('height', 0)
+        .attr('y', chartHeight)
+        .remove();
+
+    bars.enter()
+        .append('rect')
+        .attr('class', 'bar')
+        .attr('x', d => x(d))
+        .attr('width', x.bandwidth())
+        .attr('y', chartHeight)
+        .attr('height', 0)
+        .attr('fill', '#2563eb')
+        .merge(bars) // Une las barras nuevas y existentes para la transición
+        .transition().duration(350)
+        .attr('x', d => x(d))
+        .attr('width', x.bandwidth())
+        .attr('y', d => y(yearData[d]))
+        .attr('height', d => chartHeight - y(yearData[d]));
+
+    // --- 5. Título del Año ---
+    const yearLabel = svg.selectAll('.year-label').data([null]);
+    yearLabel.enter()
+        .append('text')
+        .attr('class', 'year-label')
+        .attr('x', width / 2)
+        .attr('y', margin.top / 2 + 10)
+        .attr('text-anchor', 'middle')
+        .attr('font-size', '28px')
+        .attr('font-weight', 'bold')
+        .attr('fill', '#334155')
+        .merge(yearLabel)
+        .text(`Año: ${yearData.Año}`);
+        
+    chartInitialized = true;
+}
+
 window.addEventListener('load', () => {
-    setupMap();
-    scroller.setup({
-        step: ".step",
-        offset: 0.5,
-        progress: true // Habilitar seguimiento de progreso
-    })
-    .onStepEnter(enhancedHandleStepEnter)
-    .onStepProgress(handleStepProgress) // Manejar progreso durante el scroll
-    .onStepExit(response => {
-        console.log(`Saliendo del paso: ${response.index}. Acción: ${response.direction}`);
+    const scroller = scrollama(); // 1. Define scroller aquí
+
+    d3.csv('public/data/Población - Valores.csv').then(data => {
+        // Limpiamos y convertimos los datos (esto ya lo tenías bien)
+        data.forEach(d => {
+            for (let key in d) {
+                if (key !== 'Año') {
+                    const value = d[key].replace(/\./g, '').replace(/,/g, '');
+                    d[key] = value ? +value : null;
+                } else {
+                    d[key] = +d[key];
+                }
+            }
+        });
+        populationData = data;
+
+        // 2. AÑADE EL CÁLCULO DE LA ESCALA MÁXIMA AQUÍ
+        maxPopulationValue = d3.max(populationData, d => {
+            return d3.max(Object.keys(d), key => {
+                if (key !== 'Año' && key !== 'Poblacion Mundo' && key !== 'Poblacion México') {
+                    return d[key];
+                }
+                return 0;
+            });
+        });
+        console.log("Datos cargados. Valor máximo local:", maxPopulationValue);
+
+        // 3. MUEVE LA INICIALIZACIÓN AQUÍ DENTRO
+        setupMap();
         
-        // Limpiar elementos específicos al salir de cada paso
-        switch(response.index) {
-            case 2: // Saliendo del paso de población
-                // Asegurar que el gráfico se oculte completamente
-                const chartContainer = d3.select('#chart-container').select('svg');
-                chartContainer.selectAll('*').transition().duration(300).style('opacity', 0).remove();
-                document.getElementById('chart-container').style.opacity = 0;
-                break;
-            case 5: // Saliendo del paso ambiental
-                if (g) {
-                    g.selectAll('.forest-loss-bar, .forest-year-label').transition().duration(300).remove();
-                }
-                break;
-            case 7: // Saliendo del paso vehicular
-                if (g) {
-                    g.selectAll('.vehicle-bar, .vehicle-year-label').transition().duration(300).remove();
-                }
-                break;
-            case 8: // Saliendo del paso satelital - resetear estilo
-                if (response.direction === 'up') {
-                    map.setStyle(streetStyle);
-                }
-                break;
-        }
-        
-        // Transición suave al salir
-        const config = multimediaSteps[response.index];
-        if (config) {
-            const contenedor = config.tipo === 'grafico-barras' ? 'chart-container' :
-                             config.tipo === 'video' ? 'video-container' :
-                             config.tipo === 'imagen' ? 'image-container' : 'mapa-container';
-            transicionarVisual(contenedor, false, 300);
-        }
+        scroller.setup({
+            step: ".step",
+            offset: 0.5,
+            progress: true
+        })
+        .onStepEnter(enhancedHandleStepEnter) // 4. Llamada simplificada
+        .onStepProgress(handleStepProgress)
+        .onStepExit(response => {
+            console.log(`Saliendo del paso: ${response.index}. Acción: ${response.direction}`);
+            
+            // Tu lógica de onStepExit está bien, la mantenemos
+            switch(response.index) {
+                case 8:
+                    chartInitialized = false; // Importante para redibujar si se vuelve a entrar
+                    if (response.direction === 'up') {
+                        map.setStyle(streetStyle);
+                    }
+                    break;
+                // ... (otros cases que tenías)
+            }
+            
+            const config = multimediaSteps[response.index];
+            if (config) {
+                const contenedorId = {
+                    'grafico-barras': 'chart-container',
+                    'video': 'video-container',
+                    'imagen': 'image-container',
+                    'grafico-poblacion-dinamico': 'chart-container'
+                }[config.tipo] || 'mapa-container';
+                transicionarVisual(contenedorId, false, 300);
+            }
+        });
+
+    }).catch(error => {
+        console.error("Error al cargar o procesar el archivo CSV:", error);
     });
 
-    window.addEventListener('resize', scroller.resize);
+    window.addEventListener('resize', () => scroller.resize());
 });
+
