@@ -116,3 +116,654 @@ body {
     transform: translateY(-100vh);
     transition: opacity 0.7s, transform 0.7s;
 }
+
+/* ===== NUEVOS ESTILOS PARA DIFERENTES LAYOUTS ===== */
+
+/* 1. HERO SECTION - Pantalla completa con título grande */
+.step-hero {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.9) 100%);
+    color: white;
+    min-height: 100vh;
+}
+
+.step-hero .step-content {
+    background: transparent;
+    box-shadow: none;
+    max-width: 900px;
+    padding: 4rem 2rem;
+}
+
+.hero-title {
+    font-size: 3.5rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    line-height: 1.1;
+    background: linear-gradient(135deg, #60a5fa, #34d399);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.hero-subtitle {
+    font-size: 1.5rem;
+    font-weight: 400;
+    margin-bottom: 1.5rem;
+    opacity: 0.9;
+    line-height: 1.4;
+}
+
+.hero-description {
+    font-size: 1.1rem;
+    opacity: 0.8;
+    line-height: 1.6;
+    margin-bottom: 0;
+}
+
+/* 2. IMAGE OVERLAY - Texto sobre imagen con overlay */
+.step-image-overlay {
+    position: relative;
+    background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.2));
+}
+
+.step-image-overlay .step-content {
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    max-width: 600px;
+    padding: 3rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.overlay-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 1.5rem;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.overlay-text {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #374151;
+    margin-bottom: 1rem;
+}
+
+/* 3. CHART SECTION - Fondo limpio para gráficos */
+.step-chart {
+    background: rgba(248, 250, 252, 0.0);
+}
+
+.step-chart .step-content {
+    background: white;
+    max-width: 800px;
+    padding: 3rem;
+    border-left: 4px solid #3b82f6;
+}
+
+.chart-title {
+    font-size: 2.8rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 1rem;
+}
+
+.chart-subtitle {
+    font-size: 1.3rem;
+    color: #3b82f6;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+}
+
+.chart-description {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #4b5563;
+}
+
+/* 4. FULLSCREEN STATS - Pantalla completa con estadísticas */
+.step-fullscreen {
+    background: linear-gradient(135deg, rgba(220, 38, 38, 0) 0%, rgba(65, 174, 213, 0.503) 100%);
+    color: white;
+}
+
+.step-fullscreen .step-content {
+    background: transparent;
+    box-shadow: none;
+    max-width: 1000px;
+    text-align: center;
+}
+
+.fullscreen-title {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 3rem;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.fullscreen-stats {
+    display: flex;
+    justify-content: center;
+    gap: 4rem;
+    margin-bottom: 3rem;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-number {
+    display: block;
+    font-size: 4rem;
+    font-weight: 700;
+    color: #fbbf24;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.stat-label {
+    display: block;
+    font-size: 1.1rem;
+    margin-top: 0.5rem;
+    opacity: 0.9;
+}
+
+.fullscreen-text {
+    font-size: 1.2rem;
+    line-height: 1.6;
+    opacity: 0.9;
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+/* 5. SPLIT LAYOUT - Comparación lado a lado */
+.step-split {
+    background: rgba(241, 245, 249, 0.95);
+}
+
+.step-split .step-content {
+    background: white;
+    max-width: 1000px;
+    padding: 3rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: center;
+}
+
+.split-left, .split-right {
+    text-align: center;
+    padding: 2rem;
+    border-radius: 12px;
+}
+
+.split-left {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+}
+
+.split-right {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+}
+
+.split-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+}
+
+.split-stats {
+    margin-bottom: 1rem;
+}
+
+.stat-decrease, .stat-increase {
+    display: block;
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.split-description {
+    grid-column: 1 / -1;
+    text-align: center;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #4b5563;
+    margin-top: 2rem;
+}
+
+/* 6. ENVIRONMENTAL SECTION */
+.step-environmental {
+    background: linear-gradient(135deg, rgba(6, 95, 70, 0.9) 0%, rgba(4, 120, 87, 0.9) 100%);
+    color: white;
+}
+
+.step-environmental .step-content {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    max-width: 700px;
+}
+
+.env-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.env-highlight {
+    background: rgba(239, 68, 68, 0.9);
+    padding: 2rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.env-number {
+    display: block;
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.env-label {
+    display: block;
+    font-size: 1.2rem;
+    margin-top: 0.5rem;
+    opacity: 0.9;
+}
+
+.env-text {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    opacity: 0.9;
+}
+
+/* 7. DENSITY COMPARISON */
+.step-density {
+    background: rgba(248, 250, 252, 0.95);
+}
+
+.step-density .step-content {
+    max-width: 800px;
+    padding: 3rem;
+}
+
+.density-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 2rem;
+}
+
+.density-comparison {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.density-high, .density-low {
+    text-align: center;
+    padding: 2rem;
+    border-radius: 12px;
+    min-width: 150px;
+}
+
+.density-high {
+    background: linear-gradient(135deg, #dc2626, #ef4444);
+    color: white;
+}
+
+.density-low {
+    background: linear-gradient(135deg, #64748b, #94a3b8);
+    color: white;
+}
+
+.density-number {
+    display: block;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.density-unit {
+    display: block;
+    font-size: 0.9rem;
+    opacity: 0.8;
+    margin-bottom: 0.5rem;
+}
+
+.density-label {
+    display: block;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.density-vs {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #6b7280;
+}
+
+.density-text {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #4b5563;
+    text-align: center;
+}
+
+/* 8. MOBILITY STATS */
+.step-mobility {
+    background: linear-gradient(135deg, rgba(30, 64, 175, 0.9) 0%, rgba(59, 130, 246, 0.9) 100%);
+    color: white;
+}
+
+.step-mobility .step-content {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    max-width: 900px;
+}
+
+.mobility-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.mobility-stats {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.mobility-before, .mobility-after {
+    text-align: center;
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    min-width: 200px;
+}
+
+.mobility-year {
+    display: block;
+    font-size: 1.2rem;
+    font-weight: 600;
+    opacity: 0.8;
+    margin-bottom: 0.5rem;
+}
+
+.mobility-cars {
+    display: block;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.mobility-ratio {
+    display: block;
+    font-size: 1rem;
+    opacity: 0.9;
+}
+
+.mobility-arrow {
+    font-size: 2rem;
+    opacity: 0.8;
+}
+
+.mobility-growth {
+    text-align: center;
+    font-size: 3rem;
+    font-weight: 700;
+    color: #fbbf24;
+    margin-bottom: 1.5rem;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.mobility-text {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    opacity: 0.9;
+    text-align: center;
+}
+
+/* 9. CONSEQUENCES LIST */
+.step-consequences {
+    background: rgba(243, 244, 246, 0.95);
+}
+
+.step-consequences .step-content {
+    background: white;
+    max-width: 700px;
+    padding: 3rem;
+    border-left: 4px solid #f59e0b;
+}
+
+.consequences-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.consequences-list {
+    margin-bottom: 2rem;
+}
+
+.consequence-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: #fef3c7;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.consequence-icon {
+    font-size: 1.5rem;
+}
+
+.consequence-text {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #92400e;
+}
+
+.consequences-text {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #4b5563;
+    text-align: center;
+}
+
+/* 10. SOLUTIONS CONCEPT */
+.step-solutions {
+    background: linear-gradient(135deg, rgba(5, 150, 105, 0.2) 0%, rgba(16, 185, 129, 0.9) 100%);
+    color: white;
+}
+
+.step-solutions .step-content {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    max-width: 800px;
+}
+
+.solutions-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    text-align: center;
+}
+
+.solutions-concept {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.concept-circle {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    margin: 0 auto 1rem;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.concept-center {
+    font-size: 3rem;
+}
+
+.concept-items {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.concept-item {
+    position: absolute;
+    font-size: 2rem;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.concept-item.work { top: -10px; right: 20px; }
+.concept-item.education { bottom: -10px; right: 20px; }
+.concept-item.health { bottom: -10px; left: 20px; }
+.concept-item.leisure { top: -10px; left: 20px; }
+
+.concept-text {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #fbbf24;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.solutions-text {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    opacity: 0.9;
+    text-align: center;
+}
+
+/* 11. CALL TO ACTION */
+.step-cta {
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.9) 0%, rgba(168, 85, 247, 0.9) 100%);
+    color: white;
+    min-height: 100vh;
+}
+
+.step-cta .step-content {
+    background: transparent;
+    box-shadow: none;
+    max-width: 900px;
+    padding: 4rem 2rem;
+}
+
+.cta-title {
+    font-size: 3.5rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    text-align: center;
+}
+
+.cta-question {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.cta-text {
+    display: block;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    opacity: 0.9;
+}
+
+.cta-highlight {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #fbbf24;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.cta-values {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.cta-value {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 1rem 2rem;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 1.1rem;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.cta-description {
+    font-size: 1.2rem;
+    line-height: 1.6;
+    opacity: 0.9;
+    text-align: center;
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+/* RESPONSIVE DESIGN */
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 2.5rem;
+    }
+    
+    .fullscreen-stats {
+        flex-direction: column;
+        gap: 2rem;
+    }
+    
+    .step-split .step-content {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+    
+    .density-comparison {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .mobility-stats {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .cta-values {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .cta-title {
+        font-size: 2.5rem;
+    }
+}
