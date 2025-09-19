@@ -846,6 +846,320 @@ function showImage(url) {
     img.style.transform = 'scale(1.05)';
 }
 
+// ===== INTEGRACIÓN WMS Y WFS CON MAPBOX =====
+
+// Configuración de servicios WMS
+const wmsServices = {
+    // Ejemplo con datos de INEGI México
+    inegi: {
+        url: 'https://gaia.inegi.org.mx/NLB/mdm6?',
+        layers: 'conjunto_nacional',
+        format: 'image/png',
+        transparent: true,
+        version: '1.1.1'
+    },
+    // Ejemplo con OpenStreetMap WMS
+    osm: {
+        url: 'https://ows.terrestris.de/osm/service?',
+        layers: 'OSM-WMS',
+        format: 'image/png',
+        transparent: true,
+        version: '1.1.1'
+    },
+    // Ejemplo con datos ambientales
+    environmental: {
+        url: 'https://nowcoast.noaa.gov/arcgis/services/nowcoast/mapoverlays_political/MapServer/WMSServer?',
+        layers: '1',
+        format: 'image/png',
+        transparent: true,
+        version: '1.3.0'
+    }
+};
+
+// Configuración de servicios WFS
+const wfsServices = {
+    // Ejemplo con GeoServer local o remoto
+    geoserver: {
+        url: 'http://localhost:8080/geoserver/wfs',
+        typeName: 'cancun:urban_growth',
+        version: '2.0.0',
+        outputFormat: 'application/json'
+    },
+    // Ejemplo con datos de INEGI
+    inegiWFS: {
+        url: 'https://gaia.inegi.org.mx/wfs/scince2020',
+        typeName: 'scince:loc_urb_2020',
+        version: '2.0.0',
+        outputFormat: 'application/json'
+    }
+};
+
+// Función para agregar capa WMS a Mapbox
+function addWMSLayer(map, serviceKey, layerId = null) {
+    const service = wmsServices[serviceKey];
+    if (!service) {
+        console.error(`Servicio WMS '${serviceKey}' no encontrado`);
+        return;
+    }
+    
+    const sourceId = layerId || `wms-${serviceKey}`;
+    const layerIdFinal = `${sourceId}-layer`;
+    
+    // Construir URL del WMS
+    const wmsUrl = `${service.url}SERVICE=WMS&VERSION=${service.version}&REQUEST=GetMap&LAYERS=${service.layers}&STYLES=&FORMAT=${service.format}&TRANSPARENT=${service.transparent}&HEIGHT=256&WIDTH=256&SRS=EPSG:3857&BBOX={bbox-epsg-3857}`;
+    
+    // Agregar fuente raster
+    map.addSource(sourceId, {
+        type: 'raster',
+        tiles: [wmsUrl],
+        tileSize: 256
+    });
+    
+    // Agregar capa
+    map.addLayer({
+        id: layerIdFinal,
+        type: 'raster',
+        source: sourceId,
+        paint: {
+            'raster-opacity': 0.8
+        }
+    });
+    
+    console.log(`Capa WMS '${serviceKey}' agregada con ID: ${layerIdFinal}`);
+    return layerIdFinal;
+}
+
+// Función para consumir datos WFS y convertirlos a GeoJSON
+async function fetchWFSData(serviceKey, bbox = null, maxFeatures = 1000) {
+    const service = wfsServices[serviceKey];
+    if (!service) {
+        console.error(`Servicio WFS '${serviceKey}' no encontrado`);
+        return null;
+    }
+    
+    try {
+        // Construir parámetros WFS
+        let wfsParams = new URLSearchParams({
+            service: 'WFS',
+            version: service.version,
+            request: 'GetFeature',
+            typeName: service.typeName,
+            outputFormat: service.outputFormat,
+            maxFeatures: maxFeatures
+        });
+        
+        // Agregar bbox si se proporciona
+        if (bbox) {
+            wfsParams.append('bbox', `${bbox.join(',')},EPSG:4326`);
+        }
+        
+        const url = `${service.url}?${wfsParams.toString()}`;
+        console.log(`Consultando WFS: ${url}`);
+        
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log(`Datos WFS obtenidos: ${data.features?.length || 0} features`);
+        return data;
+        
+    } catch (error) {
+        console.error(`Error al consultar WFS '${serviceKey}':`, error);
+        return null;
+    }
+}
+
+// Función para agregar datos WFS como capa vectorial en Mapbox
+async function addWFSLayer(map, serviceKey, layerId = null, styleConfig = {}) {
+    const data = await fetchWFSData(serviceKey);
+    if (!data || !data.features) {
+        console.error(`No se pudieron obtener datos WFS para '${serviceKey}'`);
+        return;
+    }
+    
+    const sourceId = layerId || `wfs-${serviceKey}`;
+    const layerIdFinal = `${sourceId}-layer`;
+    
+    // Agregar fuente GeoJSON
+    map.addSource(sourceId, {
+        type: 'geojson',
+        data: data
+    });
+    
+    // Determinar tipo de geometría para el estilo
+    const firstFeature = data.features[0];
+    const geometryType = firstFeature?.geometry?.type;
+    
+    let layerConfig = {
+        id: layerIdFinal,
+        source: sourceId
+    };
+    
+    // Configurar estilo según tipo de geometría
+    switch (geometryType) {
+        case 'Point':
+        case 'MultiPoint':
+            layerConfig.type = 'circle';
+            layerConfig.paint = {
+                'circle-radius': styleConfig.radius || 6,
+                'circle-color': styleConfig.color || '#3b82f6',
+                'circle-opacity': styleConfig.opacity || 0.8,
+                'circle-stroke-width': styleConfig.strokeWidth || 1,
+                'circle-stroke-color': styleConfig.strokeColor || '#ffffff'
+            };
+            break;
+            
+        case 'LineString':
+        case 'MultiLineString':
+            layerConfig.type = 'line';
+            layerConfig.paint = {
+                'line-color': styleConfig.color || '#ef4444',
+                'line-width': styleConfig.width || 2,
+                'line-opacity': styleConfig.opacity || 0.8
+            };
+            break;
+            
+        case 'Polygon':
+        case 'MultiPolygon':
+            // Agregar capa de relleno
+            map.addLayer({
+                id: `${layerIdFinal}-fill`,
+                type: 'fill',
+                source: sourceId,
+                paint: {
+                    'fill-color': styleConfig.fillColor || '#10b981',
+                    'fill-opacity': styleConfig.fillOpacity || 0.3
+                }
+            });
+            
+            // Agregar capa de borde
+            layerConfig.type = 'line';
+            layerConfig.paint = {
+                'line-color': styleConfig.strokeColor || '#059669',
+                'line-width': styleConfig.strokeWidth || 2,
+                'line-opacity': styleConfig.strokeOpacity || 0.8
+            };
+            break;
+            
+        default:
+            console.warn(`Tipo de geometría no soportado: ${geometryType}`);
+            return;
+    }
+    
+    map.addLayer(layerConfig);
+    console.log(`Capa WFS '${serviceKey}' agregada con ID: ${layerIdFinal}`);
+    return layerIdFinal;
+}
+
+// Función para actualizar datos WFS en tiempo real
+async function updateWFSLayer(map, sourceId, serviceKey, bbox = null) {
+    const data = await fetchWFSData(serviceKey, bbox);
+    if (data && map.getSource(sourceId)) {
+        map.getSource(sourceId).setData(data);
+        console.log(`Datos WFS actualizados para: ${sourceId}`);
+    }
+}
+
+// Función para agregar controles de capas WMS/WFS
+function addLayerControls(map) {
+    const controlsContainer = document.createElement('div');
+    controlsContainer.className = 'mapboxgl-ctrl mapboxgl-ctrl-group';
+    controlsContainer.style.cssText = `
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: white;
+        border-radius: 4px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        padding: 10px;
+        max-width: 200px;
+        z-index: 1000;
+    `;
+    
+    controlsContainer.innerHTML = `
+        <div style="margin-bottom: 10px; font-weight: bold; font-size: 14px;">Capas Disponibles</div>
+        
+        <div style="margin-bottom: 8px;">
+            <label style="display: flex; align-items: center; font-size: 12px;">
+                <input type="checkbox" id="wms-inegi" style="margin-right: 5px;">
+                INEGI (WMS)
+            </label>
+        </div>
+        
+        <div style="margin-bottom: 8px;">
+            <label style="display: flex; align-items: center; font-size: 12px;">
+                <input type="checkbox" id="wms-osm" style="margin-right: 5px;">
+                OSM (WMS)
+            </label>
+        </div>
+        
+        <div style="margin-bottom: 8px;">
+            <label style="display: flex; align-items: center; font-size: 12px;">
+                <input type="checkbox" id="wfs-geoserver" style="margin-right: 5px;">
+                Urban Growth (WFS)
+            </label>
+        </div>
+        
+        <div style="margin-bottom: 8px;">
+            <label style="display: flex; align-items: center; font-size: 12px;">
+                <input type="checkbox" id="wfs-inegi" style="margin-right: 5px;">
+                INEGI Localidades (WFS)
+            </label>
+        </div>
+    `;
+    
+    // Event listeners para los controles
+    controlsContainer.addEventListener('change', (e) => {
+        const checkbox = e.target;
+        const [type, service] = checkbox.id.split('-');
+        
+        if (checkbox.checked) {
+            if (type === 'wms') {
+                addWMSLayer(map, service);
+            } else if (type === 'wfs') {
+                addWFSLayer(map, service);
+            }
+        } else {
+            // Remover capa
+            const layerId = `${type}-${service}-layer`;
+            if (map.getLayer(layerId)) {
+                map.removeLayer(layerId);
+            }
+            if (map.getLayer(`${layerId}-fill`)) {
+                map.removeLayer(`${layerId}-fill`);
+            }
+            if (map.getSource(`${type}-${service}`)) {
+                map.removeSource(`${type}-${service}`);
+            }
+        }
+    });
+    
+    document.body.appendChild(controlsContainer);
+    return controlsContainer;
+}
+
+// Ejemplo de uso específico para Cancún
+function loadCancunLayers(map) {
+    // Cargar datos específicos de Cancún al cargar el mapa
+    map.on('load', () => {
+        // Ejemplo: Agregar capa WMS de INEGI para contexto
+        // addWMSLayer(map, 'inegi', 'cancun-context');
+        
+        // Ejemplo: Cargar datos WFS de crecimiento urbano
+        // addWFSLayer(map, 'geoserver', 'urban-growth', {
+        //     fillColor: '#ef4444',
+        //     fillOpacity: 0.4,
+        //     strokeColor: '#dc2626',
+        //     strokeWidth: 2
+        // });
+        
+        // Agregar controles de capas
+        addLayerControls(map);
+    });
+}
+
 // Sistema avanzado de transiciones fluidas
 function createMapToChartTransition(mapElements, chartContainer, chartData) {
     const elements = mapElements.nodes();
