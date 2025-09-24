@@ -119,6 +119,13 @@ function setupMap() {
 
     // Esperar a que el mapa cargue antes de añadir elementos
     map.on('load', function() {
+        // Inicializar el mapa como visible por defecto
+        const mapaContainer = document.getElementById('mapa-container');
+        mapaContainer.classList.add('visible');
+        
+        // Agregar las capas QGIS
+        addQGISLayers();
+        
         // Crear un contenedor para las visualizaciones D3
         const container = document.createElement('div');
         container.className = 'mapbox-d3-layer';
@@ -174,9 +181,12 @@ function handleStepEnter(response) {
     // Asegurarse de que el mapa esté cargado
     if (!map || !svg) return;
     
+    // Controlar la visibilidad de las capas QGIS según el paso
+    toggleQGISLayers(response.index);
+    
     switch (response.index) {
-        case 0:
-            // Paso 0: Estado inicial - limpiar todo y resetear mapa
+        case 1:
+            // Paso 1: Estado inicial - limpiar todo y resetear mapa
             map.setStyle(streetStyle); // Asegurar estilo de calles
             map.flyTo({
                 center: [-86.85, 21.05],
@@ -197,8 +207,8 @@ function handleStepEnter(response) {
                 map.removeSource('nichupte-source');
             }
             break;
-        case 1:
-            // Paso 1: Introducción al caso - mostrar imagen
+        case 2:
+            // Paso 2: Introducción al caso - mostrar imagen
             // La imagen se maneja en enhancedHandleStepEnter
             // Mantener el mapa en estado inicial y asegurar estilo correcto
             map.setStyle(streetStyle);
@@ -214,8 +224,8 @@ function handleStepEnter(response) {
                 g.selectAll("circle, .urban-sprawl, .urban-morph").transition().duration(500).style("opacity", 0).remove();
             }
             break;
-        case 2:
-            // Paso 2: Expansión de la Mancha Urbana con morphing fluido
+        case 3:
+            // Paso 3: Expansión de la Mancha Urbana con morphing fluido
             map.flyTo({
                 center: [-86.85, 21.05],
                 zoom: 10.5,
@@ -252,8 +262,8 @@ function handleStepEnter(response) {
                     .attr("stroke-opacity", 0.8);
             }, 600);
             break;
-        case 3:
-            // Paso 3: Aumento de Vehículos
+        case 4:
+            // Paso 4: Aumento de Vehículos
             map.flyTo({
                 center: [-86.90, 21.05],
                 zoom: 11.5,
@@ -277,8 +287,8 @@ function handleStepEnter(response) {
                 .duration(800)
                 .attr("r", 10);
             break;
-        case 4:
-            // Paso 4: Dispersión poblacional y abandono del centro
+        case 5:
+            // Paso 5: Dispersión poblacional y abandono del centro
             map.flyTo({
                 center: [-86.85, 21.05],
                 zoom: 11,
@@ -329,8 +339,8 @@ function handleStepEnter(response) {
                 
             break;
             
-        case 5:
-            // Paso 5: Impacto ambiental con efectos 3D
+        case 6:
+            // Paso 6: Impacto ambiental con efectos 3D
             map.flyTo({
                 center: [-86.80, 21.08],
                 zoom: 11.5,
@@ -374,8 +384,8 @@ function handleStepEnter(response) {
             }, 1500);
             break;
             
-        case 6:
-            // Paso 6: Desigualdad territorial con efectos de pulso
+        case 7:
+            // Paso 7: Desigualdad territorial con efectos de pulso
             map.flyTo({
                 center: [-86.88, 21.06],
                 zoom: 10.5,
@@ -397,8 +407,8 @@ function handleStepEnter(response) {
             }, 1000);
             break;
             
-        case 7:
-            // Paso 7: Motorización acelerada con transición fluida
+        case 8:
+            // Paso 8: Motorización acelerada con transición fluida
             map.flyTo({
                 center: [-86.85, 21.05],
                 zoom: 10,
@@ -420,8 +430,8 @@ function handleStepEnter(response) {
             g.selectAll(".density-label").transition().duration(500).remove();
             break;
             
-        case 8:
-            // Paso 8: Consecuencias sociales y urbanas
+        case 9:
+            // Paso 9: Consecuencias sociales y urbanas
             map.flyTo({
                 center: [-86.85, 21.05],
                 zoom: 11,
@@ -440,8 +450,8 @@ function handleStepEnter(response) {
             
             break;
             
-        case 9:
-            // Paso 9: Sustainable Solutions (Estrategias de futuro)
+        case 10:
+            // Paso 10: Sustainable Solutions (Estrategias de futuro)
             map.flyTo({
                 center: [-86.82, 21.08],
                 zoom: 12,
@@ -460,8 +470,8 @@ function handleStepEnter(response) {
             
             break;
             
-        case 10:
-            // Paso 10: Looking ahead (Cierre / Call to action)
+        case 11:
+            // Paso 11: Looking ahead (Cierre / Call to action)
             map.flyTo({
                 center: [-86.85, 21.05],
                 zoom: 9.5,
@@ -529,40 +539,51 @@ let populationData = [];
 
 
 function limpiarVisuals() {
-    document.getElementById('chart-container').style.opacity = 0;
-    document.getElementById('image-container').style.opacity = 0;
-    document.getElementById('video-container').style.opacity = 0;
-    document.getElementById('mapa-container').style.opacity = 1;
+    // Usar transiciones suaves para ocultar elementos
+    transicionarVisual('chart-container', false, 1200);
+    transicionarVisual('image-container', false, 1200);
+    transicionarVisual('video-container', false, 1200);
     
-    // Limpiar completamente el contenido de los contenedores
-    const chartContainer = d3.select('#chart-container').select('svg');
-    chartContainer.selectAll('*').remove();
-    
-    // Limpiar elementos D3 del mapa
-    if (typeof g !== 'undefined' && g) {
-        g.selectAll('.forest-loss-bar, .forest-year-label, .vehicle-bar, .vehicle-year-label').remove();
-    }
+    // Limpiar completamente el contenido de los contenedores después de la transición
+    setTimeout(() => {
+        const chartContainer = d3.select('#chart-container').select('svg');
+        chartContainer.selectAll('*').remove();
+        
+        // Limpiar elementos D3 del mapa
+        if (typeof g !== 'undefined' && g) {
+            g.selectAll('.forest-loss-bar, .forest-year-label, .vehicle-bar, .vehicle-year-label').remove();
+        }
+    }, 600); // Limpiar a la mitad de la transición
 }
 
-function transicionarVisual(contenedor, mostrar = true, duracion = 1000) {
+function transicionarVisual(contenedor, mostrar = true, duracion = 1200) {
     const elemento = document.getElementById(contenedor);
+    if (!elemento) return;
+    
     if (mostrar) {
-        elemento.style.transition = `opacity ${duracion}ms ease-in-out, transform ${duracion}ms ease-in-out`;
-        elemento.style.opacity = 1;
-        elemento.style.transform = 'scale(1)';
+        // Remover clases de oculto y agregar visible
+        elemento.classList.remove('hidden');
+        elemento.classList.add('visible');
+        
+        // Para compatibilidad, también actualizar styles inline con transición suave tipo "telón"
+        elemento.style.opacity = '1';
+        elemento.style.transform = 'translateY(0)';
     } else {
-        elemento.style.transition = `opacity ${duracion}ms ease-in-out, transform ${duracion}ms ease-in-out`;
-        elemento.style.opacity = 0;
-        elemento.style.transform = 'scale(0.95)';
+        // Remover clases de visible y agregar oculto
+        elemento.classList.remove('visible');
+        elemento.classList.add('hidden');
+        
+        // Para compatibilidad, también actualizar styles inline con transición suave tipo "telón"
+        elemento.style.opacity = '0';
+        elemento.style.transform = 'translateY(-100vh)';
     }
 }
 
 // Función mejorada con patrón data().join() y transiciones fluidas
 function dibujarGraficoBarras(datos) {
     // NO limpiar visuals para mantener el texto visible
-    transicionarVisual('mapa-container', false);
     const chartContainer = document.getElementById('chart-container');
-    transicionarVisual('chart-container', true);
+    transicionarVisual('chart-container', true, 1200);
     
     const svg = d3.select(chartContainer).select('svg');
     const width = chartContainer.offsetWidth;
@@ -741,10 +762,8 @@ function createPulseEffect(selection, data) {
 }
 
 function showVideo(url) {
-    limpiarVisuals();
-    transicionarVisual('mapa-container', false);
     const videoContainer = document.getElementById('video-container');
-    transicionarVisual('video-container', true);
+    transicionarVisual('video-container', true, 1200);
     const video = videoContainer.querySelector('video');
     video.src = url;
     video.play();
@@ -835,10 +854,8 @@ function create3DForestLossBars() {
 }
 
 function showImage(url) {
-    limpiarVisuals();
-    transicionarVisual('mapa-container', false);
     const imageContainer = document.getElementById('image-container');
-    transicionarVisual('image-container', true);
+    transicionarVisual('image-container', true, 1200);
     const img = imageContainer.querySelector('img');
     img.src = url;
     // Agregar efecto blur al fondo
@@ -1234,15 +1251,15 @@ function handleStepProgress(response) {
             }
             break;
             
-        case 6: // Densidad con pulsos progresivos
+        case 7: // Densidad con pulsos progresivos
             if (g && progress > 0.3) {
                 const pulseIntensity = (progress - 0.3) / 0.7;
                 g.selectAll('.density-circle')
                     .style('filter', `drop-shadow(0 0 ${pulseIntensity * 10}px rgba(255,0,0,0.6))`);
             }
             break;
-        case 8:
-            if (response.index === 9 && populationData.length > 0) {
+        case 9:
+            if (response.index === 10 && populationData.length > 0) {
             const yearIndex = Math.floor(response.progress * (populationData.length - 1));
             const currentYearIndex = Math.max(0, Math.min(yearIndex, populationData.length - 1));
             dibujarGraficoPoblacion(populationData[currentYearIndex]);
@@ -1307,7 +1324,9 @@ function enhancedHandleStepEnter(response) {
     const configStep = multimediaSteps[response.index];
     if (!configStep) {
         limpiarVisuals();
-        transicionarVisual('mapa-container', true);
+        setTimeout(() => {
+            transicionarVisual('mapa-container', true, 1200);
+        }, 300);
         return;
     }
     
@@ -1317,18 +1336,22 @@ function enhancedHandleStepEnter(response) {
     }
     if (response.index === 8) {
         limpiarVisuals();
-        transicionarVisual('mapa-container', true);
+        setTimeout(() => {
+            transicionarVisual('mapa-container', true, 1200);
+        }, 300);
         chartInitialized = false;
         return;
     }
     if (response.index === 9) {
         limpiarVisuals();
-        // Oculta el mapa y muestra solo la gráfica
-        document.getElementById('mapa-container').style.opacity = 0;
-        transicionarVisual('chart-container', true);
-        if (populationData.length > 0) {
-            dibujarGraficoPoblacion(populationData[0]);
-        }
+        // Oculta el mapa y muestra solo la gráfica con transición suave
+        transicionarVisual('mapa-container', false, 1200);
+        setTimeout(() => {
+            transicionarVisual('chart-container', true, 1200);
+            if (populationData.length > 0) {
+                dibujarGraficoPoblacion(populationData[0]);
+            }
+        }, 600);
         return;
     }
 
@@ -1337,28 +1360,46 @@ function enhancedHandleStepEnter(response) {
     setTimeout(() => {
         switch (configStep.tipo) {
             case 'grafico-barras':
-                dibujarGraficoBarras(configStep.datos);
+                // Transición gradual: primero ocultar mapa, luego mostrar gráfico
+                transicionarVisual('mapa-container', false, 1200);
+                setTimeout(() => {
+                    dibujarGraficoBarras(configStep.datos);
+                }, 600); // La mitad de la duración de la transición
                 break;
             case 'grafico-barras-csv':
-                dibujarGraficoBarrasCSV(configStep.datos, response.index);
+                // Transición gradual: primero ocultar mapa, luego mostrar gráfico
+                transicionarVisual('mapa-container', false, 1200);
+                setTimeout(() => {
+                    dibujarGraficoBarrasCSV(configStep.datos, response.index);
+                }, 600);
                 break;
             case 'video':
-                showVideo(configStep.url);
+                // Transición gradual: primero ocultar mapa, luego mostrar video
+                transicionarVisual('mapa-container', false, 1200);
+                setTimeout(() => {
+                    showVideo(configStep.url);
+                }, 600);
                 break;
             case 'imagen':
-                showImage(configStep.url);
+                // Transición gradual: primero ocultar mapa, luego mostrar imagen
+                transicionarVisual('mapa-container', false, 1200);
+                setTimeout(() => {
+                    showImage(configStep.url);
+                }, 600);
                 break;
             default:
+                // Transición gradual: ocultar otros elementos, luego mostrar mapa
                 limpiarVisuals();
-                transicionarVisual('mapa-container', true);
+                setTimeout(() => {
+                    transicionarVisual('mapa-container', true, 1200);
+                }, 600);
         }
-    }, 300); // Timing optimizado para transiciones más fluidas
+    }, 200); // Timing optimizado para transiciones más fluidas
 // Nueva función para dibujar gráfico de barras desde CSV
 function dibujarGraficoBarrasCSV(csvPath) {
 function dibujarGraficoBarrasCSV(csvPath, stepIndex) {
-    transicionarVisual('mapa-container', false);
     const chartContainer = document.getElementById('chart-container');
-    transicionarVisual('chart-container', true);
+    transicionarVisual('chart-container', true, 1200);
     const svg = d3.select(chartContainer).select('svg');
     const width = chartContainer.offsetWidth;
     const height = chartContainer.offsetHeight;
@@ -1589,7 +1630,7 @@ window.addEventListener('load', () => {
         
         scroller.setup({
             step: ".step",
-            offset: 0.5,
+            offset: 0.2,  // Valor menor para que se active más abajo en la pantalla
             progress: true
         })
         .onStepEnter(enhancedHandleStepEnter) // 4. Llamada simplificada
@@ -1599,7 +1640,7 @@ window.addEventListener('load', () => {
             
             // Tu lógica de onStepExit está bien, la mantenemos
             switch(response.index) {
-                case 8:
+                case 9:
                     chartInitialized = false; // Importante para redibujar si se vuelve a entrar
                     if (response.direction === 'up') {
                         map.setStyle(streetStyle);
@@ -1626,4 +1667,95 @@ window.addEventListener('load', () => {
 
     window.addEventListener('resize', () => scroller.resize());
 });
+
+// Función para agregar las capas QGIS al mapa
+function addQGISLayers() {
+    // Agregar la capa de Cruces Seguros Intervenidos del servidor QGIS
+    map.addSource('qgis-cruces-source', {
+        'type': 'raster',
+        'tiles': [
+            'http://45.132.241.118/lizmap/index.php/lizmap/service?repository=etapasimplementadas20232024&project=Semaforos_2025_&SERVICE=WMS&REQUEST=GetMap&VERSION=1.3.0&LAYERS=crucesintervenidos_2023_2024&STYLES=&FORMAT=image/png&TRANSPARENT=true&CRS=EPSG:3857&WIDTH=256&HEIGHT=256&BBOX={bbox-epsg-3857}'
+        ],
+        'tileSize': 256
+    });
+    
+    map.addLayer({
+        'id': 'qgis-cruces-layer',
+        'type': 'raster',
+        'source': 'qgis-cruces-source',
+        'paint': {
+            'raster-opacity': 0.8
+        },
+        'layout': {
+            'visibility': 'visible'
+        }
+    });
+
+    // Agregar capa base del servidor QGIS (opcional)
+    map.addSource('qgis-base-source', {
+        'type': 'raster',
+        'tiles': [
+            'http://45.132.241.118/lizmap/index.php/lizmap/service?repository=etapasimplementadas20232024&project=Semaforos_2025_&SERVICE=WMS&REQUEST=GetMap&VERSION=1.3.0&LAYERS=baselayers&STYLES=&FORMAT=image/png&TRANSPARENT=true&CRS=EPSG:3857&WIDTH=256&HEIGHT=256&BBOX={bbox-epsg-3857}'
+        ],
+        'tileSize': 256
+    });
+    
+    map.addLayer({
+        'id': 'qgis-base-layer',
+        'type': 'raster',
+        'source': 'qgis-base-source',
+        'paint': {
+            'raster-opacity': 0.3
+        },
+        'layout': {
+            'visibility': 'visible'
+        }
+    });
+
+    // Centrar el mapa en el área de cobertura de los datos
+    map.fitBounds([
+        [-86.900916, 21.115437], // Southwest coordinates
+        [-86.73846, 21.207327]   // Northeast coordinates
+    ], {
+        padding: 50
+    });
+}
+
+// Función para controlar la visibilidad de las capas QGIS durante el scrollytelling
+function toggleQGISLayers(step) {
+    if (!map.getLayer('qgis-cruces-layer')) return;
+    
+    switch(step) {
+        case 0:
+        case 1:
+            // Mostrar las capas QGIS en los primeros pasos
+            map.setLayoutProperty('qgis-cruces-layer', 'visibility', 'visible');
+            map.setLayoutProperty('qgis-base-layer', 'visibility', 'visible');
+            break;
+        case 2:
+        case 3:
+        case 4:
+        case 5:
+            // Mantener visibles pero con menor opacidad
+            map.setPaintProperty('qgis-cruces-layer', 'raster-opacity', 0.5);
+            map.setPaintProperty('qgis-base-layer', 'raster-opacity', 0.2);
+            break;
+        case 6:
+        case 7:
+        case 8:
+            // Ocultar temporalmente para mostrar otras visualizaciones
+            map.setLayoutProperty('qgis-cruces-layer', 'visibility', 'none');
+            map.setLayoutProperty('qgis-base-layer', 'visibility', 'none');
+            break;
+        case 8:
+        case 9:
+        case 10:
+            // Mostrar nuevamente al final
+            map.setLayoutProperty('qgis-cruces-layer', 'visibility', 'visible');
+            map.setLayoutProperty('qgis-base-layer', 'visibility', 'visible');
+            map.setPaintProperty('qgis-cruces-layer', 'raster-opacity', 0.8);
+            map.setPaintProperty('qgis-base-layer', 'raster-opacity', 0.3);
+            break;
+    }
+}
 

@@ -1,79 +1,123 @@
 body {
-    font-family: 'Montserrat', sans-serif; /* Fuente principal para párrafos */
-    background-color: #f8fafc;
+    font-family: 'Montserrat', sans-serif;
+    background-color: #8ECAE6; /* Color más claro de la paleta */
     margin: 0;
     padding: 0;
 }
 
-/* Estilo para los encabezados de cada sección */
-.step-content h2 {
+/* Estilos para diferentes elementos de texto con colores de la paleta */
+.step-content h1 {
+    text-align: center;
+    color: #FB8500; /* Color naranja */
     font-family: 'Krona One', sans-serif;
+    font-size: 2.5em;
+}
+
+.step-content h2 {
+    text-align: center;
+    color: #8ECAE6; /* Color azul claro para mejor contraste sobre fondo oscuro */
+    font-family: 'Krona One', sans-serif;
+}
+
+.step-content p {
+    text-align: center;
+    color: #FFFFFF; /* Color blanco para mejor contraste con fondo oscuro */
+    background-color: rgba(255, 255, 255, 0.1); /* Fondo claro pero más transparente */
+    margin: 1rem 0;
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+.step-content li {
+    text-align: center;
+    color: #023047; /* Color oscuro principal */
+}
+
+.step-content strong {
+    color: #FFB703; /* Color amarillo para énfasis */
+    font-weight: bold;
 }
 
 /* Contenedor principal para la tarjeta del step 8 */
 .card-chart-container {
-    background: #ffffff;
+    background: #FFFFFF;
     border-radius: 16px;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    box-shadow: 0 8px 30px rgba(2, 48, 71, 0.15); /* Sombra con color oscuro */
     padding: 1.5rem;
     width: 100%;
     max-width: 700px;
-    /* Usamos flexbox para organizar la gráfica y el texto */
     display: flex;
     flex-direction: column;
-    gap: 1.5rem; /* Espacio entre la gráfica y el texto */
-    border: 1px solid #e2e8f0;
+    gap: 1.5rem;
+    border: 1px solid #219EBC; /* Color azul medio */
 }
 
-/* El espacio donde se dibujará la gráfica (unificado con la tarjeta) */
+/* El espacio donde se dibujará la gráfica */
 #bar-chart-dynamic {
     width: 100%;
-    height: 300px; /* Altura fija para la gráfica */
-    /* Se eliminan el fondo y el borde para que se integre en la tarjeta principal */
+    height: 300px;
 }
 
-/* Nos aseguramos de que el texto dentro de esta tarjeta se vea bien */
+/* Texto dentro de la tarjeta */
 .card-chart-container .step-content {
-    background: #fff;
-    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
-    border-radius: 12px;
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
     max-width: 700px;
     margin: 0 auto;
     padding: 2rem;
     text-align: center;
     transition: opacity 0.7s, transform 0.7s;
     opacity: 1;
+    color: #023047; /* Color oscuro principal */
 }
-
-
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
 
 /* Estilos globales */
 body {
     font-family: 'Inter', sans-serif;
-    background-color: #f8fafc;
+    background-color: #8ECAE6; /* Color más claro de la paleta */
     margin: 0;
     padding: 0;
 }
 
 /* Contenedor del gráfico */
 #graphic {
-    position: sticky; /* La clave para que el gráfico se "pegue" */
+    position: sticky;
     top: 0;
     width: 100%;
     height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #e2e8f0;
-    border-bottom: 2px solid #94a3b8;
+    background-color: #219EBC; /* Color azul medio */
+    border-bottom: 2px solid #023047; /* Color oscuro */
+    transition: opacity 1.2s ease-in-out, transform 1.2s ease-in-out;
+}
+
+/* Estados de transición para el contenedor gráfico */
+#graphic.slide-out {
+    opacity: 0;
+    transform: translateY(-100vh);
+    transition: opacity 1.2s ease-in-out, transform 1.2s ease-in-out;
+}
+
+#graphic.slide-in {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 1.2s ease-in-out, transform 1.2s ease-in-out;
 }
 
 /* Contenedor del mapa Mapbox */
 #mapa-container {
     width: 90%;
     height: 90%;
+    transition: opacity 1.2s ease-in-out, transform 1.2s ease-in-out;
+    opacity: 1;
+    transform: translateY(0);
+    background-color: #FFB703; /* Color amarillo para contraste */
+    border-radius: 8px;
 }
 
 /* Estilos para la capa D3 sobre Mapbox */
@@ -94,29 +138,34 @@ body {
     height: 100%;
 }
 
-/* Estilos para visualizaciones específicas */
+/* Estilos para visualizaciones específicas - actualizados con la paleta */
 .population-change {
     stroke-opacity: 0.8;
     mix-blend-mode: multiply;
+    stroke: #FB8500; /* Color naranja */
 }
 
 .forest-loss-bar {
-    stroke: #064e3b;
+    stroke: #023047; /* Color oscuro */
     stroke-width: 1;
+    fill: #219EBC; /* Color azul medio */
 }
 
 .vehicle-bar {
     stroke: #1e40af;
     stroke-width: 1;
+    fill: #FFB703; /* Color amarillo */
 }
 
 .density-circle {
     mix-blend-mode: multiply;
+    fill: #FB8500; /* Color naranja */
 }
 
 .density-label {
     font-family: 'Inter', sans-serif;
     text-shadow: 0px 0px 3px white;
+    color: #023047; /* Color oscuro */
 }
 
 /* Contenedor del texto (scroller) */
@@ -127,29 +176,51 @@ body {
 
 /* Cada paso individual de la historia */
 .step-content {
-    background-color: #fff;
+    background-color: #FFFFFF; /* Fondo blanco opaco para mejor contraste */
     padding: 2rem;
     border-radius: 12px;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 20px rgba(2, 48, 71, 0.1);
     max-width: 700px;
     text-align: center;
     transition: opacity 0.7s, transform 0.7s;
     opacity: 1;
+    color: #023047; /* Color oscuro principal */
+    border: 1px solid #219EBC; /* Borde azul medio */
 }
 
-.step {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem 1rem;
-    z-index: 20;
-}
-
-.step-content.is-active {
+        .step {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+            z-index: 20;
+            position: relative;
+        }
+        
+        .step-with-background {
+            position: relative;
+            background-image: url('assets/1.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            z-index: 1;
+        }
+        
+        .step-with-background::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(33, 158, 188, 0.4); /* Color azul medio (#219EBC) con 40% de opacidad */
+            z-index: 0;
+        }.step-content.is-active {
     opacity: 1;
     transform: translateY(0);
+    background-color: #023047 !important; /* Color sólido #023047 */
 }
 
 .step-content {
@@ -160,13 +231,90 @@ body {
     text-align: center;
     transition: opacity 0.7s, transform 0.7s;
     opacity: 1;
+    background-color: #023047 !important; /* Color sólido #023047, !important para asegurar prioridad */
+    box-shadow: 0 4px 20px rgba(2, 48, 71, 0.1);
+    color: #FFFFFF; /* Cambiado a blanco para mejor contraste */
 }
 
 .step.is-out {
     pointer-events: none;
 }
+
 .step.is-out .step-content {
     opacity: 0;
     transform: translateY(-100vh);
     transition: opacity 0.7s, transform 0.7s;
+}
+
+/* Transiciones suaves para contenedores de visualización */
+#chart-container, #video-container, #image-container {
+    transition: opacity 1.2s ease-in-out, transform 1.2s ease-in-out;
+    opacity: 0;
+    transform: translateY(100vh);
+    background-color: #FFB703; /* Color amarillo de fondo */
+    border-radius: 8px;
+}
+
+/* Estilos específicos para el primer step */
+.step-with-background .step-content {
+    background-color: transparent !important; /* Mantenemos transparente para los pasos con imagen de fondo */
+    box-shadow: none;
+    border: none;
+    max-width: 800px;
+}
+
+.step-with-background .step-content p {
+    background-color: transparent;
+    color: white;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8);
+}
+
+.step-with-background .step-content h1 {
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.step-with-background .step-content strong {
+    color: white;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8);
+}
+
+#chart-container.visible, #video-container.visible, #image-container.visible,
+#mapa-container.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+#chart-container.hidden, #video-container.hidden, #image-container.hidden,
+#mapa-container.hidden {
+    opacity: 0;
+    transform: translateY(-100vh);
+}
+
+/* Elementos adicionales para mejor integración de la paleta */
+.step-content p, .step-content li {
+    color: #FFFFFF; /* Color claro para texto sobre fondo oscuro */
+}
+
+.step-content strong {
+    color: #FFB703; /* Color amarillo para énfasis */
+}
+
+/* Botones o elementos interactivos si los hay */
+.button-primary {
+    background-color: #FB8500;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.button-secondary {
+    background-color: #219EBC;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
 }
