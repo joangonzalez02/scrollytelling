@@ -318,3 +318,162 @@ body {
     border-radius: 6px;
     cursor: pointer;
 }
+
+/* Estilos para el gráfico de vehículos */
+.chart-container {
+    background-color: #FFFFFF;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(2, 48, 71, 0.1);
+    padding: 1.5rem;
+    margin: 2rem auto;
+    width: 90%;
+    max-width: 700px;
+    height: 380px;
+    overflow: visible;
+    position: relative;
+}
+
+#vehicleGrowthChart {
+    width: 100% !important;
+    height: 100% !important; /* Fill the container */
+    margin: 0 auto;
+    display: block; /* Remove flex which was centering the small SVG */
+    position: relative;
+}
+
+/* Make the vehicle chart step match the same visual size as the "Cinco Décadas" chart */
+.step[data-step="27"] {
+    /* keep the step full-height for scroll behavior but center the content */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem 1rem; /* reduce vertical padding to remove extra whitespace */
+    min-height: 100vh;
+}
+
+.step[data-step="27"] .step-content {
+    /* reuse the same max-width and background as other chart steps */
+    max-width: 700px !important;
+    width: auto !important;
+    display: inline-block !important; /* prevent full-width stretch */
+    margin: 0 auto !important;
+    padding: 0.75rem 1rem !important;
+    background-color: #023047 !important; /* keep existing theme */
+    box-shadow: 0 4px 20px rgba(2, 48, 71, 0.1) !important;
+}
+
+.step[data-step="27"] .chart-container {
+    display: inline-block !important; /* keep container sized to content */
+    width: auto !important;
+    max-width: 800px !important; /* Aumentado de 700px */
+    height: 500px !important;    /* Aumentado de 380px */
+    padding: 1rem !important;
+    margin: 0 auto !important;
+    background-color: #FFFFFF !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 20px rgba(2,48,71,0.1) !important;
+}
+
+/* Ensure tooltip is positioned relative to the chart container */
+.step[data-step="27"] .tooltip {
+    position: absolute;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+/* Force the SVG to respect the exact pixel height inside the chart container */
+.step[data-step="27"] #vehicleGrowthChart,
+.step[data-step="27"] #vehicleGrowthChart svg {
+    height: 500px !important;
+    max-height: 500px !important;
+    width: 100% !important;
+    display: block !important;
+}
+
+/* Small screens: reduce chart height to avoid overflow */
+@media (max-width: 600px) {
+    .step[data-step="27"] .chart-container,
+    .step[data-step="27"] #vehicleGrowthChart,
+    .step[data-step="27"] #vehicleGrowthChart svg {
+        height: 400px !important;
+        max-height: 400px !important;
+    }
+}
+
+#vehicleGrowthChart .line {
+    fill: none;
+    stroke-width: 3;
+}
+
+#vehicleGrowthChart .vehicles-line {
+    stroke: #FB8500;
+}
+
+#vehicleGrowthChart .vehicle-point {
+    cursor: pointer;
+    transition: r 0.2s ease;
+}
+
+#vehicleGrowthChart .vehicle-point:hover {
+    r: 8;
+}
+
+#vehicleGrowthChart .x-axis path,
+#vehicleGrowthChart .y-axis path {
+    stroke: #023047;
+    stroke-width: 1;
+}
+
+#vehicleGrowthChart .x-axis text,
+#vehicleGrowthChart .y-axis text {
+    fill: #023047;
+    font-size: 12px;
+}
+
+#vehicleGrowthChart .title {
+    font-size: 16px;
+    font-weight: bold;
+    fill: #023047;
+}
+
+#vehicleGrowthChart .axis-label {
+    font-size: 12px;
+    fill: #555;
+}
+
+#vehicleGrowthChart .info-box rect {
+    fill: rgba(255, 255, 255, 0.9);
+    stroke: #FB8500;
+    stroke-width: 1;
+}
+
+#vehicleGrowthChart .info-box text {
+    font-size: 11px;
+    fill: #023047;
+}
+
+/* Tooltip para el gráfico */
+.tooltip {
+    position: absolute;
+    background: rgba(2, 48, 71, 0.95);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.tooltip::before {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border: 5px solid transparent;
+    border-top-color: rgba(2, 48, 71, 0.95);
+}

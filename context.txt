@@ -1,0 +1,125 @@
+Step 1: Portada / Hook
+Texto:
+“Cancún, destino internacional de primer nivel, es también un territorio urbano en constante transformación. Su crecimiento acelerado ha traído consigo retos de movilidad, sostenibilidad y justicia urbana. Hoy, la gran oportunidad de nuestra ciudad es compatibilizar su liderazgo turístico global con la construcción de un espacio habitable, equitativo y resiliente para todas y todos sus habitantes. En esta contradicción se juega no solo la competitividad del destino, sino la posibilidad de construir un Cancún justo, sostenible y con calidad de vida.”
+
+Visual sugerido: Imagen aérea contrastando Zona Hotelera, Laguna Nichupté y ciudad continental.
+
+⸻
+Step 2: Imagen 2.jpg
+
+⸻
+Step 3: Digging in (Introducción al caso)
+Texto:
+“A diferencia de muchas ciudades costeras de América Latina, Cancún nació como un proyecto planificado bajo el modelo de los Centros Integralmente Planeados de FONATUR en los años setenta. Desde su origen se trazaron dos espacios en tensión: la franja turística frente al Caribe y la ciudad continental separada por la laguna Nichupté. Lo que comenzó como un modelo de modernidad turística pronto se convirtió en el hogar de cientos de miles de familias. Este tránsito de destino global a ciudad viva explica gran parte de los retos actuales: desigualdades, expansión acelerada y presión ambiental, pero también abre la puerta a imaginar un Cancún más inclusivo y cercano.”
+
+⸻
+
+Step 4: Visual sugerido: Mapa histórico de la franja hotelera y supermanzanas iniciales.
+Transición: zoom in a la franja hotelera del mapa -> zoom out -> zoom in a la ciudad continental.
+⸻
+
+Step 5: Población en perspectiva
+
+Texto:
+“En cinco décadas, Cancún pasó de 6,867 habitantes en 1970 a más de 911 mil en 2020. Este incremento del 441% en los setenta y del 375% en los noventa convirtió a nuestro municipio en uno de los territorios más dinámicos de América Latina. Esta urbanización acelerada desafió la capacidad de la planeación pública, pero también muestra la fuerza y resiliencia de quienes han hecho de Cancún su hogar. Cada familia y cada migrante ha aportado al carácter único de la ciudad, construyendo un territorio de oportunidades y contrastes.”
+
+Visual sugerido: Gráfico comparativo (México – Mundo – Q. Roo – Benito Juárez, 1970–2020).
+
+Gráfico de puntos con una línea de Crecimiento Poblacional, crece con scroll hacia abajo, decrece con scroll hacia arriba, muestra tooltip de porcentaje de crecimiento y muestra filtro para elegir entre los valores de población México,Poblacion Mundo,Población Benito Juárez,Población Resto de Quintana Roo,Población Todo de Quintana Roo del archivo de Población - Valores.csv
+
+
+⸻
+
+Step 6: Imagen 6.jpg
+
+⸻
+
+Step 7: Expansión urbana sin freno
+
+Texto:
+“El crecimiento poblacional se tradujo en expansión física: entre 1984 y 1990 la superficie urbana casi se duplicó, y entre 2000 y 2010 la mancha urbana se multiplicó en 145%. Aunque en la última década el ritmo bajó al 34%, la ciudad siguió consumiendo suelo más rápido que su población. El modelo expansivo ha privilegiado la extensión sobre la consolidación, generando altos costos de infraestructura y servicios. Pero este reto es también una oportunidad: consolidar la ciudad existente, hacerla más eficiente y compacta, y aprovechar mejor cada metro cuadrado de suelo urbano.”
+
+Visual sugerido: Gráfico de crecimiento de la mancha urbana (1984–2020).
+
+
+⸻
+
+Step 8: Imagen 1975.jpg
+Step 9: Imagen 1980.jpg
+Step 10: Imagen 1985.jpg
+Step 11: Imagen 1990.jpg
+Step 12: Imagen 1995.jpg
+Step 13: Imagen 2000.jpg
+Step 14: Imagen 2005.jpg
+Step 15: Imagen 2010.jpg
+Step 16: Imagen 2015.jpg
+Step 17: Imagen 2020.jpg
+Step 18: Imagen 2025.jpg
+
+Las transiciones de las imágenes son desvanecerse para que se vea el cambio entre cada imagen
+⸻
+Step 19: Dispersión poblacional y abandono del centro
+
+Texto:
+“Entre 2010 y 2020, las zonas centrales perdieron más del 10% de su población, mientras que las periferias crecieron hasta un 30%. Más suelo para menos personas: un fenómeno que incrementa costos de transporte, servicios e infraestructura. Revitalizar nuestros barrios centrales, fortalecer los espacios comunitarios y equilibrar el desarrollo urbano es fundamental para recuperar cohesión social y calidad de vida. Apostar por un Cancún más compacto significa reactivar la vida urbana en sus centros y acercar servicios a quienes habitan en la periferia.”
+
+Step 20: Visual sugerido: Mapa de tasa de cambio poblacional por AGEB (2010–2020).
+
+
+⸻
+
+Step 21: Impacto ambiental
+
+Texto:
+“La expansión urbana ha presionado ecosistemas frágiles como selvas y manglares. Solo en 2006 se perdieron más de 90 km² de vegetación, comprometiendo la recarga de acuíferos, la protección ante huracanes y la captura de carbono. Cada hectárea perdida aumenta la vulnerabilidad de Cancún al cambio climático. Proteger estos ecosistemas no es solo un deber ambiental, es cuidar la vida y el futuro de nuestra ciudad. Planear con responsabilidad es invertir en resiliencia climática y en seguridad para nuestras familias.”
+
+Step 22: Visual sugerido: Gráfico de pérdida de cobertura forestal (2000–2020) + mapa ANP Nichupté.
+
+⸻
+
+ Step 23: Desigualdad territorial
+
+Texto:
+“El municipio está organizado en 22 distritos con densidades contrastantes: algunos superan los 100 habitantes por hectárea, mientras que otros no alcanzan los 10. La baja densidad en periferias implica acceso desigual a servicios y altos costos de mantenimiento urbano. Reducir estas brechas es un compromiso estratégico: más educación, salud y transporte cerca de cada hogar. La equidad territorial es la base de una ciudad justa, competitiva y con oportunidades para todas y todos.”
+
+Step 24: Visual sugerido: Mapa de densidad poblacional por distrito.
+
+⸻
+Step 25: Imagen 23.jpg
+
+⸻
+
+Step 26: Motorización acelerada
+
+Texto:
+“El parque vehicular ha crecido más rápido que la población: de 186 mil autos en 2010 a más de 452 mil en 2023 (+142%). Pasamos de 0.41 autos por vivienda en 2010 a casi 0.7 en 2020. Este crecimiento refuerza la dependencia del automóvil, genera congestión y multiplica las desigualdades: quienes no tienen vehículo enfrentan traslados más largos y menos oportunidades. El gran desafío es construir un modelo de movilidad equitativa, con transporte público eficiente y movilidad activa accesible para todas y todos.”
+
+Step 27: Visual sugerido: Gráfico interactivo con d3 del parque vehicular (2010–2023) + autos por vivienda.
+
+⸻
+
+Step 28: Consecuencias sociales y urbanas
+
+Texto:
+“El modelo expansivo se refleja en la vida cotidiana: más horas en traslados, servicios lejanos, menor convivencia comunitaria. La ciudad se encarece al mantener colonias lejanas y pierde cohesión social. Pero este rumbo puede cambiar: priorizar calidad sobre extensión, proximidad sobre distancia, equidad sobre desigualdad. Estamos a tiempo de transformar los costos invisibles en oportunidades de bienestar compartido.”
+
+Step 29: Visual sugerido: Fotos de tráfico + periferias con servicios insuficientes. Imagen 25.jpg e imagen 20.jpg
+
+⸻
+
+Step 30: Sustainable Solutions (Estrategias de futuro)
+
+Texto:
+“El futuro de Cancún no depende de crecer más, sino de crecer mejor. Contamos con experiencias que inspiran: las supermanzanas fundacionales, que integraban parques y equipamientos a escala de barrio; el Parque de la Equidad, con 16 km de espacio público y movilidad activa; y el PDU 2022, que propone una ciudad policéntrica, compacta y mixta. Todos apuntan hacia un mismo horizonte: la ciudad de la proximidad, donde vivienda, trabajo, educación y ocio estén a 15 minutos a pie o en bicicleta. No se trata de importar un modelo, sino de actualizar la lógica de proximidad con la que Cancún nació, adaptándola a los retos del siglo XXI.”
+
+Visual sugerido: Mockup “antes/después” de calle completa (banqueta, ciclovía, árboles) + foto del Parque de la Equidad (imagen 26.jpg de fondo del texto).
+
+⸻
+
+Step 31: Looking ahead (Cierre / Call to action)
+
+Texto:
+“Cancún seguirá creciendo. La pregunta es: ¿cómo lo haremos? Hoy tenemos la posibilidad de transformar los retos en oportunidades y proyectar un Cancún ordenado, resiliente y justo. Desde el IMPLAN impulsamos estrategias de planeación que priorizan la equidad, la sostenibilidad y la proximidad. Pero la construcción de esta ciudad no depende solo del gobierno: requiere la participación activa de la ciudadanía. El futuro de Cancún está en nuestras manos, y juntos podemos hacerlo posible.”
+
+Visual sugerido: Imagen conceptual de ciudad compacta, verde y caminable + logotipo IMPLAN. (imagen de fondo 27.png)
+

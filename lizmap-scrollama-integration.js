@@ -9,20 +9,14 @@ let lizmapManager = null;
 // Configuración de cuándo mostrar Lizmap en cada step
 const lizmapStepsConfig = {
     // Steps donde Lizmap debe estar visible
-    visibleSteps: [9, 11, 13, 15, 17, 19, 21], // Step 7 eliminado
+    visibleSteps: [4, 20, 22, 24],
     
     // Steps donde debe cambiar automáticamente
-    autoChangeSteps: [9, 11, 13, 15, 17, 19], // Step 7 eliminado
+    autoChangeSteps: [4, 20, 22, 24],
     
-    // Configuración de botones para mostrar Lizmap manualmente
+    // Configuración de botones para mostrar Lizmap manualmente (si es necesario)
     manualButtons: {
-        6: "Ver crecimiento demográfico",
-        8: "Ver expansión territorial", 
-        10: "Ver distribución poblacional",
-        12: "Ver impacto ambiental",
-        14: "Ver desigualdad territorial",
-        16: "Ver infraestructura vial",
-        18: "Ver equipamiento urbano"
+        // Los mapas ahora se muestran automáticamente en los steps correspondientes
     }
 };
 
@@ -123,15 +117,18 @@ function setupLizmapScrollamaIntegration() {
     };
 }
 
-// Manejar cambios de step para Lizmap con transiciones automáticas
+// Manejar cambios de step para Lizmap con transiciones automáticas - versión mejorada
 function handleLizmapStepChange(response) {
     if (!lizmapManager) return;
     
     const stepIndex = response.index;
     const isVisible = lizmapStepsConfig.visibleSteps.includes(stepIndex);
     const shouldAutoChange = lizmapStepsConfig.autoChangeSteps.includes(stepIndex);
+    const direction = response.direction;
     
-    console.log(`Cambio de step a ${stepIndex}, visible: ${isVisible}, autoChange: ${shouldAutoChange}`);
+    console.log(`Cambio de step a ${stepIndex}, visible: ${isVisible}, autoChange: ${shouldAutoChange}, dirección: ${direction}`);
+    
+    // No ocultar automáticamente - el mapa se mantiene hasta que se cierre manualmente
     
     // Controlar la transición de telón del contenedor de Lizmap
     const lizmapContainer = document.getElementById('lizmap-scrolly-container');
@@ -147,18 +144,14 @@ function handleLizmapStepChange(response) {
     
     // Si el step actual debe mostrar Lizmap automáticamente
     if (shouldAutoChange) {
+        console.log('Mostrando mapa para step con auto-cambio:', stepIndex);
         setTimeout(() => {
             lizmapManager.showForStep(stepIndex);
         }, 300); // Delay para sincronizar con la animación del telón
     }
-    // Si Lizmap está visible pero el step actual no debe mostrarlo, ocultarlo
-    else if (lizmapManager.isVisible && !isVisible) {
-        setTimeout(() => {
-            lizmapManager.hide();
-        }, 100);
-    }
     // Si Lizmap está visible y el step cambia dentro de los steps visibles
     else if (lizmapManager.isVisible && isVisible) {
+        console.log('Cambiando a nuevo step de mapa:', stepIndex);
         setTimeout(() => {
             lizmapManager.changeToStep(stepIndex);
         }, 300);

@@ -1,54 +1,37 @@
 <!DOCTYPE html>
-<html l        /* Configuración del mapa base con transiciones tipo telón simplificadas */
-        #map { 
-            position: fixed; 
-            top: 0; 
-            left: 0;
-            bottom: 0; 
-            width: 100%; 
-            height: 100vh;
-            z-index: 1; /* Debajo del contenedor Lizmap (z-index: 2) */
-            /* Transiciones suaves */
-            transition: all 0.8s ease-in-out;
-            transform-origin: top center;
-            /* Estado inicial: oculto */
-            opacity: 0;
-            transform: translateY(-100%);
-            visibility: hidden;
-        }
-        
-        #map.curtain-up {
-            opacity: 1;
-            transform: translateY(0);
-            visibility: visible;
-        }
-        
-        #map.curtain-down {
-            opacity: 0;
-            transform: translateY(-100%);
-            visibility: hidden;
-        }>
+<html lang="es">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lizmap Scrollytelling Integrado</title>
+    <title>Cancún: Entre el Destino Global y la Ciudad Justa</title>
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.js"></script>
     <script src="https://unpkg.com/scrollama"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-annotation/2.5.1/d3-annotation.min.js"></script>
-    <!-- Comentado para evitar conflictos: <script src="main.js"></script> -->
     <script src="lizmap-config.js"></script>
-    <script>console.log('lizmap-config.js cargado, lizmapLayerConfig:', typeof lizmapLayerConfig);</script>
     <script src="lizmap-manager.js"></script>
-    <script>console.log('lizmap-manager.js cargado, LizmapScrollytellingManager:', typeof LizmapScrollytellingManager);</script>
     <script src="lizmap-scrollama-integration.js"></script>
-    <script>console.log('lizmap-scrollama-integration.js cargado');</script>
+    <script src="population-chart.js"></script>
+    <script src="vehicle-chart.js?v=1727244000"></script>
+    <script src="urban-evolution.js"></script>
+    <script src="main.js"></script>
     <style>
         * { box-sizing: border-box; }
         body { 
             margin: 0; 
             padding: 0; 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        /* Estilo específico para step 1 con video */
+        section[data-step="1"] {
+            background: none !important;
+        }
+        
+        section[data-step="1"]::before,
+        section[data-step="1"]::after {
+            display: none !important;
         }
         
         /* Configuración del mapa base con transiciones tipo telón simplificadas */
@@ -70,22 +53,100 @@
         
         /* Estilos para el contenedor de Lizmap con transiciones de cortina */
         .lizmap-scrolly-container {
-            transition: all 0.8s ease-in-out !important;
-            opacity: 0;
-            transform: translateY(100%);
-            visibility: hidden;
+            width: 100% !important;
+            background: white;
+            transition: all 800ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
         }
         
-        .lizmap-scrolly-container.curtain-up {
-            opacity: 1;
-            transform: translateY(0);
-            visibility: visible;
-        }
-        
-        .lizmap-scrolly-container.curtain-down {
+        /* Cuando está como overlay (fuera del flujo) */
+        .lizmap-scrolly-container.overlay {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            height: 100vh !important;
+            z-index: 1000 !important;
+            display: none;
             opacity: 0;
             transform: translateY(-100%);
             visibility: hidden;
+            pointer-events: none;
+        }
+        
+        .lizmap-scrolly-container.overlay.curtain-up {
+            opacity: 1 !important;
+            transform: translateY(0) !important;
+            visibility: visible !important;
+            background: white !important;
+            pointer-events: none !important;
+        }
+        
+        .lizmap-scrolly-container.overlay.curtain-down {
+            opacity: 0 !important;
+            transform: translateY(-100%) !important;
+            visibility: hidden !important;
+            transition: all 800ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+        
+        /* Cuando está integrado en un step (parte del flujo) */
+        .step .lizmap-scrolly-container {
+            position: relative !important;
+            height: 600px !important;
+            z-index: 1 !important;
+            display: block !important;
+            opacity: 1 !important;
+            transform: none !important;
+            visibility: visible !important;
+            pointer-events: auto !important;
+            margin: 20px 0 !important;
+        }
+        
+        /* Estilo para el botón de cierre */
+        .lizmap-close-btn {
+            position: absolute !important;
+            top: 20px !important;
+            right: 20px !important;
+            background-color: #FB8500 !important; /* Color naranja de la paleta */
+            color: white !important;
+            font-size: 36px !important;
+            width: 60px !important;
+            height: 60px !important;
+            border: 2px solid white !important;
+            border-radius: 50% !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            cursor: pointer !important;
+            z-index: 99999 !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+            transition: all 0.2s ease !important;
+            pointer-events: auto !important; /* Asegurarse de que siempre capture clics */
+        }
+
+        .lizmap-close-btn:hover {
+            background-color: #FF9E2C !important;
+            transform: scale(1.1) !important;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.7) !important;
+        }
+
+        .lizmap-close-btn:active {
+            transform: scale(0.95) !important;
+            background-color: #FF6500 !important;
+        }
+        
+        /* Estilos para el iframe de Lizmap */
+        .lizmap-scrolly-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+        
+        /* Asegurarse de que los steps con mapa permitan el scroll */
+        .step.has-map {
+            z-index: 3; /* Por encima del mapa para permitir scroll */
         }
         
         /* Estilos para el scrollytelling */
@@ -105,6 +166,15 @@
             position: relative;
         }
         
+        /* Estilos especiales para los steps de años urbanos */
+        .step.urban-year-image {
+            padding: 0 !important;
+            margin: 0 !important;
+            background: transparent !important;
+            z-index: 2;
+            color: transparent !important;
+        }
+        
         .step.has-map {
             /* Steps con mapas/visualizaciones - fondo transparente, sin texto */
             background: transparent;
@@ -119,72 +189,85 @@
             overflow: hidden !important;
         }
         
-        /* Estos estilos son reemplazados por los de abajo para dar texto blanco y fondo azul */
-        /* Se comentan para evitar conflictos */
-        /*
-        .step:nth-child(odd) {
-            background: rgba(255, 255, 255, 0.95);
+        /* Estilos diferenciados para steps de texto vs mapa/visualizaciones */
+        .step:not(.has-map):not(.urban-year-image) {
+            /* Steps de texto - fondo gradiente como demo-lizmap */
+            background: linear-gradient(135deg, rgba(13, 71, 161, 0.95), rgba(25, 118, 210, 0.95));
+            color: white;
         }
         
-        .step:nth-child(even) {
-            background: rgba(248, 249, 250, 0.95);
-        }
-        */
-        
+        /* Estilo del contenido de texto similar a demo-lizmap */
         .step-content {
-            max-width: 600px;
+            font-size: 24px;
+            font-weight: normal;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: 0 auto;
         }
         
-        /* Estos estilos son sobrescritos más abajo para dar texto blanco */
-        /*
+        /* Excepción para que la sombra no se aplique al contenido del gráfico */
+        .chart-container text,
+        .chart-container .data-selector,
+        .chart-container .data-selector label {
+            text-shadow: none;
+        }
+        
         .step-content h1 {
-            color: #2c3e50;
-            font-size: 2.5em;
-            margin-bottom: 20px;
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 30px;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.7);
+            color: white;
             text-align: center;
         }
         
         .step-content h2 {
-            color: #34495e;
-            font-size: 1.8em;
-            margin-bottom: 15px;
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 25px;
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.6);
+            color: white;
+            text-align: center;
         }
-        */
         
-        /* Estos estilos son sobrescritos más abajo para dar texto blanco */
-        /*
         .step-content p {
-            color: #555;
-            font-size: 1.1em;
-            line-height: 1.6;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            font-size: 20px;
+            color: white;
         }
-        */
+        
+        .step-content strong {
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            color: white;
+        }
         
         /* Estilos para el gráfico interactivo con D3 */
         .chart-container {
             width: 100%;
-            height: 480px;
+            height: 550px;
             margin-top: 30px;
             background-color: rgba(255, 255, 255, 0.9);
             border-radius: 12px;
+            overflow: visible;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #populationGrowthChart {
+            width: 100%;
+            height: 100%;
+            min-height: 480px;
+            display: flex;
+            flex-direction: column;
             padding: 25px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
             animation: fadeIn 1s ease-in-out;
             position: relative;
             overflow: hidden;
-            border-left: 5px solid #FB8500;
-        }
-        
-        .chart-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 6px;
-            background: linear-gradient(90deg, #FB8500, #FFB703);
-            border-radius: 12px 12px 0 0;
         }
         
         .chart-container .axis path,
@@ -231,20 +314,7 @@
             stroke: rgba(200, 200, 200, 0.2);
         }
         
-        .chart-container .annotation-note-title {
-            font-weight: bold;
-            font-size: 13px;
-        }
-        
-        .chart-container .annotation-note-label {
-            font-size: 12px;
-        }
-        
-        .chart-container .annotation path {
-            stroke: #FB8500;
-            stroke-width: 2px;
-        }
-        
+        /* Estilos para el tooltip */
         .chart-container .tooltip {
             position: absolute;
             padding: 12px 18px;
@@ -284,31 +354,98 @@
             font-size: 16px;
         }
         
-        .chart-container .tooltip .growth {
-            font-size: 13px;
-            display: flex;
-            align-items: center;
-            margin-top: 8px;
-            position: relative;
+        /* Transición de imágenes para la evolución urbana */
+        .urban-evolution-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: 0;
         }
         
-        .chart-container .tooltip .growth::before {
-            content: '↑';
-            display: inline-block;
-            margin-right: 5px;
-            color: #FB8500;
-            font-weight: bold;
+        .urban-evolution-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+            background-size: cover;
+            background-position: center;
+        }
+        
+        .urban-evolution-image.active {
+            opacity: 1;
         }
 
+        /* Estilos específicos para las imágenes de evolución urbana */
+        .urban-year-image {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            background: transparent !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* Contenedor de fondo para evolución urbana */
+        #urban-evolution-background {
+            pointer-events: none;
+            background-color: #023047; /* Color de fondo para evitar flash blanco */
+        }
+        
+        .urban-bg-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            opacity: 0;
+            transition: opacity 0.8s ease-in-out;
+        }
+        
+        .urban-bg-image.active {
+            opacity: 1;
+        }
+        
+
+        
+        /* Footer */
+        .footer {
+            background-color: #023047;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9em;
+        }
+        
+        .footer img {
+            max-height: 60px;
+            margin: 10px;
+        }
+        
+        /* Animaciones */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
-        /* Responsivo */
+        
+        .fade-in {
+            animation: fadeIn 1s ease-out forwards;
+            opacity: 0;
+        }
+        
+        /* Media queries para responsividad */
         @media (max-width: 768px) {
             .step {
-                padding: 50px 20px;
+                padding: 60px 20px;
             }
             
             .step-content h1 {
@@ -319,106 +456,216 @@
                 font-size: 1.5em;
             }
             
-            .step.has-map .step-content {
-                position: fixed;
-                top: auto;
-                bottom: 20px;
-                left: 20px;
-                right: 20px;
-                transform: none;
-                max-width: none;
+            .chart-container {
+                height: 450px;
             }
             
-            .chart-container {
-                height: 300px;
+            #populationGrowthChart {
+                min-height: 380px;
             }
-        }
-        
-        /* Estilos diferenciados para steps de texto vs mapa/visualizaciones */
-        .step:not(.has-map) {
-            /* Steps de texto - fondo gradiente como demo-lizmap */
-            background: linear-gradient(135deg, rgba(13, 71, 161, 0.95), rgba(25, 118, 210, 0.95));
-            color: white;
-        }
-        
-        /* Estilo del contenido de texto similar a demo-lizmap */
-        .step-content {
-            font-size: 24px;
-            font-weight: normal;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-            line-height: 1.6;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        
-        /* Excepción para que la sombra no se aplique al contenido del gráfico */
-        .chart-container text {
-            text-shadow: none;
-        }
-        
-        .step-content h1 {
-            font-size: 48px;
-            font-weight: bold;
-            margin-bottom: 30px;
-            text-shadow: 3px 3px 6px rgba(0,0,0,0.7);
-            color: white;
-            text-align: center;
-        }
-        
-        .step-content h2 {
-            font-size: 36px;
-            font-weight: bold;
-            margin-bottom: 25px;
-            text-shadow: 2px 2px 5px rgba(0,0,0,0.6);
-            color: white;
-            text-align: center;
-        }
-        
-        .step-content p {
-            margin-bottom: 20px;
-            font-size: 20px;
-            color: white;
-        }
-        
-        .step-content strong {
-            font-weight: 700;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-            color: white;
+            
+            /* Cuando está integrado en un step */
+            .step .lizmap-scrolly-container {
+                height: 400px !important;
+                margin: 20px 0 !important;
+            }
+            
+            /* Cuando está como overlay */
+            .lizmap-scrolly-container.overlay {
+                height: 100vh !important;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Mapa base de Mapbox -->
     <div id="map"></div>
+    
+    <!-- Contenedor para el mapa Lizmap -->
+    <div id="lizmap-container" class="lizmap-scrolly-container">
+        <!-- El iframe del mapa Lizmap se insertará aquí dinámicamente -->
+    </div>
+    
+    <!-- Botón X independiente que siempre estará por encima de todo -->
+    <button id="emergency-close-btn" style="position:fixed; top:20px; right:20px; z-index:999999; width:80px; height:80px; font-size:44px; background:#FB8500; color:white; border:3px solid white; border-radius:50%; cursor:pointer; display:none; box-shadow:0 6px 16px rgba(0,0,0,0.7); align-items:center; justify-content:center;" onclick="cerrarMapaAhora()">×</button>
+
+    <script>
+        // Función específica para cerrar el mapa directamente desde el botón X
+        function cerrarMapaAhora() {
+            console.log("¡BOTÓN X PRESIONADO! - Cerrando mapa ahora");
+            
+            // 1. Cerrar mediante manipulación directa del DOM (primero y rápido)
+            console.log("Aplicando cierre manual directo");
+            const container = document.querySelector('.lizmap-scrolly-container');
+            if (container) {
+                // Determinar si está dentro de un step o como overlay
+                const isInStep = container.closest('.step') !== null;
+                
+                if (isInStep) {
+                    // Está integrado en un step - ocultar completamente
+                    console.log('Ocultando mapa integrado en step');
+                    container.style.display = 'none';
+                    container.style.opacity = '0';
+                    container.style.visibility = 'hidden';
+                    container.style.pointerEvents = 'none';
+                    container.style.height = '0';
+                    container.style.overflow = 'hidden';
+                    
+                    // Mover de vuelta al contenedor original
+                    const originalContainer = document.getElementById('lizmap-container');
+                    if (originalContainer && container.parentNode !== originalContainer) {
+                        container.parentNode.removeChild(container);
+                        originalContainer.appendChild(container);
+                        console.log('Contenedor movido de vuelta al lugar original');
+                    }
+                } else {
+                    // Está como overlay - aplicar animación de cortina
+                    console.log('Ocultando mapa como overlay');
+                    container.style.display = 'none';
+                    container.style.opacity = '0';
+                    container.style.visibility = 'hidden';
+                    container.style.pointerEvents = 'none';
+                    container.style.zIndex = '-1';
+                    
+                    // Añadir clase para animación
+                    container.classList.remove('curtain-up');
+                    container.classList.add('curtain-down');
+                }
+            }
+            
+            // 2. Restaurar scroll y estados del body
+            document.body.style.overflow = 'auto';
+            document.documentElement.style.overflow = 'auto';
+            document.body.classList.remove('showing-map');
+            
+            // 3. Ocultar el botón X
+            document.getElementById('emergency-close-btn').style.display = 'none';
+            
+            // 4. Intentar métodos programáticos
+            if (typeof window.hideMapVisuals === 'function') {
+                console.log("Usando hideMapVisuals");
+                try {
+                    window.hideMapVisuals();
+                } catch(e) {
+                    console.error("Error en hideMapVisuals:", e);
+                }
+            }
+            
+            if (typeof window.forceLizmapClose === 'function') {
+                console.log("Usando forceLizmapClose");
+                try {
+                    window.forceLizmapClose();
+                } catch(e) {
+                    console.error("Error en forceLizmapClose:", e);
+                }
+            }
+            
+            if (window.lizmapManager && typeof window.lizmapManager.hide === 'function') {
+                console.log("Usando lizmapManager.hide()");
+                try {
+                    window.lizmapManager.hide();
+                } catch(e) {
+                    console.error("Error en lizmapManager.hide:", e);
+                }
+            }
+            
+            if (window.LizmapScrollyManager && typeof window.LizmapScrollyManager.hide === 'function') {
+                console.log("Usando LizmapScrollyManager.hide()");
+                try {
+                    window.LizmapScrollyManager.hide();
+                } catch(e) {
+                    console.error("Error en LizmapScrollyManager.hide:", e);
+                }
+            }
+            
+            console.log("Proceso de cierre de mapa completado");
+            
+            // Para evitar propagación de eventos
+            return false;
+        }
+        
+        // Mostrar botón X solo cuando el mapa esté visible y estemos en un paso con mapa
+        setInterval(function() {
+            const mapContainer = document.querySelector('.lizmap-scrolly-container');
+            let mapVisible = false;
+            let currentStepHasMap = false;
+            
+            // Verificar si el paso actual tiene un mapa
+            const currentStepElement = document.querySelector('.step.is-active');
+            if (currentStepElement && currentStepElement.getAttribute('data-map') === 'true') {
+                currentStepHasMap = true;
+            }
+            
+            if (mapContainer) {
+                // Verificar si está como overlay
+                const isOverlay = mapContainer.classList.contains('overlay');
+                if (isOverlay) {
+                    mapVisible = window.getComputedStyle(mapContainer).visibility !== 'hidden' || 
+                               mapContainer.classList.contains('curtain-up');
+                } else {
+                    // Verificar si está integrado en un step
+                    mapVisible = window.getComputedStyle(mapContainer).display !== 'none' && 
+                               window.getComputedStyle(mapContainer).visibility !== 'hidden';
+                }
+            }
+            
+            // Mostrar botón X solo si el mapa está visible Y estamos en un paso con mapa
+            const emergencyButton = document.getElementById('emergency-close-btn');
+            if (emergencyButton) {
+                emergencyButton.style.display = (mapVisible && currentStepHasMap) ? 'flex' : 'none';
+                console.log("Estado botón X:", (mapVisible && currentStepHasMap) ? "VISIBLE" : "oculto", 
+                           "Paso con mapa:", currentStepHasMap ? "SÍ" : "NO",
+                           mapContainer ? (mapContainer.classList.contains('overlay') ? "(overlay)" : "(integrado)") : "(sin contenedor)");
+            }
+        }, 1000);
+        
+        // Función de emergencia global para cerrar el mapa con Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                console.log('¡Escape presionado! Intentando cerrar mapa...');
+                cerrarMapaAhora();
+            }
+        });
+    </script>
     
     <!-- Contenedor para imágenes de fondo -->
     <div id="image-container" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100vh; z-index: 0; overflow: hidden;">
         <img src="" style="width: 100%; height: 100%; object-fit: cover;">
     </div>
     
-    <!-- Indicador de estado eliminado -->
+    <!-- Contenedor para evolución urbana -->
+    <div id="urban-evolution-background" style="position: fixed; top: 0; left: 0; width: 100%; height: 100vh; z-index: 0;">
+        <!-- Las imágenes de años se insertarán aquí dinámicamente -->
+    </div>
     
-
-
+    <!-- Contenedor principal para el scrollytelling -->
     <main id="scroller">
-        <!-- Sección 1: Portada / Hook -->
-        <section class="step" data-step="1" style="position: relative; min-height: 100vh; background-image: url('assets/1.png'); background-size: cover; background-position: center;">
-            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(2, 48, 71, 0.75);"></div>
-            <div class="step-content" style="background-color: transparent; position: relative; z-index: 2; border: none; box-shadow: none;">
-                <h1 style="color: white; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);">Cancún: Entre el Destino Global y la Ciudad Justa</h1>
-                <p style="color: white; background-color: transparent; text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8);">Cancún, destino internacional de primer nivel, es también un territorio urbano en constante transformación. Su crecimiento acelerado ha traído consigo retos de movilidad, sostenibilidad y justicia urbana.</p>
-                <p style="color: white; background-color: transparent; text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8);">Hoy, la gran oportunidad de nuestra ciudad es compatibilizar su liderazgo turístico global con la construcción de un espacio habitable, equitativo y resiliente para todas y todos sus habitantes.</p>
-                <p style="background-color: transparent;"><strong style="color: white; text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8);">En esta contradicción se juega no solo la competitividad del destino, sino la posibilidad de construir un Cancún justo, sostenible y con calidad de vida.</strong></p>
+        <!-- Step 1: Portada / Hook -->
+        <section class="step" data-step="1" style="position: relative; overflow: hidden; background: none !important;">
+            <!-- Video de fondo con mejor implementación -->
+            <video autoplay muted loop playsinline id="background-video" style="position: absolute; width: 100%; height: 100%; object-fit: cover; z-index: -2;">
+                <source src="assets/1.mp4" type="video/mp4">
+                Tu navegador no soporta video HTML5.
+            </video>
+            
+            <!-- Capa de color con transparencia mayor -->
+            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(2, 48, 71, 0.4); z-index: -1;"></div>
+            
+            <!-- Contenido sin estilo de las tarjetas normales -->
+            <div style="position: relative; z-index: 5; max-width: 800px; margin: 0 auto; padding: 40px 20px; text-align: center;">
+                <h1 style="font-size: 48px; font-weight: bold; margin-bottom: 30px; text-shadow: 3px 3px 6px rgba(0,0,0,0.7); color: white;">Cancún: Entre el Destino Global y la Ciudad Justa</h1>
+                <p style="margin-bottom: 20px; font-size: 20px; color: white; text-shadow: 1px 1px 3px rgba(0,0,0,0.5);">Cancún, destino internacional de primer nivel, es también un territorio urbano en constante transformación. Su crecimiento acelerado ha traído consigo retos de movilidad, sostenibilidad y justicia urbana.</p>
+                <p style="margin-bottom: 20px; font-size: 20px; color: white; text-shadow: 1px 1px 3px rgba(0,0,0,0.5);">Hoy, la gran oportunidad de nuestra ciudad es compatibilizar su liderazgo turístico global con la construcción de un espacio habitable, equitativo y resiliente para todas y todos sus habitantes.</p>
+                <p style="margin-bottom: 20px; font-size: 20px; color: white; text-shadow: 1px 1px 3px rgba(0,0,0,0.5);"><strong>En esta contradicción se juega no solo la competitividad del destino, sino la posibilidad de construir un Cancún justo, sostenible y con calidad de vida.</strong></p>
             </div>
         </section>
 
-        <!-- Sección 2: Visual - Imagen aérea contrastando Zona Hotelera, Laguna Nichupté y ciudad continental -->
-        <section class="step" data-step="2" style="position: relative; min-height: 150vh; background-image: url('assets/2.jpg'); background-size: cover; background-position: center; background-attachment: fixed;">
-            <!-- Sin overlay, solo la imagen a pantalla completa con mayor espacio para verla completa -->
-            <!-- Espacio adicional para asegurar que se vea completamente antes del mapa -->
-            <div style="height: 100vh;"></div>
+        <!-- Step 2: Imagen 2.jpg -->
+        <section class="step" data-step="2" style="position: relative; min-height: 100vh;">
+            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url('assets/2.jpg'); background-size: cover; background-position: center; background-attachment: fixed;"></div>
         </section>
 
-        <!-- Sección 3: Digging in (Introducción al caso) -->
+        <!-- Step 3: Digging in (Introducción al caso) -->
         <section class="step" data-step="3">
             <div class="step-content">
                 <h2>De Proyecto Planificado a Ciudad Viva</h2>
@@ -428,15 +675,16 @@
             </div>
         </section>
         
-        <!-- Nueva Sección: Imagen 3.png después de "De Proyecto Planificado a Ciudad Viva" -->
-        <section class="step" data-step="4" style="position: relative; min-height: 150vh; background-image: url('assets/3.png'); background-size: cover; background-position: center; background-attachment: fixed;">
-            <!-- Sin overlay, solo la imagen a pantalla completa con mayor espacio para verla completa -->
-            <div style="height: 100vh;"></div>
+        <!-- Step 4: Mapa histórico de la franja hotelera y supermanzanas iniciales (usando Lizmap) -->
+        <section class="step has-map" data-step="4" data-map="true" data-map-layer="desarrollo_historico" data-map-view="hotelera">
+            <div class="step-content">
+                <h2>Mapa histórico de la franja hotelera y supermanzanas iniciales</h2>
+                <p>Visualización del crecimiento histórico de Cancún.</p>
+            </div>
         </section>
 
-        <!-- Step eliminado: Mapa histórico de la franja hotelera y supermanzanas iniciales -->
-        <!-- Sección 6: Población en perspectiva -->
-        <section class="step" data-step="6">
+        <!-- Step 5: Población en perspectiva -->
+        <section class="step" data-step="5">
             <div class="step-content">
                 <h2>Cinco Décadas de Crecimiento Extraordinario</h2>
                 <p>En cinco décadas, <strong>Cancún pasó de 6,867 habitantes en 1970 a más de 911 mil en 2020</strong>. Este incremento del 441% en los setenta y del 375% en los noventa convirtió a nuestro municipio en uno de los territorios más dinámicos de América Latina.</p>
@@ -444,19 +692,19 @@
                 <p><strong>Cada familia y cada migrante ha aportado al carácter único de la ciudad, construyendo un territorio de oportunidades y contrastes.</strong></p>
                 
                 <div class="chart-container">
-                    <div id="populationGrowthD3Chart"></div>
+                    <div id="populationGrowthChart"></div>
                     <div class="tooltip"></div>
                 </div>
             </div>
         </section>
 
-        <!-- Sección 7: Visual - Gráfico comparativo (México – Mundo – Q. Roo – Benito Juárez, 1970–2020) -->
-        <section class="step has-map" data-step="7" style="min-height: 120vh;">
-            <div style="height: 50vh;"></div>
+        <!-- Step 6: Imagen 6.jpg -->
+        <section class="step" data-step="6" style="position: relative; min-height: 100vh;">
+            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url('assets/6.jpg'); background-size: cover; background-position: center;"></div>
         </section>
-            <!-- Step eliminado: mapa antes de cinco décadas de crecimiento -->
-        <!-- Sección 8: Expansión urbana sin freno -->
-        <section class="step" data-step="8">
+
+        <!-- Step 7: Expansión urbana sin freno -->
+        <section class="step" data-step="7">
             <div class="step-content">
                 <h2>Expansión Urbana Sin Freno</h2>
                 <p>El crecimiento poblacional se tradujo en expansión física: <strong>entre 1984 y 1990 la superficie urbana casi se duplicó, y entre 2000 y 2010 la mancha urbana se multiplicó en 145%</strong>.</p>
@@ -465,13 +713,52 @@
             </div>
         </section>
 
-        <!-- Sección 8: Visual - Gráfico de crecimiento de la mancha urbana (1984–2020) -->
-        <section class="step has-map" data-step="9" style="min-height: 120vh;">
-            <div style="height: 50vh;"></div>
+        <!-- Step 8: Imagen 1975.jpg -->
+        <section class="step urban-year-image" data-step="8" data-year="1975">
         </section>
 
-        <!-- Sección 9: Dispersión poblacional y abandono del centro -->
-        <section class="step" data-step="10">
+        <!-- Step 9: Imagen 1980.jpg -->
+        <section class="step urban-year-image" data-step="9" data-year="1980">
+        </section>
+
+        <!-- Step 10: Imagen 1985.jpg -->
+        <section class="step urban-year-image" data-step="10" data-year="1985">
+        </section>
+
+        <!-- Step 11: Imagen 1990.jpg -->
+        <section class="step urban-year-image" data-step="11" data-year="1990">
+        </section>
+
+        <!-- Step 12: Imagen 1995.jpg -->
+        <section class="step urban-year-image" data-step="12" data-year="1995">
+        </section>
+
+        <!-- Step 13: Imagen 2000.jpg -->
+        <section class="step urban-year-image" data-step="13" data-year="2000">
+        </section>
+
+        <!-- Step 14: Imagen 2005.jpg -->
+        <section class="step urban-year-image" data-step="14" data-year="2005">
+        </section>
+
+        <!-- Step 15: Imagen 2010.jpg -->
+        <section class="step urban-year-image" data-step="15" data-year="2010">
+        </section>
+
+        <!-- Step 16: Imagen 2015.jpg -->
+        <section class="step urban-year-image" data-step="16" data-year="2015">
+        </section>
+
+        <!-- Step 17: Imagen 2020.jpg -->
+        <section class="step urban-year-image" data-step="17" data-year="2020">
+        </section>
+
+        <!-- Step 18: Imagen 2025.jpg -->
+        <section class="step urban-year-image" data-step="18" data-year="2025">
+        </section>
+
+        <!-- Step 19: Dispersión poblacional y abandono del centro -->
+        <section class="step" data-step="19">
             <div class="step-content">
                 <h2>Dispersión Poblacional y Abandono del Centro</h2>
                 <p><strong>Entre 2010 y 2020, las zonas centrales perdieron más del 10% de su población, mientras que las periferias crecieron hasta un 30%</strong>. Más suelo para menos personas: un fenómeno que incrementa costos de transporte, servicios e infraestructura.</p>
@@ -479,14 +766,17 @@
                 <p><strong>Apostar por un Cancún más compacto significa reactivar la vida urbana en sus centros y acercar servicios a quienes habitan en la periferia.</strong></p>
             </div>
         </section>
-
-        <!-- Sección 10: Visual - Mapa de tasa de cambio poblacional por AGEB (2010–2020) -->
-        <section class="step has-map" data-step="10" style="min-height: 120vh;">
-            <div style="height: 50vh;"></div>
+        
+        <!-- Step 20: Mapa de tasa de cambio poblacional por AGEB (2010-2020) -->
+        <section class="step has-map" data-step="20" data-map="true" data-map-layer="cambio_poblacional_ageb" data-map-view="ciudad_central">
+            <div class="step-content">
+                <h2>Mapa de tasa de cambio poblacional por AGEB (2010-2020)</h2>
+                <p>Visualización del cambio poblacional en la ciudad.</p>
+            </div>
         </section>
 
-        <!-- Sección 11: Impacto ambiental -->
-        <section class="step" data-step="11">
+        <!-- Step 21: Impacto ambiental -->
+        <section class="step" data-step="21">
             <div class="step-content">
                 <h2>El Costo Ambiental del Crecimiento</h2>
                 <p>La expansión urbana ha presionado ecosistemas frágiles como selvas y manglares. <strong>Solo en 2006 se perdieron más de 90 km² de vegetación</strong>, comprometiendo la recarga de acuíferos, la protección ante huracanes y la captura de carbono.</p>
@@ -494,14 +784,17 @@
                 <p><strong>Planear con responsabilidad es invertir en resiliencia climática y en seguridad para nuestras familias.</strong></p>
             </div>
         </section>
-
-        <!-- Sección 12: Visual - Gráfico de pérdida de cobertura forestal (2000–2020) + mapa ANP Nichupté -->
-        <section class="step has-map" data-step="12" style="min-height: 120vh;">
-            <div style="height: 50vh;"></div>
+        
+        <!-- Step 22: Mapa de pérdida de cobertura forestal (2000-2020) + ANP Nichupté -->
+        <section class="step has-map" data-step="22" data-map="true" data-map-layer="perdida_vegetacion" data-map-view="area_natural">
+            <div class="step-content">
+                <h2>Mapa de pérdida de cobertura forestal (2000-2020)</h2>
+                <p>Visualización de la pérdida de cobertura forestal y áreas naturales protegidas.</p>
+            </div>
         </section>
 
-        <!-- Sección 13: Desigualdad territorial -->
-        <section class="step" data-step="13">
+        <!-- Step 23: Desigualdad territorial -->
+        <section class="step" data-step="23">
             <div class="step-content">
                 <h2>Desigualdad Territorial</h2>
                 <p>El municipio está organizado en 22 distritos con densidades contrastantes: <strong>algunos superan los 100 habitantes por hectárea, mientras que otros no alcanzan los 10</strong>.</p>
@@ -509,14 +802,22 @@
                 <p><strong>La equidad territorial es la base de una ciudad justa, competitiva y con oportunidades para todas y todos.</strong></p>
             </div>
         </section>
-
-        <!-- Sección 14: Visual - Mapa de densidad poblacional por distrito -->
-        <section class="step has-map" data-step="14" style="min-height: 120vh;">
-            <div style="height: 50vh;"></div>
+        
+        <!-- Step 24: Mapa de densidad poblacional por distrito -->
+        <section class="step has-map" data-step="24" data-map="true" data-map-layer="densidad_poblacional" data-map-view="distritos">
+            <div class="step-content">
+                <h2>Mapa de densidad poblacional por distrito</h2>
+                <p>Visualización de la densidad poblacional por distritos.</p>
+            </div>
         </section>
 
-        <!-- Sección 15: Motorización acelerada -->
-        <section class="step" data-step="15">
+        <!-- Step 25: Imagen de la desigualdad territorial (imagen 23.jpg) -->
+        <section class="step" data-step="25" style="position: relative; min-height: 100vh;">
+            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url('assets/23.jpg'); background-size: cover; background-position: center;"></div>
+        </section>
+
+        <!-- Step 26: Motorización acelerada -->
+        <section class="step" data-step="26">
             <div class="step-content">
                 <h2>Motorización Acelerada</h2>
                 <p>El parque vehicular ha crecido más rápido que la población: <strong>de 186 mil autos en 2010 a más de 452 mil en 2023 (+142%)</strong>. Pasamos de 0.41 autos por vivienda en 2010 a casi 0.7 en 2020.</p>
@@ -525,13 +826,21 @@
             </div>
         </section>
 
-        <!-- Sección 16: Visual - Gráfico del parque vehicular (2010–2023) + autos por vivienda -->
-        <section class="step has-map" data-step="16" style="min-height: 120vh;">
-            <div style="height: 50vh;"></div>
+        <!-- Step 27: Gráfico interactivo del parque vehicular -->
+        <section class="step" data-step="27" style="max-width: 1400px; margin: 0 auto;">
+            <div class="step-content" style="min-height: 100vh; padding: 20px;">
+                <h2>Evolución del Parque Vehicular</h2>
+                <p>Crecimiento del parque vehicular y autos por vivienda en Cancún.</p>
+
+                <div class="chart-container" style="height: 80vh; width: 100%; margin: 20px auto; padding: 20px;">
+                    <div id="vehicleGrowthChart" style="width: 100%; height: 100%; background-color: white;"></div>
+                    <div class="tooltip"></div>
+                </div>
+            </div>
         </section>
 
-        <!-- Sección 17: Consecuencias sociales y urbanas -->
-        <section class="step" data-step="17">
+        <!-- Step 28: Consecuencias sociales y urbanas -->
+        <section class="step" data-step="28">
             <div class="step-content">
                 <h2>Consecuencias Sociales y Urbanas</h2>
                 <p>El modelo expansivo se refleja en la vida cotidiana: más horas en traslados, servicios lejanos, menor convivencia comunitaria. La ciudad se encarece al mantener colonias lejanas y pierde cohesión social.</p>
@@ -540,13 +849,48 @@
             </div>
         </section>
 
-        <!-- Sección 18: Visual - Fotos de tráfico + periferias con servicios insuficientes -->
-        <section class="step has-map" data-step="18" style="min-height: 120vh;">
-            <div style="height: 50vh;"></div>
+        <!-- Step 29: Fotos de tráfico + periferias con servicios insuficientes -->
+        <section class="step" data-step="29" style="position: relative; min-height: 100vh; overflow: hidden; padding: 0; margin: 0;">
+            <!-- Contenedor principal que ocupa toda la pantalla -->
+            <div style="display: flex; width: 100%; height: 100vh; position: relative;">
+                <!-- Imagen 25.jpg a la izquierda -->
+                <div class="consequence-image-left" style="flex: 1; background-image: url('assets/25.jpg'); background-size: cover; background-position: center; 
+                           opacity: 0; transform: scale(0.8) translateX(-50px); 
+                           animation: popupLeft 1.2s ease-out 0.3s forwards;"></div>
+                
+                <!-- Imagen 20.jpg a la derecha -->
+                <div class="consequence-image-right" style="flex: 1; background-image: url('assets/20.jpg'); background-size: cover; background-position: center;
+                            opacity: 0; transform: scale(0.8) translateX(50px);
+                            animation: popupRight 1.2s ease-out 0.6s forwards;"></div>
+            </div>
+            
+            <style>
+                @keyframes popupLeft {
+                    0% {
+                        opacity: 0;
+                        transform: scale(0.8) translateX(-50px);
+                    }
+                    100% {
+                        opacity: 1;
+                        transform: scale(1) translateX(0);
+                    }
+                }
+                
+                @keyframes popupRight {
+                    0% {
+                        opacity: 0;
+                        transform: scale(0.8) translateX(50px);
+                    }
+                    100% {
+                        opacity: 1;
+                        transform: scale(1) translateX(0);
+                    }
+                }
+            </style>
         </section>
 
-        <!-- Sección 19: Sustainable Solutions (Estrategias de futuro) -->
-        <section class="step" data-step="19">
+        <!-- Step 30: Estrategias de Futuro -->
+        <section class="step" data-step="30">
             <div class="step-content">
                 <h2>Estrategias de Futuro</h2>
                 <p>El futuro de Cancún no depende de crecer más, sino de <strong>crecer mejor</strong>. Contamos con experiencias que inspiran: las supermanzanas fundacionales, que integraban parques y equipamientos a escala de barrio; el Parque de la Equidad, con 16 km de espacio público y movilidad activa; y el PDU 2022, que propone una ciudad policéntrica, compacta y mixta.</p>
@@ -555,697 +899,109 @@
             </div>
         </section>
 
-        <!-- Sección 20: Visual - Mockup "antes/después" de calle completa + foto del Parque de la Equidad -->
-        <section class="step has-map" data-step="20" style="min-height: 120vh;">
-            <div style="height: 50vh;"></div>
+        <!-- Step 31: Imagen 26.jpg -->
+        <section class="step" data-step="31" style="position: relative; min-height: 100vh;">
+            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url('assets/26.jpg'); background-size: cover; background-position: center;"></div>
         </section>
 
-        <!-- Sección 21: Looking ahead (Cierre / Call to action) -->
-        <section class="step" data-step="21">
-            <div class="step-content">
-                <h2>El Futuro Está en Nuestras Manos</h2>
-                <p><strong>Cancún seguirá creciendo. La pregunta es: ¿cómo lo haremos?</strong></p>
-                <p>Hoy tenemos la posibilidad de transformar los retos en oportunidades y proyectar un Cancún ordenado, resiliente y justo. Desde el IMPLAN impulsamos estrategias de planeación que priorizan la equidad, la sostenibilidad y la proximidad.</p>
-                <p>Pero la construcción de esta ciudad no depende solo del gobierno: requiere la participación activa de la ciudadanía.</p>
-                <p><strong>El futuro de Cancún está en nuestras manos, y juntos podemos hacerlo posible.</strong></p>
+        <!-- Step 32: Looking ahead (Cierre / Call to action) -->
+        <section class="step" data-step="32" style="background: linear-gradient(135deg, rgba(13, 71, 161, 0.95), rgba(25, 118, 210, 0.95)); color: white;">
+            <div style="display: flex; align-items: center; max-width: 1200px; margin: 0 auto; gap: 30px;">
+                <!-- Columna de texto a la izquierda -->
+                <div class="step-content" style="flex: 1;">
+                    <h2>El Futuro Está en Nuestras Manos</h2>
+                    <p><strong>Cancún seguirá creciendo. La pregunta es: ¿cómo lo haremos?</strong></p>
+                    <p>Hoy tenemos la posibilidad de transformar los retos en oportunidades y proyectar un Cancún ordenado, resiliente y justo. Desde el IMPLAN impulsamos estrategias de planeación que priorizan la equidad, la sostenibilidad y la proximidad.</p>
+                    <p>Pero la construcción de esta ciudad no depende solo del gobierno: requiere la participación activa de la ciudadanía.</p>
+                    <p><strong>El futuro de Cancún está en nuestras manos, y juntos podemos hacerlo posible.</strong></p>
+                </div>
+                
+                <!-- Imagen a la derecha -->
+                <div style="flex: 1; display: flex; justify-content: center; align-items: center;">
+                    <img src="assets/27.png" style="max-width: 100%; max-height: 70vh; border-radius: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);" alt="Futuro de Cancún">
+                </div>
             </div>
         </section>
+
+        <!-- Footer con logo IMPLAN -->
+        <div class="footer">
+            <p>IMPLAN Cancún | Instituto de Planeación del Desarrollo Urbano</p>
+            <p>© 2025 - Todos los derechos reservados</p>
+        </div>
     </main>
 
     <script>
-        mapboxgl.accessToken = 'pk.eyJ1IjoibWVsbm90dGUiLCJhIjoiY21mNzhsc3FmMGtieTJrcTFtZ2FsZmNjMCJ9.z321w5lq62mb-7OQ4T8C0g';
+        // Este script ha sido movido a archivos externos:
+        // - cancun-main.js: configuración principal de Scrollama y mapas
+        // - population-chart.js: gráfico interactivo de población 
+        // - urban-evolution.js: visualización de evolución urbana
         
-        const mapboxMap = new mapboxgl.Map({
-            container: 'map',
-            style: 'mapbox://styles/mapbox/streets-v12',
-            center: [-86.85, 21.05],
-            zoom: 11
-        });
-
-        // Variables para Scrollama
-        const scroller = scrollama();
-        let currentStep = 0;
-        let transitionInProgress = false;
-
-        // Inicializar el mapa como oculto inmediatamente
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log('DOM cargado - inicializando mapa como oculto');
-            const mapElement = document.getElementById('map');
-            mapElement.classList.add('curtain-down');
-        });
-
-        // Funciones para transiciones de mapa
-        function showMapWithCurtainEffect() {
-            console.log('Mostrando mapa con efecto telón');
-            const mapElement = document.getElementById('map');
-            console.log('Clases antes de mostrar:', mapElement.className);
-            mapElement.classList.remove('curtain-down');
-            mapElement.classList.add('curtain-up');
-            console.log('Clases después de mostrar:', mapElement.className);
-        }
-
-        function hideMapWithCurtainEffect() {
-            console.log('Ocultando mapa base con efecto telón');
-            const mapElement = document.getElementById('map');
-            console.log('Clases antes de ocultar:', mapElement.className);
-            mapElement.classList.remove('curtain-up');
-            mapElement.classList.add('curtain-down');
-            console.log('Clases después de ocultar:', mapElement.className);
-        }
-
-        function hideAllMaps() {
-            console.log('Ocultando todos los mapas');
-            // Ocultar Lizmap si está disponible
-            if (window.lizmapScrollytellingIntegration) {
-                window.lizmapScrollytellingIntegration.hide();
-            }
-            // Ocultar mapa base
-            hideMapWithCurtainEffect();
-        }
-        
-        // Función updateStatus eliminada
-
-        function triggerLizmapForStep(stepIndex) {
-            if (transitionInProgress) {
-                console.log(`Transición en progreso, ignorando step ${stepIndex}`);
-                return;
-            }
+        // Script adicional para configurar fondos de secciones específicas
+        document.addEventListener('DOMContentLoaded', function() {
+            // La configuración de fondo para la sección de cierre ha sido eliminada
+            // El step 30 ahora usa solo el fondo de color sin imagen
             
-            transitionInProgress = true;
-            console.log(`=== Activando mapa para step ${stepIndex} ===`);
-            
-            // Verificar si Lizmap está disponible y funcionando
-            if (window.lizmapScrollytellingIntegration && 
-                window.lizmapScrollytellingIntegration.manager && 
-                window.lizmapScrollytellingIntegration.manager()) {
-                
-                console.log('✓ Lizmap disponible, activando...');
-                // Primero ocultar el mapa base
-                hideMapWithCurtainEffect();
-                // Luego mostrar Lizmap con un delay apropiado
-                setTimeout(() => {
-                    try {
-                        window.lizmapScrollytellingIntegration.showStep(stepIndex);
-                        console.log(`✓ Lizmap activado para step ${stepIndex}`);
-                    } catch (error) {
-                        console.error(`Error activando Lizmap para step ${stepIndex}:`, error);
-                        // Fallback al mapa base si hay error
-                        showMapWithCurtainEffect();
-                    }
-                    
-                    // Liberar el flag después de la transición
-                    setTimeout(() => {
-                        transitionInProgress = false;
-                    }, 1000);
-                }, 300);
-            } else {
-                console.log('⚠ Lizmap no disponible, usando mapa base Mapbox');
-                // Si Lizmap no está disponible, mostrar el mapa base
-                showMapWithCurtainEffect();
-                setTimeout(() => {
-                    transitionInProgress = false;
-                }, 1000);
-            }
-        }
-
-        // Configurar Scrollama
-        function initScrollama() {
-            console.log('Inicializando Scrollama...');
-            scroller
-                .setup({
-                    step: '.step',
-                    offset: 0.5,
-                    progress: true,
-                    debug: false
-                })
-                .onStepProgress(response => {
-                    // Transición gradual basada en el progreso del scroll
-                    const visualSteps = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19];
-                    if (visualSteps.includes(response.index)) {
-                        updateMapProgress(response.index, response.progress);
-                    }
-                })
-                .onStepEnter(response => {
-                    currentStep = response.index;
-                    console.log('Entrando al step:', currentStep);
-                    
-                    // Agregar clase activa
-                    document.querySelectorAll('.step').forEach(el => {
-                        el.classList.remove('is-active', 'has-map');
-                    });
-                    response.element.classList.add('is-active');
-                    
-                    // Activar visualizaciones para steps que las requieren
-                    const visualSteps = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19];
-                    if (visualSteps.includes(currentStep)) {
-                        console.log('Step con visualización detectado:', currentStep);
-                        response.element.classList.add('has-map');
-                        
-                        setTimeout(() => {
-                            triggerLizmapForStep(currentStep);
-                        }, 200);
-                    } else {
-                        console.log('Step de texto detectado:', currentStep);
-                        setTimeout(() => {
-                            hideAllMaps();
-                        }, 100);
-                    }
-                })
-                .onStepExit(response => {
-                    console.log('Saliendo del step:', response.index);
-                    response.element.classList.remove('is-active', 'has-map');
-                    
-                    // Si estamos saliendo de un step con visualización
-                    const exitingStep = response.index;
-                    const visualSteps = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19];
-                    if (visualSteps.includes(exitingStep)) {
-                        // Pequeño delay para verificar si el siguiente step también tiene visualización
-                        setTimeout(() => {
-                            if (!visualSteps.includes(currentStep)) {
-                                console.log('Saliendo de step con visualización, ocultando...');
-                                hideAllMaps();
-                            }
-                        }, 100);
-                    }
-                });
-        }
-
-        // Función para transición gradual basada en progreso
-        function updateMapProgress(stepIndex, progress) {
-            console.log('Map progress update:', stepIndex, progress);
-            
-            // Calcular visibilidad basada en progreso del scroll
-            const visibility = Math.max(0, Math.min(1, progress));
-            
-            // Usar el manager de Lizmap para transiciones suaves
-            if (window.LizmapManager && window.LizmapManager.setOpacity) {
-                window.LizmapManager.setOpacity(visibility);
-            } else {
-                // Fallback directo si el manager no está disponible
-                const container = document.getElementById('lizmap-scrolly-container');
-                if (container) {
-                    container.style.opacity = visibility;
-                    const scale = 0.9 + (0.1 * visibility);
-                    const translateY = (1 - visibility) * 20;
-                    container.style.transform = `translateY(${translateY}px) scale(${scale})`;
-                }
-            }
-            
-            // Cambiar configuración del mapa cuando el progreso sea suficiente
-            const visualSteps = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19];
-            if (progress > 0.4 && visualSteps.includes(stepIndex)) {
-                // Solo mostrar si no está ya mostrado
-                if (!window.LizmapManager || !window.LizmapManager.isVisible) {
-                    triggerLizmapForStep(stepIndex);
-                }
-            } else if (progress < 0.2) {
-                // Ocultar completamente si el progreso es muy bajo
-                hideAllMaps();
-            }
-        }
-
-        // Función para redimensionar Scrollama
-        function handleResize() {
-            scroller.resize();
-        }
-
-        // Inicialización
-        mapboxMap.on('load', () => {
-            mapboxMap.addControl(new mapboxgl.NavigationControl());
-            console.log('Mapa base cargado');
-            
-            // Asegurar que todos los mapas inicen ocultos
-            console.log('Inicializando mapas como ocultos...');
-            hideAllMaps();
-            
-            // Esperar a que Lizmap esté inicializado antes de inicializar Scrollama
-            waitForLizmapAndInitialize();
-        });
-        
-        function waitForLizmapAndInitialize() {
-            console.log('Esperando inicialización de Lizmap...');
-            
-            let attempts = 0;
-            const maxAttempts = 20; // 10 segundos máximo
-            
-            const checkLizmap = () => {
-                attempts++;
-                console.log(`Intento ${attempts}: Verificando Lizmap...`);
-                
-                if (window.lizmapScrollytellingIntegration && window.lizmapScrollytellingIntegration.manager()) {
-                    console.log('✓ Lizmap inicializado correctamente');
-                    setTimeout(() => {
-                        initScrollama();
-                        console.log('✓ Sistema completo inicializado');
-                    }, 100);
-                } else if (attempts < maxAttempts) {
-                    console.log('Lizmap aún no está listo, reintentando...');
-                    setTimeout(checkLizmap, 500);
-                } else {
-                    console.warn('⚠ Lizmap no se inicializó en el tiempo esperado, continuando sin él');
-                    setTimeout(() => {
-                        initScrollama();
-                        console.log('Sistema base inicializado (sin Lizmap)');
-                    }, 100);
-                }
+            // Configurar otros fondos de secciones según sea necesario
+            const bgSections = {
+                // "1" ha sido reemplazado por un video con overlay
+                "2": "assets/2.jpg",
+                "6": "assets/6.jpg",
+                "25": "assets/23.jpg"
             };
             
-            checkLizmap();
-        }
-
-        // Event listeners
-        window.addEventListener('resize', handleResize);
-        
-
-
-        // CSS adicional simplificado para evitar interferencias
-        const additionalStyles = document.createElement('style');
-        additionalStyles.textContent = `
-            /* Lizmap interactivo pero permite scroll del documento */
-            .lizmap-scrolly-container {
-                pointer-events: none !important; /* No bloquea scroll */
-            }
-            
-            .lizmap-scrolly-container.curtain-up {
-                z-index: 10000 !important;
-            }
-            
-            .lizmap-scrolly-iframe {
-                pointer-events: auto !important; /* Solo el iframe es interactivo */
-                user-select: auto !important;
-                touch-action: pan-x pan-y zoom-inout !important; /* Permite interacción del mapa */
-            }
-            
-            .lizmap-close-btn {
-                pointer-events: auto !important; /* Botón de cerrar funcional */
-            }
-            
-            /* Botón de test también debe ser interactivo */
-            .lizmap-scrolly-container button {
-                pointer-events: auto !important;
-            }
-            
-            /* Asegurar que el scroll nunca se bloquee */
-            body, html {
-                overflow: auto !important;
-            }
-            
-            /* Deshabilitar zoom con scroll en el iframe */
-            .lizmap-scrolly-iframe {
-                overflow: hidden !important;
-            }
-            
-            /* Prevenir zoom con wheel en mapas */
-            .lizmap-scrolly-container iframe {
-                pointer-events: auto;
-                -webkit-user-select: none;
-                -moz-user-select: none;
-                -ms-user-select: none;
-                user-select: none;
-                transition: opacity 0.3s ease, transform 0.3s ease !important;
-            }
-            
-            /* Transiciones suaves para contenedor principal */
-            #lizmap-scrolly-container {
-                transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
-                           transform 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
-                will-change: opacity, transform;
-            }
-            
-            /* Animación de entrada suave para contenido */
-            .step-content {
-                animation: fadeInUp 0.6s ease-out;
-            }
-            
-            @keyframes fadeInUp {
-                from {
-                    opacity: 0;
-                    transform: translateY(30px);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateY(0);
+            for (const [step, bgImage] of Object.entries(bgSections)) {
+                const section = document.querySelector(`section[data-step="${step}"]`);
+                if (section) {
+                    section.classList.add('bg-image');
+                    section.style.backgroundImage = `url('${bgImage}')`;
+                    section.style.backgroundSize = "cover";
+                    section.style.backgroundPosition = "center";
+                    section.style.backgroundAttachment = "fixed";
                 }
             }
-        `;
-        document.head.appendChild(additionalStyles);
-    </script>
-
-    <!-- Script para el gráfico interactivo de crecimiento poblacional usando D3 -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Datos de población de Cancún (Benito Juárez) a lo largo de las décadas
-            const data = [
-                { year: 1970, population: 6867, growth: null },
-                { year: 1980, population: 37190, growth: 441.6, absolute: 30323 },
-                { year: 1990, population: 176765, growth: 375.3, absolute: 139575 },
-                { year: 2000, population: 419815, growth: 137.5, absolute: 243050 },
-                { year: 2010, population: 659311, growth: 57.0, absolute: 239496 },
-                { year: 2020, population: 911503, growth: 38.3, absolute: 252192 }
-            ];
+            // La sección con fotos de tráfico ha sido eliminada
             
-            // Función para formatear números con separadores de miles
-            function formatNumber(num) {
-                return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-            }
-            
-            // Función para crear y animar el gráfico D3 cuando se hace visible
-            function createD3Chart() {
-                // Verificamos si el gráfico ya está creado
-                if (d3.select('#populationGrowthD3Chart').select('svg').size() > 0) return;
+            // Asegurarnos de que el video de fondo se reproduce correctamente
+            const bgVideo = document.getElementById('background-video');
+            if (bgVideo) {
+                console.log('Video de fondo encontrado, asegurando reproducción...');
                 
-                // Dimensiones y márgenes del gráfico
-                const margin = {top: 60, right: 40, bottom: 60, left: 80};
-                const container = document.getElementById('populationGrowthD3Chart');
-                const width = container.clientWidth - margin.left - margin.right;
-                const height = 400 - margin.top - margin.bottom;
+                // Forzar la reproducción del video sin añadir botón
+                const playPromise = bgVideo.play();
                 
-                // Creamos el SVG
-                const svg = d3.select('#populationGrowthD3Chart')
-                    .append('svg')
-                    .attr('width', width + margin.left + margin.right)
-                    .attr('height', height + margin.top + margin.bottom)
-                    .append('g')
-                    .attr('transform', `translate(${margin.left},${margin.top})`);
-                    
-                // Definimos el gradiente
-                const defs = svg.append("defs");
-                const gradient = defs.append("linearGradient")
-                    .attr("id", "bar-gradient")
-                    .attr("gradientUnits", "userSpaceOnUse")
-                    .attr("x1", 0)
-                    .attr("y1", height)
-                    .attr("x2", 0)
-                    .attr("y2", 0);
-                    
-                gradient.append("stop")
-                    .attr("offset", "0%")
-                    .attr("stop-color", "rgba(251, 133, 0, 0.7)");
-                    
-                gradient.append("stop")
-                    .attr("offset", "100%")
-                    .attr("stop-color", "#FB8500");
+                if (playPromise !== undefined) {
+                    playPromise.then(_ => {
+                        console.log('Video de fondo reproduciendo correctamente');
+                    }).catch(error => {
+                        console.warn('No se pudo reproducir el video automáticamente:', error);
+                        // En caso de error, simplemente volvemos a intentar reproducir el video
+                        setTimeout(() => {
+                            bgVideo.play().catch(e => console.log('Segundo intento fallido, pero continuamos sin botón'));
+                        }, 1000);
+                    });
+                }
                 
-                // Escalas X e Y
-                const x = d3.scaleBand()
-                    .domain(data.map(d => d.year))
-                    .range([0, width])
-                    .padding(0.3);
-                    
-                const y = d3.scaleLinear()
-                    .domain([0, d3.max(data, d => d.population) * 1.1])
-                    .range([height, 0]);
-                
-                // Añadimos el título del gráfico
-                svg.append("text")
-                    .attr("class", "title")
-                    .attr("x", width / 2)
-                    .attr("y", -30)
-                    .text("Crecimiento Poblacional de Cancún (1970-2020)");
-                
-                // Añadimos las líneas de cuadrícula horizontales
-                svg.append("g")
-                    .attr("class", "grid")
-                    .call(d3.axisLeft(y)
-                        .tickSize(-width)
-                        .tickFormat("")
-                    );
-                
-                // Ejes X e Y
-                svg.append("g")
-                    .attr("class", "x axis")
-                    .attr("transform", `translate(0,${height})`)
-                    .call(d3.axisBottom(x)
-                        .tickFormat(d => d))
-                    .selectAll("text")
-                    .style("font-weight", "bold")
-                    .style("font-size", "12px");
-                    
-                svg.append("g")
-                    .attr("class", "y axis")
-                    .call(d3.axisLeft(y)
-                        .tickFormat(d => {
-                            if (d >= 1000000) return d / 1000000 + 'M';
-                            if (d >= 1000) return d / 1000 + 'k';
-                            return d;
-                        }))
-                    .selectAll("text")
-                    .style("font-weight", "bold")
-                    .style("font-size", "12px");
-                
-                // Tooltip mejorado
-                const tooltip = d3.select('.chart-container .tooltip');
-                
-                // Creamos las barras con efecto de animación
-                svg.selectAll(".bar")
-                    .data(data)
-                    .enter()
-                    .append("rect")
-                    .attr("class", "bar")
-                    .attr("x", d => x(d.year))
-                    .attr("width", x.bandwidth())
-                    .attr("y", height) // Empezamos desde abajo
-                    .attr("height", 0) // Sin altura inicial
-                    .attr("rx", 5) // Bordes redondeados
-                    .attr("ry", 5) // Bordes redondeados
-                    .on("mouseover", function(event, d) {
-                        // Destacar la barra activa
-                        d3.select(this)
-                            .transition()
-                            .duration(300)
-                            .attr("opacity", 0.9)
-                            .attr("stroke-width", 2)
-                            .attr("filter", "brightness(1.1)");
+                // Asegurarnos de que el video se mantenga en proporción y cubra la pantalla
+                const handleResize = () => {
+                    const step1 = document.querySelector('section[data-step="1"]');
+                    if (step1 && bgVideo) {
+                        const aspectRatio = bgVideo.videoWidth / bgVideo.videoHeight;
+                        const containerWidth = step1.offsetWidth;
+                        const containerHeight = step1.offsetHeight;
                         
-                        // Mostrar tooltip mejorado con detalles
-                        let tooltipContent = `
-                            <p>Año: <strong>${d.year}</strong></p>
-                            <p>Población: <span class="value">${formatNumber(d.population)}</span> habitantes</p>
-                        `;
-                        
-                        // Agregar información sobre el crecimiento si existe
-                        if (d.growth) {
-                            tooltipContent += `
-                                <p class="growth">Crecimiento: <span style="color:#FB8500; font-size:16px; font-weight:bold">+${d.growth}%</span></p>
-                                <p class="growth" style="font-size:11px">desde ${d.year - 10} (+${formatNumber(d.absolute)} habitantes)</p>
-                            `;
+                        if ((containerWidth / containerHeight) < aspectRatio) {
+                            bgVideo.style.width = 'auto';
+                            bgVideo.style.height = '100%';
+                        } else {
+                            bgVideo.style.width = '100%';
+                            bgVideo.style.height = 'auto';
                         }
-                        
-                        tooltip.style("opacity", 1)
-                            .style("left", (event.pageX - container.getBoundingClientRect().left - 50) + "px")
-                            .style("top", (event.pageY - container.getBoundingClientRect().top - 120) + "px")
-                            .html(tooltipContent);
-                        
-                        // Destacar también el valor numérico sobre la barra
-                        svg.selectAll(".value-label")
-                            .filter(label => label.year === d.year)
-                            .transition()
-                            .duration(200)
-                            .attr("font-size", "16px")
-                            .attr("font-weight", "bold")
-                            .attr("fill", "#FB8500");
-                            
-                        // Si hay crecimiento, mostrar una etiqueta de porcentaje temporal y línea de comparación
-                        if (d.growth) {
-                            // Eliminar etiquetas temporales existentes primero
-                            svg.selectAll(".temp-growth-label, .temp-comparison-line").remove();
-                            
-                            // Mostrar etiqueta de porcentaje
-                            svg.append("text")
-                                .attr("class", "temp-growth-label")
-                                .attr("x", x(d.year) + x.bandwidth() / 2)
-                                .attr("y", y(d.population) - 35)
-                                .attr("text-anchor", "middle")
-                                .attr("fill", "#FB8500")
-                                .attr("font-weight", "bold")
-                                .attr("font-size", "14px")
-                                .text(`+${d.growth}%`)
-                                .attr("opacity", 0)
-                                .transition()
-                                .duration(200)
-                                .attr("opacity", 1);
-                                
-                            // Destacar solo la barra actual, sin líneas punteadas ni conexión con barras anteriores
-                            // Podemos mantener una referencia a la década anterior para los datos
-                            const prevYearIndex = data.findIndex(item => item.year === d.year - 10);
-                            if (prevYearIndex >= 0) {
-                                // Referencia disponible pero no añadimos ningún efecto visual entre barras
-                            }
-                        }
-                    })
-                    .on("mouseout", function(event, d) {
-                        // Restaurar la barra a su estado normal
-                        d3.select(this)
-                            .transition()
-                            .duration(300)
-                            .attr("opacity", 1)
-                            .attr("stroke-width", 1)
-                            .attr("filter", null);
-                            
-                        // Restaurar también todas las barras a su estado original
-                        svg.selectAll(".bar")
-                            .transition()
-                            .duration(300)
-                            .attr("opacity", 1)
-                            .attr("stroke-width", 1)
-                            .attr("stroke", "rgba(255, 255, 255, 0.6)");
-                        
-                        // Ocultar el tooltip
-                        tooltip.style("opacity", 0);
-                        
-                        // Restaurar el formato original de la etiqueta
-                        svg.selectAll(".value-label")
-                            .transition()
-                            .duration(200)
-                            .attr("font-size", "14px")
-                            .attr("font-weight", "normal")
-                            .attr("fill", "#333");
-                            
-                        // Eliminar etiquetas temporales
-                        svg.selectAll(".temp-growth-label")
-                            .transition()
-                            .duration(200)
-                            .attr("opacity", 0)
-                            .remove();
-                    })
-                    .on("mousemove", function(event) {
-                        // Actualizar posición del tooltip para que siga al cursor
-                        tooltip
-                            .style("left", (event.pageX - container.getBoundingClientRect().left - 50) + "px")
-                            .style("top", (event.pageY - container.getBoundingClientRect().top - 120) + "px");
-                    })
-                    .transition() // Animación inicial
-                    .delay((d, i) => i * 150)
-                    .duration(1000)
-                    .attr("y", d => y(d.population))
-                    .attr("height", d => height - y(d.population))
-                    .ease(d3.easeBounceOut);
-                
-                // Etiquetas de valor sobre las barras
-                svg.selectAll(".value-label")
-                    .data(data)
-                    .enter()
-                    .append("text")
-                    .attr("class", "value-label")
-                    .attr("x", d => x(d.year) + x.bandwidth() / 2)
-                    .attr("y", height) // Empezamos desde abajo
-                    .attr("opacity", 0) // Inicialmente invisible
-                    .text(d => formatNumber(d.population))
-                    .transition()
-                    .delay((d, i) => i * 150 + 700) // Un poco después de las barras
-                    .duration(700)
-                    .attr("y", d => y(d.population) - 10)
-                    .attr("opacity", 1);
-                
-                // Anotaciones para destacar el crecimiento extraordinario
-                if (width > 500) { // Solo si hay suficiente espacio
-                    const annotations = [{
-                        note: {
-                            title: "Crecimiento Extraordinario",
-                            label: "441.6% de incremento poblacional",
-                            wrap: 150
-                        },
-                        connector: {
-                            end: "arrow",
-                            type: "curve",
-                            curvature: 0.5
-                        },
-                        x: x(1980) + x.bandwidth() / 2,
-                        y: y(37190) - 30,
-                        dy: -30,
-                        dx: -30
-                    }];
-                    
-                    const makeAnnotations = d3.annotation()
-                        .type(d3.annotationLabel)
-                        .annotations(annotations);
-                        
-                    svg.append("g")
-                        .attr("class", "annotation-group")
-                        .attr("opacity", 0)
-                        .call(makeAnnotations)
-                        .transition()
-                        .delay(1500)
-                        .duration(800)
-                        .attr("opacity", 1);
-                }
-                
-                // Resaltar el período más dramático
-                svg.append("path")
-                    .attr("d", `M${x(1970) + x.bandwidth() / 2},${y(6867)} L${x(1990) + x.bandwidth() / 2},${y(176765)}`)
-                    .attr("stroke", "#FFB703")
-                    .attr("stroke-width", 3)
-                    .attr("stroke-dasharray", "5,5")
-                    .attr("fill", "none")
-                    .attr("opacity", 0)
-                    .transition()
-                    .delay(2000)
-                    .duration(800)
-                    .attr("opacity", 0.7);
-                    
-                // Decorativos: círculos en los puntos clave
-                svg.selectAll(".key-point")
-                    .data([data[0], data[2]]) // 1970 y 1990
-                    .enter()
-                    .append("circle")
-                    .attr("class", "key-point")
-                    .attr("cx", d => x(d.year) + x.bandwidth() / 2)
-                    .attr("cy", d => y(d.population))
-                    .attr("r", 6)
-                    .attr("fill", "#FFB703")
-                    .attr("stroke", "#fff")
-                    .attr("stroke-width", 2)
-                    .attr("opacity", 0)
-                    .transition()
-                    .delay(2000)
-                    .duration(800)
-                    .attr("opacity", 1);
-            }
-            
-            // Observamos el contenedor del gráfico para activar la animación cuando es visible
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        createD3Chart();
-                        observer.unobserve(entry.target); // Solo animamos una vez
                     }
-                });
-            }, { threshold: 0.3 });
-            
-            // Observamos el contenedor del gráfico
-            const chartContainer = document.querySelector('.chart-container');
-            if (chartContainer) {
-                observer.observe(chartContainer);
-            }
-            
-            // Ajustamos el tamaño del gráfico cuando cambia el tamaño de la ventana
-            window.addEventListener('resize', () => {
-                // Limpiamos el gráfico anterior
-                d3.select('#populationGrowthD3Chart').html('');
-                // Lo creamos de nuevo con las nuevas dimensiones
-                if (isElementInViewport(chartContainer)) {
-                    createD3Chart();
-                }
-            });
-            
-            // Función auxiliar para verificar si un elemento está visible
-            function isElementInViewport(el) {
-                const rect = el.getBoundingClientRect();
-                return (
-                    rect.top >= 0 &&
-                    rect.left >= 0 &&
-                    rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-                    rect.right <= (window.innerWidth || document.documentElement.clientWidth)
-                );
-            }
-            
-            // Integración con scrollama
-            if (window.scroller) {
-                window.scroller.on('step.enter', (response) => {
-                    if (response.element.querySelector('#populationGrowthD3Chart')) {
-                        createD3Chart();
-                    }
-                });
+                };
+                
+                // Llamar al resize inicial y en cada cambio de tamaño
+                window.addEventListener('resize', handleResize);
+                bgVideo.addEventListener('loadedmetadata', handleResize);
             }
         });
     </script>

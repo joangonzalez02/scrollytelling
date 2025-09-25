@@ -74,10 +74,10 @@ const lizmapLayerConfig = {
     // Función para generar la URL de Lizmap
     generateLizmapUrl: function(stepConfig) {
         const { server, repository, project } = this.baseConfig;
-        const layers = stepConfig.layers.join(',');
-        const bbox = this.calculateBbox(stepConfig.center, stepConfig.zoom);
         
-        return `${server}?repository=${repository}&project=${project}&layers=${layers}&bbox=${bbox}&center=${stepConfig.center.join(',')}&zoom=${stepConfig.zoom}`;
+        // URL básica para Lizmap view con bbox para centrar el mapa
+        const bbox = this.calculateBbox(stepConfig.center, stepConfig.zoom);
+        return `${server}?repository=${repository}&project=${project}&bbox=${bbox}`;
     },
     
     // Función para calcular el bbox basado en centro y zoom
