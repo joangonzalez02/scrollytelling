@@ -11,29 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
         mapContainer.style.display = 'none';
     }
     
-    // Mapa principal de Mapbox (fondo) - inicialización diferida
-    let mapboxMap;
-    
-    // Solo inicializar el mapa si realmente se va a utilizar
-    function initBackgroundMap() {
-        if (mapboxMap) return; // Evitar inicialización múltiple
-        
-        console.log('Inicializando mapa de fondo');
-        mapboxMap = new mapboxgl.Map({
-            container: 'map',
-            style: 'mapbox://styles/mapbox/streets-v12',
-            center: [-86.85, 21.05],
-            zoom: 11
-        });
-        
-        // Añadir evento para saber cuando el mapa está listo
-        mapboxMap.on('load', function() {
-            console.log('Mapa de fondo cargado correctamente');
-            
-            // Añadir controles solo si se necesitan
-            // mapboxMap.addControl(new mapboxgl.NavigationControl());
-        });
-    }
+    // Eliminado: no se crea un segundo mapa. Se usa únicamente el mapa principal definido en mapbox-integration.js
 
     // Variables para Scrollama
     const scroller = scrollama();
@@ -50,8 +28,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 debug: false
             })
             .onStepProgress(response => {
-                // Manejo de progreso de pasos para animaciones
-                handleStepProgress(response.index, response.progress);
+                // Manejo de progreso de pasos para animaciones (opcional)
+                // console.log('Progress step', response.index, response.progress);
             })
             .onStepEnter(response => {
                 currentStep = response.index;
@@ -119,46 +97,53 @@ document.addEventListener('DOMContentLoaded', function() {
         const hasMap = currentStepElement.getAttribute('data-map') === 'true';
         
         if (hasMap) {
-            console.log(`Step ${stepIndex+1} tiene un mapa, activando...`);
+            console.log(`=== ACTIVANDO MAPA PARA STEP ${stepIndex+1} ===`);
             
             // Forzar la restauración del estado del mapa (importante para cuando se oculta con el botón naranja)
             const mapContainer = document.getElementById('map');
             if (mapContainer) {
+                console.log('🗺️ Forzando visibilidad del contenedor #map...');
                 mapContainer.style.display = 'block';
                 mapContainer.style.opacity = '1';
                 mapContainer.style.visibility = 'visible';
-                console.log('Forzando visibilidad del contenedor de mapa');
+                mapContainer.style.zIndex = '1000';
+                mapContainer.classList.add('active');
+                console.log('✅ Estilos aplicados a #map');
+                console.log('Display:', mapContainer.style.display);
+                console.log('Opacity:', mapContainer.style.opacity);
+                console.log('Visibility:', mapContainer.style.visibility);
+            } else {
+                console.error('❌ No se encontró el contenedor #map');
             }
             
-            // Configuración para mostrar el mapa
+            // Configuración para mostrar el mapa (no bloqueamos el scroll del body)
             document.body.classList.add('showing-map');
-            document.body.style.overflow = 'hidden'; // Asegurar que el scroll esté bloqueado para mapas
+            document.body.style.overflow = 'auto';
             
             // Extraer la capa y vista del mapa de los atributos data
             const mapLayer = currentStepElement.getAttribute('data-map-layer');
             const mapView = currentStepElement.getAttribute('data-map-view');
+            console.log('📊 Datos del step:');
+            console.log('- Map Layer:', mapLayer);
+            console.log('- Map View:', mapView);
             
             // Activar el mapa Mapbox con la configuración adecuada
             if (window.mapboxHelper && typeof window.mapboxHelper.updateMapForStep === 'function') {
-                console.log(`Mostrando mapa para el step ${stepIndex+1}`);
+                console.log(`🚀 Llamando updateMapForStep(${stepIndex+1})...`);
                 window.mapboxHelper.updateMapForStep(stepIndex+1);
             } else {
-                console.error('No se encontró el helper de Mapbox');
+                console.error('❌ No se encontró window.mapboxHelper.updateMapForStep');
+                console.log('window.mapboxHelper:', window.mapboxHelper);
             }
             
             // Mostrar el botón de emergencia para cerrar el mapa
             const emergencyBtn = document.getElementById('emergency-close-btn');
             if (emergencyBtn) {
                 emergencyBtn.style.display = 'flex';
-                console.log('Mostrando botón de emergencia para cerrar mapa');
+                console.log('✅ Botón de emergencia mostrado');
             }
             
-            // Comprobar si hay mapas embebidos en este step
-            const embeddedMap = currentStepElement.querySelector('.mapbox-embedded');
-            if (embeddedMap) {
-                console.log('Mostrando mapa embebido en el step');
-                embeddedMap.style.display = 'block';
-            }
+            // Sin mapas embebidos: no realizar acciones adicionales
         } else {
             // Restaurar el scroll normal del body si no estamos en un step con mapa
             document.body.style.overflow = 'auto';
@@ -211,27 +196,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const mapElem = document.getElementById('map');
         if (!mapElem) return;
         
-        // Por defecto, ocultar el mapa base para todos los pasos
-        mapElem.style.opacity = '0';
-        mapElem.style.visibility = 'hidden';
-        mapElem.style.display = 'none';
-        
-        // Solo mostrar el mapa base en pasos específicos donde sea necesario
-        // y donde no esté usando el mapa en modo overlay
-        const showBackgroundMapSteps = [18, 19, 23, 25];
-        
-        if (showBackgroundMapSteps.includes(stepIndex)) {
-            // Inicializar el mapa si es necesario
-            if (typeof initBackgroundMap === 'function') {
-                initBackgroundMap();
-            }
-            
-            mapElem.style.display = 'block';
-            mapElem.style.visibility = 'visible';
-            // Opacidad dinámica según el paso
-            const opacity = '0.3'; // Baja opacidad para todos estos pasos
-            mapElem.style.opacity = opacity;
-        }
+        // El mapa solo se muestra cuando un step con data-map="true" está activo. En otros pasos se oculta.
+        mapElem.style.opacity = hasMap ? '1' : '0';
+        mapElem.style.visibility = hasMap ? 'visible' : 'hidden';
+        mapElem.style.display = hasMap ? 'block' : 'none';
     }
 
     // Función para ocultar visualizaciones del mapa
@@ -256,10 +224,7 @@ document.addEventListener('DOMContentLoaded', function() {
             window.mapboxHelper.hideMapOverlay();
         }
         
-        // Ocultar cualquier mapa embebido
-        document.querySelectorAll('.mapbox-embedded').forEach(map => {
-            map.style.display = 'none';
-        });
+        // No hay mapas embebidos que ocultar
         
         // Ocultar también el mapa de fondo si está visible
         const backgroundMap = document.getElementById('map');
@@ -271,8 +236,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Método adicional de emergencia con verificación extra
         setTimeout(() => {
-            // Verificar si hay algún contenedor de mapbox visible
-            document.querySelectorAll('.mapbox-container, #map').forEach(container => {
+            // Verificar si #map está visible
+            document.querySelectorAll('#map').forEach(container => {
                 if (container && (
                     window.getComputedStyle(container).display !== 'none' ||
                     window.getComputedStyle(container).opacity > 0 ||

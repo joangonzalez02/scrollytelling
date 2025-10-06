@@ -3,10 +3,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Variables para almacenar datos y estado
     let vehicleData = [];
     let chart = null;
-document.addEventListener('DOMContentLoaded', function() {
-    // Variables para almacenar datos y estado
-    let vehicleData = [];
-    let chart = null;
 
     // Datos de ejemplo del parque vehicular (2010-2023)
     const vehicleDataRaw = [

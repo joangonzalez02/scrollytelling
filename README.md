@@ -4,14 +4,12 @@ Proyecto de scrollytelling con mapas (Mapbox GL), visualizaciones D3 y servidor 
 
 ## Requisitos
 - Node.js 18+ (recomendado) y npm
-- Conexión a internet (carga de librerías CDN y mapas)
 - Token de Mapbox válido si lo cambias (actualmente hay uno configurado en `mapbox-integration.js`)
 
 ## Instalación
 
 ```powershell
 # En Windows PowerShell
-cd "D:\Melanie\Proyectos\SCROLLAMA"
 npm install
 ```
 
@@ -72,4 +70,3 @@ Luego abre el navegador en `http://localhost:3000` (o el puerto que elijas).
 
 ---
 
-Hecho con ❤️ para explorar la evolución urbana de Cancún.
