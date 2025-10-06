@@ -31,6 +31,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Calcular crecimiento para cada conjunto de datos
                 populationData.forEach((d, i) => {
+                    // Inicializar valores de crecimiento a null
+                    d.growthBenito = null;
+                    d.growthMexico = null;
+                    d.growthMundo = null;
+                    d.growthQRooTotal = null;
+                    
                     if (i > 0) {
                         // Benito Juárez
                         if (d.benitoJuarez !== null && populationData[i-1].benitoJuarez !== null) {
@@ -48,6 +54,16 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (d.qrooTotal !== null && populationData[i-1].qrooTotal !== null) {
                             d.growthQRooTotal = Number(((d.qrooTotal - populationData[i-1].qrooTotal) / populationData[i-1].qrooTotal * 100).toFixed(1));
                         }
+                    }
+                    
+                    // Para fines de depuración, imprimimos el crecimiento calculado para el primer elemento
+                    if (i === 1) {
+                        console.log('Ejemplo de crecimiento calculado para ' + d.year + ':', {
+                            benito: d.growthBenito,
+                            mexico: d.growthMexico,
+                            mundo: d.growthMundo,
+                            qroo: d.growthQRooTotal
+                        });
                     }
                 });
                 
@@ -169,10 +185,12 @@ document.addEventListener('DOMContentLoaded', function() {
             .append('g')
             .attr('transform', `translate(${margin.left},${margin.top})`);
             
-        // Definir gradiente para las barras
+        // Definir gradiente para las barras con ID único para evitar conflictos
+        const gradientId = `bar-gradient-${dataType}-${Date.now()}`;
+        
         const gradient = svg.append('defs')
             .append('linearGradient')
-            .attr('id', 'bar-gradient')
+            .attr('id', gradientId)
             .attr('x1', '0%')
             .attr('y1', '0%')
             .attr('x2', '0%')
@@ -265,7 +283,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .call(d3.axisLeft(y)
                 .tickFormat(d => {
                     if (dataType === 'mundo' && d > 1000000000) {
-                        return d3.format('.1f')(d/1000000000) + ' B';
+                        return d3.format('.1f')(d/1000000000);
                     } else if (d > 1000000) {
                         return d3.format('.1f')(d/1000000) + ' M';
                     } else if (d > 1000) {
@@ -305,7 +323,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Función para formatear números mejorada
         const formatNumber = num => {
             if (dataType === 'mundo' && num >= 1000000000) {
-                return `${(num/1000000000).toFixed(1)} mil millones`;
+                return `${(num/1000000000).toFixed(1)}`;
             } else if (dataType === 'mexico' && num >= 1000000) {
                 return `${(num/1000000).toFixed(1)} millones`;
             } else if (num >= 1000000) {
@@ -317,8 +335,39 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         };
         
-        // Tooltip
-        const tooltip = d3.select('.tooltip');
+        // Tooltip - Crear siempre uno nuevo para este gráfico específico
+        // Eliminar tooltip existente si hay
+        const existingTooltip = document.getElementById('population-chart-tooltip');
+        if (existingTooltip) {
+            existingTooltip.remove();
+        }
+        
+        // Crear un nuevo tooltip específico para este gráfico
+        const tooltipDiv = document.createElement('div');
+        tooltipDiv.id = 'population-chart-tooltip';
+        tooltipDiv.className = 'tooltip';
+        tooltipDiv.style.position = 'fixed'; // Usar fixed en lugar de absolute
+        tooltipDiv.style.padding = '12px 18px';
+        tooltipDiv.style.background = 'rgba(255, 255, 255, 0.97)';
+        tooltipDiv.style.borderRadius = '8px';
+        tooltipDiv.style.boxShadow = '0 6px 20px rgba(0,0,0,0.2)';
+        tooltipDiv.style.pointerEvents = 'none';
+        tooltipDiv.style.opacity = '0';
+        tooltipDiv.style.zIndex = '99999';
+        tooltipDiv.style.fontSize = '14px';
+        tooltipDiv.style.fontWeight = '600';
+        tooltipDiv.style.color = '#333';
+        tooltipDiv.style.borderLeft = '4px solid #FB8500';
+        tooltipDiv.style.minWidth = '180px';
+        tooltipDiv.style.transition = 'opacity 0.2s';
+        
+        // Agregar el tooltip al body para que esté siempre visible
+        document.body.appendChild(tooltipDiv);
+        
+        // Seleccionar el tooltip con d3
+        const tooltip = d3.select('#population-chart-tooltip');
+        
+        console.log('Tooltip creado:', tooltip.node());
         
         // Crear barras con animación
         svg.selectAll('.bar')
@@ -332,13 +381,15 @@ document.addEventListener('DOMContentLoaded', function() {
             .attr('height', 0)
             .attr('rx', 5)
             .attr('ry', 5)
+            .attr('fill', `url(#${gradientId})`) // Aplicar el gradiente
             .on('mouseover', function(event, d) {
                 // Destacar barra
                 d3.select(this)
                     .transition()
                     .duration(300)
                     .attr('opacity', 0.9)
-                    .attr('stroke-width', 2);
+                    .attr('stroke-width', 2)
+                    .style('fill', `url(#${gradientId})`); // Asegurarnos de aplicar el gradiente
                 
                 // Mostrar tooltip
                 let tooltipContent = `
@@ -346,18 +397,33 @@ document.addEventListener('DOMContentLoaded', function() {
                     <p>Población: <span class="value">${formatNumber(getValue(d))}</span></p>
                 `;
                 
-                // Añadir datos de crecimiento si están disponibles
+                // Añadir datos de crecimiento solo si están disponibles
                 const growth = getGrowth(d);
+                
+                // Mostrar incremento solo cuando hay datos disponibles
                 if (growth !== null && !isNaN(growth)) {
+                    // Mostrar signo + solo para valores positivos, para negativos ya incluye el signo -
+                    const signPrefix = growth > 0 ? '+' : '';
+                    const color = growth > 0 ? getColorByType(dataType, 'start') : '#e63946'; // Rojo para negativos
                     tooltipContent += `
-                        <p class="growth">Crecimiento: <span style="color:${getColorByType(dataType, 'start')}; font-weight:bold">+${growth}%</span></p>
+                        <p class="growth">Incremento: <span style="color:${color}; font-weight:bold">${signPrefix}${growth}%</span></p>
                     `;
                 }
+                // Eliminamos la condición que mostraba "Sin datos"
                 
-                tooltip.style('opacity', 1)
-                    .style('left', (event.pageX - 90) + 'px')
-                    .style('top', (event.pageY - 120) + 'px')
-                    .html(tooltipContent);
+                // Posición del tooltip
+                const xPosition = event.clientX - 90;
+                const yPosition = event.clientY - 120;
+                
+                // Mostrar tooltip
+                tooltip
+                    .html(tooltipContent)
+                    .style('left', xPosition + 'px')
+                    .style('top', yPosition + 'px')
+                    .style('opacity', 1)
+                    .style('display', 'block'); // Asegurarse de que sea visible
+                
+                console.log('Tooltip mostrado en:', xPosition, yPosition, 'Contenido:', tooltipContent);
             })
             .on('mouseout', function() {
                 // Restaurar barra
@@ -365,23 +431,31 @@ document.addEventListener('DOMContentLoaded', function() {
                     .transition()
                     .duration(300)
                     .attr('opacity', 1)
-                    .attr('stroke-width', 1);
+                    .attr('stroke-width', 1)
+                    .style('fill', `url(#${gradientId})`);
                 
                 // Ocultar tooltip
-                tooltip.style('opacity', 0);
+                tooltip
+                    .style('opacity', 0)
+                    .style('display', 'none'); // Ocultar completamente
             })
             .on('mousemove', function(event) {
                 // Mover tooltip con el cursor
+                const xPosition = event.clientX - 90;
+                const yPosition = event.clientY - 120;
+                
                 tooltip
-                    .style('left', (event.pageX - 90) + 'px')
-                    .style('top', (event.pageY - 120) + 'px');
+                    .style('left', xPosition + 'px')
+                    .style('top', yPosition + 'px');
             })
             .transition()
             .delay((d, i) => i * 150)
             .duration(1000)
             .attr('y', d => y(getValue(d)))
             .attr('height', d => height - y(getValue(d)))
-            .ease(d3.easeBounceOut);
+            .ease(d3.easeBounceOut)
+            // Asegurarnos que después de la animación también tenga el estilo correcto
+            .style('fill', `url(#${gradientId})`);
         
         // Etiquetas de valores
         svg.selectAll('.value-label')
@@ -395,7 +469,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .text(d => {
                 // Formato abreviado para valores grandes
                 if (dataType === 'mundo' && getValue(d) > 1000000000) {
-                    return `${(getValue(d)/1000000000).toFixed(1)}B`;
+                    return `${(getValue(d)/1000000000).toFixed(1)}`;
                 } else if (getValue(d) > 1000000) {
                     return `${(getValue(d)/1000000).toFixed(1)}M`;
                 } else if (getValue(d) > 1000) {
