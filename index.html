@@ -9,12 +9,10 @@
     <script src="https://unpkg.com/scrollama"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-annotation/2.5.1/d3-annotation.min.js"></script>
-    <script src="lizmap-config.js"></script>
-    <script src="lizmap-manager.js"></script>
-    <script src="lizmap-scrollama-integration.js"></script>
     <script src="population-chart.js"></script>
     <script src="vehicle-chart.js?v=1727244000"></script>
     <script src="urban-evolution.js"></script>
+    <script src="mapbox-integration.js"></script>
     <script src="main.js"></script>
     <style>
         * { box-sizing: border-box; }
@@ -42,82 +40,62 @@
             bottom: 0; 
             width: 100%; 
             height: 100vh;
-            z-index: 1; /* Debajo de Lizmap y steps */
+            z-index: 1; /* Debajo de los elementos de contenido */
             /* Transiciones suaves */
             transition: opacity 0.8s ease-in-out, visibility 0.8s ease-in-out;
             transform-origin: top center;
             /* Estado inicial: oculto */
             opacity: 0;
             visibility: hidden;
+            display: none; /* Añadido para garantizar que no se muestre inicialmente */
         }
         
-        /* Estilos para el contenedor de Lizmap con transiciones de cortina */
-        .lizmap-scrolly-container {
-            width: 100% !important;
-            background: white;
-            transition: all 800ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+        /* Estilos para el contenedor de Mapbox */
+        .mapbox-container {
+            width: 100%;
+            height: 600px;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             overflow: hidden;
+            background-color: #f5f5f5;
         }
         
-        /* Cuando está como overlay (fuera del flujo) */
-        .lizmap-scrolly-container.overlay {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            height: 100vh !important;
-            z-index: 1000 !important;
-            display: none;
+        /* Cuando el mapa está en modo overlay (pantalla completa) */
+        .mapbox-container.overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: 1000;
+            border-radius: 0;
             opacity: 0;
-            transform: translateY(-100%);
             visibility: hidden;
-            pointer-events: none;
+            transform: translateY(-100%);
+            transition: all 800ms cubic-bezier(0.4, 0, 0.2, 1);
         }
         
-        .lizmap-scrolly-container.overlay.curtain-up {
-            opacity: 1 !important;
-            transform: translateY(0) !important;
-            visibility: visible !important;
-            background: white !important;
-            pointer-events: none !important;
+        .mapbox-container.overlay.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
         }
         
-        .lizmap-scrolly-container.overlay.curtain-down {
-            opacity: 0 !important;
-            transform: translateY(-100%) !important;
-            visibility: hidden !important;
-            transition: all 800ms cubic-bezier(0.4, 0, 0.2, 1) !important;
-        }
-        
-        /* Cuando está integrado en un step (parte del flujo) */
-        .step .lizmap-scrolly-container {
-            position: relative !important;
-            height: 600px !important;
-            z-index: 1 !important;
-            display: block !important;
-            opacity: 1 !important;
-            transform: none !important;
-            visibility: visible !important;
-            pointer-events: auto !important;
-            margin: 20px 0 !important;
-        }
-        
-        /* Estilo para el botón de cierre */
-        .lizmap-close-btn {
-            position: absolute !important;
-            top: 20px !important;
-            right: 20px !important;
-            background-color: #FB8500 !important; /* Color naranja de la paleta */
-            color: white !important;
-            font-size: 36px !important;
-            width: 60px !important;
-            height: 60px !important;
-            border: 2px solid white !important;
-            border-radius: 50% !important;
-            display: flex !important;
-            justify-content: center !important;
-            align-items: center !important;
+        /* Estilo para el botón de cierre de mapa */
+        .map-close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: #FB8500; /* Color naranja de la paleta */
+            color: white;
+            font-size: 24px;
+            width: 40px;
+            height: 40px;
+            border: 2px solid white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             cursor: pointer !important;
             z-index: 99999 !important;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
@@ -481,100 +459,46 @@
     <!-- Mapa base de Mapbox -->
     <div id="map"></div>
     
-    <!-- Contenedor para el mapa Lizmap -->
-    <div id="lizmap-container" class="lizmap-scrolly-container">
-        <!-- El iframe del mapa Lizmap se insertará aquí dinámicamente -->
-    </div>
+    <!-- Contenedor para el mapa Mapbox (se creará dinámicamente con JS) -->
     
     <!-- Botón X independiente que siempre estará por encima de todo -->
-    <button id="emergency-close-btn" style="position:fixed; top:20px; right:20px; z-index:999999; width:80px; height:80px; font-size:44px; background:#FB8500; color:white; border:3px solid white; border-radius:50%; cursor:pointer; display:none; box-shadow:0 6px 16px rgba(0,0,0,0.7); align-items:center; justify-content:center;" onclick="cerrarMapaAhora()">×</button>
+    <button id="emergency-close-btn" style="position:fixed; top:20px; right:20px; z-index:999999; width:60px; height:60px; font-size:36px; background:#FB8500; color:white; border:3px solid white; border-radius:50%; cursor:pointer; display:none; box-shadow:0 6px 16px rgba(0,0,0,0.7); align-items:center; justify-content:center;" onclick="cerrarMapaAhora()">×</button>
 
     <script>
         // Función específica para cerrar el mapa directamente desde el botón X
         function cerrarMapaAhora() {
             console.log("¡BOTÓN X PRESIONADO! - Cerrando mapa ahora");
             
-            // 1. Cerrar mediante manipulación directa del DOM (primero y rápido)
-            console.log("Aplicando cierre manual directo");
-            const container = document.querySelector('.lizmap-scrolly-container');
-            if (container) {
-                // Determinar si está dentro de un step o como overlay
-                const isInStep = container.closest('.step') !== null;
-                
-                if (isInStep) {
-                    // Está integrado en un step - ocultar completamente
-                    console.log('Ocultando mapa integrado en step');
-                    container.style.display = 'none';
-                    container.style.opacity = '0';
-                    container.style.visibility = 'hidden';
-                    container.style.pointerEvents = 'none';
-                    container.style.height = '0';
-                    container.style.overflow = 'hidden';
-                    
-                    // Mover de vuelta al contenedor original
-                    const originalContainer = document.getElementById('lizmap-container');
-                    if (originalContainer && container.parentNode !== originalContainer) {
-                        container.parentNode.removeChild(container);
-                        originalContainer.appendChild(container);
-                        console.log('Contenedor movido de vuelta al lugar original');
-                    }
-                } else {
-                    // Está como overlay - aplicar animación de cortina
-                    console.log('Ocultando mapa como overlay');
-                    container.style.display = 'none';
-                    container.style.opacity = '0';
-                    container.style.visibility = 'hidden';
-                    container.style.pointerEvents = 'none';
-                    container.style.zIndex = '-1';
-                    
-                    // Añadir clase para animación
-                    container.classList.remove('curtain-up');
-                    container.classList.add('curtain-down');
-                }
+            // Cerrar el mapa usando la función de Mapbox
+            if (window.mapboxHelper && typeof window.mapboxHelper.hideMapOverlay === 'function') {
+                console.log("Cerrando mapa usando mapboxHelper");
+                window.mapboxHelper.hideMapOverlay();
             }
             
-            // 2. Restaurar scroll y estados del body
+            // También ocultamos mapas embebidos si hay
+            const embeddedMaps = document.querySelectorAll('.mapbox-embedded');
+            if (embeddedMaps.length > 0) {
+                console.log('Ocultando mapas embebidos:', embeddedMaps.length);
+                embeddedMaps.forEach(map => {
+                    map.style.display = 'none';
+                });
+            }
+            
+            // Restaurar scroll y estados del body
             document.body.style.overflow = 'auto';
             document.documentElement.style.overflow = 'auto';
             document.body.classList.remove('showing-map');
             
-            // 3. Ocultar el botón X
+            // Ocultar el botón X
             document.getElementById('emergency-close-btn').style.display = 'none';
             
-            // 4. Intentar métodos programáticos
+            // Intentar método programático general
             if (typeof window.hideMapVisuals === 'function') {
                 console.log("Usando hideMapVisuals");
                 try {
                     window.hideMapVisuals();
                 } catch(e) {
                     console.error("Error en hideMapVisuals:", e);
-                }
-            }
-            
-            if (typeof window.forceLizmapClose === 'function') {
-                console.log("Usando forceLizmapClose");
-                try {
-                    window.forceLizmapClose();
-                } catch(e) {
-                    console.error("Error en forceLizmapClose:", e);
-                }
-            }
-            
-            if (window.lizmapManager && typeof window.lizmapManager.hide === 'function') {
-                console.log("Usando lizmapManager.hide()");
-                try {
-                    window.lizmapManager.hide();
-                } catch(e) {
-                    console.error("Error en lizmapManager.hide:", e);
-                }
-            }
-            
-            if (window.LizmapScrollyManager && typeof window.LizmapScrollyManager.hide === 'function') {
-                console.log("Usando LizmapScrollyManager.hide()");
-                try {
-                    window.LizmapScrollyManager.hide();
-                } catch(e) {
-                    console.error("Error en LizmapScrollyManager.hide:", e);
                 }
             }
             
@@ -586,7 +510,7 @@
         
         // Mostrar botón X solo cuando el mapa esté visible y estemos en un paso con mapa
         setInterval(function() {
-            const mapContainer = document.querySelector('.lizmap-scrolly-container');
+            const mapContainer = document.querySelector('.mapbox-container');
             let mapVisible = false;
             let currentStepHasMap = false;
             
@@ -634,7 +558,7 @@
     </div>
     
     <!-- Contenedor para evolución urbana -->
-    <div id="urban-evolution-background" style="position: fixed; top: 0; left: 0; width: 100%; height: 100vh; z-index: 0;">
+    <div id="urban-evolution-background" style="position: fixed; top: 0; left: 0; width: 100%; height: 100vh; z-index: 0; display: none; visibility: hidden; opacity: 0; transition: opacity 0.8s ease-in-out, visibility 0.8s ease-in-out;">
         <!-- Las imágenes de años se insertarán aquí dinámicamente -->
     </div>
     
@@ -672,6 +596,8 @@
                 <p>A diferencia de muchas ciudades costeras de América Latina, Cancún nació como un proyecto planificado bajo el modelo de los Centros Integralmente Planeados de FONATUR en los años setenta.</p>
                 <p>Desde su origen se trazaron dos espacios en tensión: <strong>la franja turística frente al Caribe y la ciudad continental separada por la laguna Nichupté</strong>.</p>
                 <p>Lo que comenzó como un modelo de modernidad turística pronto se convirtió en el hogar de cientos de miles de familias. Este tránsito de destino global a ciudad viva explica gran parte de los retos actuales: desigualdades, expansión acelerada y presión ambiental, pero también abre la puerta a imaginar un Cancún más inclusivo y cercano.</p>
+                <p>El plan maestro de Cancún fue diseñado a finales de los sesenta por el arquitecto Enrique Landa Verdugo, inspirado en conjuntos habitacionales previos en la Ciudad de México como Legaria, Tlatilco y Loma Hermosa. Estos modelos privilegiaban al peatón, con jardines, áreas comunes y escuelas integradas en la trama urbana.</p>
+                <p>En Cancún, esta idea tomó forma en las supermanzanas fundacionales, concebidas como unidades con equipamientos centrales, circulaciones peatonales internas y accesos perimetrales para el automóvil. Esta lógica de diseño fue la base de la ciudad turística y residencial que dio origen a Cancún.</p>
             </div>
         </section>
         
@@ -679,7 +605,7 @@
         <section class="step has-map" data-step="4" data-map="true" data-map-layer="desarrollo_historico" data-map-view="hotelera">
             <div class="step-content">
                 <h2>Mapa histórico de la franja hotelera y supermanzanas iniciales</h2>
-                <p>Visualización del crecimiento histórico de Cancún.</p>
+                <p>Visualización del desarrollo histórico de Cancún, mostrando el contraste entre la franja hotelera turística y las supermanzanas residenciales diseñadas bajo los principios de proximidad y accesibilidad peatonal.</p>
             </div>
         </section>
 
@@ -771,7 +697,7 @@
         <section class="step has-map" data-step="20" data-map="true" data-map-layer="cambio_poblacional_ageb" data-map-view="ciudad_central">
             <div class="step-content">
                 <h2>Mapa de tasa de cambio poblacional por AGEB (2010-2020)</h2>
-                <p>Visualización del cambio poblacional en la ciudad.</p>
+                <p>Visualización del cambio poblacional en la ciudad, mostrando cómo las zonas centrales perdieron población mientras las periferias experimentaron crecimiento acelerado.</p>
             </div>
         </section>
 
@@ -789,7 +715,7 @@
         <section class="step has-map" data-step="22" data-map="true" data-map-layer="perdida_vegetacion" data-map-view="area_natural">
             <div class="step-content">
                 <h2>Mapa de pérdida de cobertura forestal (2000-2020)</h2>
-                <p>Visualización de la pérdida de cobertura forestal y áreas naturales protegidas.</p>
+                <p>Visualización de la pérdida de cobertura forestal y áreas naturales protegidas, destacando las más de 90 km² de vegetación perdidos y el impacto en la recarga de acuíferos y protección ante huracanes.</p>
             </div>
         </section>
 
@@ -807,7 +733,7 @@
         <section class="step has-map" data-step="24" data-map="true" data-map-layer="densidad_poblacional" data-map-view="distritos">
             <div class="step-content">
                 <h2>Mapa de densidad poblacional por distrito</h2>
-                <p>Visualización de la densidad poblacional por distritos.</p>
+                <p>Visualización de los 22 distritos del municipio con sus densidades contrastantes, donde algunos superan los 100 habitantes por hectárea mientras otros no alcanzan los 10, evidenciando la desigualdad territorial.</p>
             </div>
         </section>
 
@@ -836,6 +762,7 @@
                     <div id="vehicleGrowthChart" style="width: 100%; height: 100%; background-color: white;"></div>
                     <div class="tooltip"></div>
                 </div>
+                <p style="text-align: center; font-size: 14px; margin-top: 10px;">Fuente: INEGI, Registros administrativos de vehículos de motor registrados en circulación (2010-2023)</p>
             </div>
         </section>
 
@@ -896,6 +823,8 @@
                 <p>El futuro de Cancún no depende de crecer más, sino de <strong>crecer mejor</strong>. Contamos con experiencias que inspiran: las supermanzanas fundacionales, que integraban parques y equipamientos a escala de barrio; el Parque de la Equidad, con 16 km de espacio público y movilidad activa; y el PDU 2022, que propone una ciudad policéntrica, compacta y mixta.</p>
                 <p>Todos apuntan hacia un mismo horizonte: <strong>la ciudad de la proximidad, donde vivienda, trabajo, educación y ocio estén a 15 minutos a pie o en bicicleta</strong>.</p>
                 <p>No se trata de importar un modelo, sino de actualizar la lógica de proximidad con la que Cancún nació, adaptándola a los retos del siglo XXI.</p>
+                <p>Las supermanzanas originales no solo fueron un trazo urbano, sino un modelo adelantado a su tiempo: integraban vivienda, comercio, educación y áreas verdes en un mismo conjunto.</p>
+                <p>Recuperar esta lógica de proximidad significa volver a los principios fundacionales de Cancún, actualizándolos al siglo XXI. Lo que en los sesenta era innovación urbana hoy se reconoce como clave para la sostenibilidad y la justicia espacial.</p>
             </div>
         </section>
 
