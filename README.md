@@ -47,6 +47,60 @@ Luego abre el navegador en `http://localhost:3000` (o el puerto que elijas).
 - El archivo `mapbox-integration.js` contiene un token de acceso (`mapboxAccessToken`). Si necesitas usar tu propio token, reemplázalo por el tuyo.
 - El contenedor del mapa es `#map` y el servidor entrega los archivos estáticos necesarios.
 
+## Mapas GeoJSON — Bibliotecas utilizadas y flujo
+
+- Biblioteca de mapas: Mapbox GL JS v3.15.0 (CDN en `index.html`).
+  - CSS: `https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.css`
+  - JS: `https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.js`
+- Reproyección en el navegador: proj4js v2.9.2 (CDN en `index.html`).
+  - Se usa para convertir GeoJSON que vienen en CRS métricos (por ejemplo EPSG:32616/UTM 16N) a WGS84 (EPSG:4326) antes de agregarlos al mapa.
+
+### ¿Dónde está la lógica?
+
+- `mapbox-integration.js`:
+  - Inicializa el mapa (`new mapboxgl.Map(...)`).
+  - Define `mapStepsConfig` con la configuración de cada paso (centro, zoom, estilo y capas a dibujar).
+  - Funciones clave:
+    - `reprojectGeoJSONToWGS84(geojson)`: intenta detectar el CRS de entrada (por ejemplo `EPSG:32616`), define la proyección con `proj4` si hace falta y transforma coordenadas a lon/lat (EPSG:4326). También elimina `crs` del GeoJSON final para evitar conflictos con Mapbox GL.
+    - `loadGeoJSONWithReprojection(url)`: hace `fetch` del archivo y llama a la función de reproyección.
+    - `showMapOverlay(config)`: aplica el estilo/viewport y agrega fuentes `type: 'geojson'` con `map.addSource` y capas `type: 'fill'` con `map.addLayer` usando los datos (ya reproyectados).
+    - `updateMapForStep(stepId)`: decide mostrar/ocultar el mapa y qué capas cargar según el paso activo de scroll.
+
+### ¿Cómo se dibujan los GeoJSON?
+
+1. En cada paso configurado, se define un arreglo `layers` dentro de `mapStepsConfig.stepConfigs["N"]`:
+   - Ejemplo (resumen):
+     - `source: { type: 'geojson', data: 'public/data/tasa-de-cambio-poblacional-por-AGEB.geojson' }`
+     - `type: 'fill'`, `paint: { 'fill-color': [...], 'fill-opacity': ... }`
+     - Opcional: `popup(properties) { ... }` para mostrar popups al hacer clic.
+2. Al cargar el estilo, se hace `addSource` y `addLayer` para cada capa. Si `source.data` es una URL, primero se `fetch`ea y reproyecta con `proj4` si trae `crs` distinto a 4326.
+3. Los datos se sirven desde `public/data/*.geojson`.
+
+### Agregar una nueva capa GeoJSON (rápido)
+
+1. Copia tu archivo en `public/data/mi-capa.geojson`.
+2. En `mapbox-integration.js`, localiza `mapStepsConfig.stepConfigs["N"]` del paso donde quieres mostrarla (o crea uno nuevo y agrega "N" a `visibleSteps`).
+3. Agrega un objeto dentro de `layers` como:
+   ```js
+   {
+     id: 'mi-capa',
+     type: 'fill',
+     source: { type: 'geojson', data: 'public/data/mi-capa.geojson' },
+     paint: {
+       'fill-color': ['step', ['to-number', ['get', 'miProp']], '#e5e5e5', 10, '#a8dadc', 30, '#457b9d'],
+       'fill-opacity': 0.8,
+       'fill-outline-color': '#fff'
+     },
+     popup: (p) => `<h3>Título</h3><p>Valor: ${p.miProp ?? 'N/D'}</p>`
+   }
+   ```
+4. Si tu GeoJSON trae `crs` y no es `EPSG:4326`, la reproyección ocurrirá automáticamente vía `proj4`.
+
+Notas:
+- Si ves propiedades de color que dependen de campos (por ejemplo `pobtot`, `DEN_HAB_HA`), asegúrate de que tu archivo tenga esos nombres o ajusta la expresión de `fill-color`.
+- Si cambias el estilo base (`config.style`), las capas se vuelven a agregar cuando el estilo termine de cargar.
+- El token de Mapbox se configura en `mapbox-integration.js` (`mapboxAccessToken`). Usa el tuyo si el actual deja de funcionar.
+
 ## Problemas comunes (Troubleshooting)
 
 - El comando `python -m http.server` no es necesario aquí. Usa `npm start` o `node serve.js` para el servidor Express.
