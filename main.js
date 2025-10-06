@@ -44,12 +44,39 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
                 response.element.classList.add('is-active');
                 
+                // Animación específica para step 29 (index 28)
+                if (currentStep === 28) {
+                    const step29 = response.element; // section[data-step="29"]
+                    step29.classList.remove('animate-up', 'animate-down');
+                    // direction: 'down' when entering while scrolling down; 'up' when entering while scrolling up
+                    if (response.direction === 'down') {
+                        step29.classList.add('animate-down');
+                    } else {
+                        step29.classList.add('animate-up');
+                    }
+                }
+
                 // Debug: imprimir información del step actual
                 console.log('Step activo:', currentStep, 'elemento:', response.element.classList.toString());
             })
             .onStepExit(response => {
                 console.log('Saliendo del step:', response.index);
                 response.element.classList.remove('is-active');
+
+                // Reset de animaciones para step 29 al salir, para que pueda reanimarse al re-entrar
+                if (response.index === 28) {
+                    const step29 = response.element;
+                    // Forzar reflow para reiniciar animaciones si fuese necesario
+                    step29.classList.remove('animate-up', 'animate-down');
+                    const left = step29.querySelector('.consequence-image-left');
+                    const right = step29.querySelector('.consequence-image-right');
+                    if (left && right) {
+                        left.style.opacity = '0';
+                        right.style.opacity = '0';
+                        left.style.transform = 'scale(0.9) translateX(-40px)';
+                        right.style.transform = 'scale(0.9) translateX(40px)';
+                    }
+                }
                 
                 // Si salimos de cualquier step de evolución urbana (7-17), ocultar las imágenes de fondo
                 if (response.index >= 7 && response.index <= 17) {

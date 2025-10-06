@@ -116,8 +116,6 @@
             height: 80px;
         }
         
-        /* Eliminados estilos de contenedores secundarios de Mapbox; se usa únicamente #map */
-        
         /* Estilo para el botón de cierre de mapa */
         .map-close-btn {
             position: absolute;
@@ -444,6 +442,28 @@
         .footer img {
             max-height: 60px;
             margin: 10px;
+        }
+
+        /* Crédito de foto en steps con imagen de fondo */
+        .photo-credit {
+            position: absolute;
+            bottom: 14px;
+            right: 16px;
+            background: rgba(0, 0, 0, 0.5);
+            color: #fff;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            line-height: 1.3;
+            z-index: 5;
+            pointer-events: auto;
+        }
+        .photo-credit a {
+            color: #fff;
+            text-decoration: underline;
+        }
+        .photo-credit a:hover {
+            text-decoration: none;
         }
         
         /* Animaciones */
@@ -802,40 +822,53 @@
         <!-- Step 29: Fotos de tráfico + periferias con servicios insuficientes -->
         <section class="step" data-step="29" style="position: relative; min-height: 100vh; overflow: hidden; padding: 0; margin: 0;">
             <!-- Contenedor principal que ocupa toda la pantalla -->
-            <div style="display: flex; width: 100%; height: 100vh; position: relative;">
+            <div class="consequence-images-wrapper" style="display: flex; width: 100%; height: 100vh; position: relative;">
                 <!-- Imagen 25.jpg a la izquierda -->
-                <div class="consequence-image-left" style="flex: 1; background-image: url('assets/25.jpg'); background-size: cover; background-position: center; 
-                           opacity: 0; transform: scale(0.8) translateX(-50px); 
-                           animation: popupLeft 1.2s ease-out 0.3s forwards;"></div>
+                <div class="consequence-image-left"></div>
                 
                 <!-- Imagen 20.jpg a la derecha -->
-                <div class="consequence-image-right" style="flex: 1; background-image: url('assets/20.jpg'); background-size: cover; background-position: center;
-                            opacity: 0; transform: scale(0.8) translateX(50px);
-                            animation: popupRight 1.2s ease-out 0.6s forwards;"></div>
+                <div class="consequence-image-right"></div>
             </div>
             
             <style>
+                /* Estado base (oculto) */
+                section[data-step="29"] .consequence-image-left,
+                section[data-step="29"] .consequence-image-right {
+                    flex: 1;
+                    background-size: cover;
+                    background-position: center;
+                    opacity: 0;
+                    transform: scale(0.9);
+                }
+
+                section[data-step="29"] .consequence-image-left {
+                    background-image: url('assets/25.jpg');
+                    transform: scale(0.9) translateX(-40px);
+                }
+
+                section[data-step="29"] .consequence-image-right {
+                    background-image: url('assets/20.jpg');
+                    transform: scale(0.9) translateX(40px);
+                }
+
+                /* Animaciones */
                 @keyframes popupLeft {
-                    0% {
-                        opacity: 0;
-                        transform: scale(0.8) translateX(-50px);
-                    }
-                    100% {
-                        opacity: 1;
-                        transform: scale(1) translateX(0);
-                    }
+                    0% { opacity: 0; transform: scale(0.9) translateX(-40px); }
+                    100% { opacity: 1; transform: scale(1) translateX(0); }
                 }
-                
+
                 @keyframes popupRight {
-                    0% {
-                        opacity: 0;
-                        transform: scale(0.8) translateX(50px);
-                    }
-                    100% {
-                        opacity: 1;
-                        transform: scale(1) translateX(0);
-                    }
+                    0% { opacity: 0; transform: scale(0.9) translateX(40px); }
+                    100% { opacity: 1; transform: scale(1) translateX(0); }
                 }
+
+                /* Entrando hacia abajo (desde arriba) */
+                section[data-step="29"].animate-down .consequence-image-left { animation: popupLeft 0.9s ease-out 0.1s forwards; }
+                section[data-step="29"].animate-down .consequence-image-right { animation: popupRight 0.9s ease-out 0.25s forwards; }
+
+                /* Entrando hacia arriba (desde abajo) - reutilizamos animación para consistencia */
+                section[data-step="29"].animate-up .consequence-image-left { animation: popupLeft 0.9s ease-out 0.1s forwards; }
+                section[data-step="29"].animate-up .consequence-image-right { animation: popupRight 0.9s ease-out 0.25s forwards; }
             </style>
         </section>
 
@@ -854,6 +887,9 @@
         <!-- Step 31: Imagen 26.jpg -->
         <section class="step" data-step="31" style="position: relative; min-height: 100vh;">
             <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url('assets/26.jpg'); background-size: cover; background-position: center;"></div>
+            <div class="photo-credit">
+                Fotografía: Parque de la Equidad en Cancún. Fuente: <a href="https://cgc.qroo.gob.mx/avanza-con-paso-firme-el-parque-de-la-equidad-en-cancun/" target="_blank" rel="noopener" title="Avanza con paso firme el Parque de la Equidad en Cancún - cgc.qroo.gob.mx">cgc.qroo.gob.mx</a>
+            </div>
         </section>
 
         <!-- Step 32: Looking ahead (Cierre / Call to action) -->
