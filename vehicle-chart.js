@@ -31,15 +31,38 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function parseCsvRow(row) {
-        // Soportar variaciones de encabezados
+        // Soportar variaciones y mojibake en encabezados (e.g., "A??o")
+        const originalKeys = Object.keys(row);
         const map = {};
-        for (const k in row) {
+        for (const k of originalKeys) {
             map[normalizeKey(k)] = row[k];
         }
-        const year = +map['ano'] || +map['anio'] || +map['year'];
-        const vehicles = +map['vehiculos_totales'] || +map['vehiculos'] || +map['total'];
+
+        // Año: preferir claves conocidas; si no existen, usar el primer valor de la fila como fallback
+        let year = +map['ano'] || +map['anio'] || +map['year'];
+        if (!year) {
+            // Fallback por posición (primera columna) ante mojibake tipo "A??o"
+            const firstVal = row[originalKeys[0]];
+            year = +firstVal;
+        }
+
+        // Vehículos totales: preferir claves conocidas; fallback por heurística o segunda columna
+        let vehicles = +map['vehiculos_totales'] || +map['vehiculos'] || +map['total'];
+        if (!vehicles) {
+            // Buscar alguna clave que contenga 'vehicul' y no 'por_vivienda'
+            const vehKey = Object.keys(map).find(k => k.includes('vehicul') && !k.includes('por_vivienda'));
+            if (vehKey) {
+                vehicles = +map[vehKey];
+            } else if (originalKeys.length > 1) {
+                // Fallback por posición: segunda columna
+                vehicles = +row[originalKeys[1]];
+            }
+        }
+
+        // Autos por vivienda (puede venir vacío)
         const vphRaw = map['vehiculos_por_vivienda'] || map['autos_por_vivienda'] || map['vph'];
         const vehiclesPerHousehold = vphRaw === undefined || vphRaw === '' ? null : +vphRaw;
+
         return { year, vehicles, vehiclesPerHousehold };
     }
 
@@ -145,11 +168,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Barras (vehículos)
         const barWidth = x.bandwidth() * 0.6;
-        const bars = g.selectAll('.bar')
+        const bars = g.selectAll('.veh-bar')
             .data(state.data, d => d.year)
             .enter()
             .append('rect')
-            .attr('class', 'bar')
+            .attr('class', 'veh-bar')
             .attr('x', d => x(d.year) + (x.bandwidth() - barWidth) / 2)
             .attr('y', dims.innerH)
             .attr('width', barWidth)
@@ -208,7 +231,7 @@ document.addEventListener('DOMContentLoaded', function () {
             .style('font-size', `${font.title}px`)
             .style('font-weight', '700')
             .style('fill', palette.text)
-            .text('Parque vehicular (2010–2023) y autos por vivienda');
+            .text('Crecimiento del Parque Vehicular y Autos por vivienda en Cancún, 2010–2023');
 
         // Leyenda (arriba-izquierda, bajo el título)
         const legend = g.append('g')
