@@ -1,260 +1,390 @@
-// Configuración para el gráfico del parque vehicular
-document.addEventListener('DOMContentLoaded', function() {
-    // Variables para almacenar datos y estado
-    let vehicleData = [];
-    let chart = null;
+// Gráfico combinado (barras + línea) con doble eje Y para Parque Vehicular
+// - Barras: Vehículos totales (eje Y izquierdo)
+// - Línea: Autos por vivienda (eje Y derecho)
+// Datos desde: /public/data/parque-vehicular.csv
 
-    // Datos de ejemplo del parque vehicular (2010-2023)
-    const vehicleDataRaw = [
-        { year: 2010, vehicles: 186000, vehiclesPerHousehold: 0.41 },
-        { year: 2011, vehicles: 195000, vehiclesPerHousehold: 0.42 },
-        { year: 2012, vehicles: 205000, vehiclesPerHousehold: 0.43 },
-        { year: 2013, vehicles: 218000, vehiclesPerHousehold: 0.45 },
-        { year: 2014, vehicles: 232000, vehiclesPerHousehold: 0.47 },
-        { year: 2015, vehicles: 248000, vehiclesPerHousehold: 0.49 },
-        { year: 2016, vehicles: 265000, vehiclesPerHousehold: 0.51 },
-        { year: 2017, vehicles: 283000, vehiclesPerHousehold: 0.53 },
-        { year: 2018, vehicles: 302000, vehiclesPerHousehold: 0.55 },
-        { year: 2019, vehicles: 322000, vehiclesPerHousehold: 0.57 },
-        { year: 2020, vehicles: 335000, vehiclesPerHousehold: 0.59 },
-        { year: 2021, vehicles: 348000, vehiclesPerHousehold: 0.61 },
-        { year: 2022, vehicles: 362000, vehiclesPerHousehold: 0.63 },
-        { year: 2023, vehicles: 380000, vehiclesPerHousehold: 0.65 }
-    ];
+document.addEventListener('DOMContentLoaded', function () {
+    const TARGET_ID = 'vehicleGrowthChart';
+    const DATA_URL = '/public/data/parque-vehicular.csv';
 
-    // Función para cargar datos
-    function loadData() {
-        vehicleData = vehicleDataRaw.map(d => {
-            return {
-                year: d.year,
-                vehicles: d.vehicles,
-                vehiclesPerHousehold: d.vehiclesPerHousehold
-            };
-        });
-
-        console.log('Datos de vehículos cargados:', vehicleData);
-        createChart();
-    }
-
-    // Función para crear el gráfico
-    function createChart() {
-        const container = d3.select('#vehicleGrowthChart');
-        if (container.empty()) return;
-
-        // Limpiar contenedor
-        container.html('');
-
-        // Dimensiones base para el viewBox, ajustadas para mejor visualización
-        const baseWidth = 1200; // Aumentado para mejor uso del espacio
-        const baseHeight = 700; // Aumentado para mejor visualización
-        const margin = { top: 60, right: 80, bottom: 60, left: 100 }; // Márgenes aumentados para evitar cortes
-        
-        // Dimensiones internas del área de dibujo
-        const width = baseWidth - margin.left - margin.right;
-        const height = baseHeight - margin.top - margin.bottom;
-
-        // Crear SVG responsive con viewBox
-        const svg = container.append('svg')
-            .attr('viewBox', `0 0 ${baseWidth} ${baseHeight}`)
-            .attr('preserveAspectRatio', 'xMidYMid meet')
-            .style('width', '100%')
-            .style('height', '100%')
-            .style('display', 'block')
-            .append('g')
-            .attr('transform', `translate(${margin.left},${margin.top})`);
-
-        // Escalas
-        const xScale = d3.scaleLinear()
-            .domain(d3.extent(vehicleData, d => d.year))
-            .range([0, width]);
-
-        const yScale = d3.scaleLinear()
-            .domain([0, d3.max(vehicleData, d => d.vehicles)])
-            .range([height, 0]);
-
-        // Ejes
-        const xAxis = d3.axisBottom(xScale)
-            .tickFormat(d3.format('d'));
-
-        const yAxis = d3.axisLeft(yScale)
-            .tickFormat(d => `${(d / 1000).toFixed(0)}k`);
-
-        svg.append('g')
-            .attr('class', 'x-axis')
-            .attr('transform', `translate(0,${height})`)
-            .call(xAxis)
-            .selectAll('text')
-            .style('font-size', `${Math.min(width * 0.015, 16)}px`)
-            .style('fill', '#023047');
-
-        svg.append('g')
-            .attr('class', 'y-axis')
-            .call(yAxis)
-            .selectAll('text')
-            .style('font-size', `${Math.min(width * 0.015, 16)}px`)
-            .style('fill', '#023047');
-
-        // Línea para vehículos
-        const line = d3.line()
-            .x(d => xScale(d.year))
-            .y(d => yScale(d.vehicles))
-            .curve(d3.curveMonotoneX);
-
-        svg.append('path')
-            .datum(vehicleData)
-            .attr('class', 'line vehicles-line')
-            .attr('d', line)
-            .attr('fill', 'none')
-            .attr('stroke', '#FB8500')
-            .attr('stroke-width', 3);
-
-        // Puntos para vehículos
-        svg.selectAll('.vehicle-point')
-            .data(vehicleData)
-            .enter()
-            .append('circle')
-            .attr('class', 'vehicle-point')
-            .attr('cx', d => xScale(d.year))
-            .attr('cy', d => yScale(d.vehicles))
-            .attr('r', 5)
-            .attr('fill', '#FB8500')
-            .attr('stroke', 'white')
-            .attr('stroke-width', 2);
-
-        // Título
-        svg.append('text')
-            .attr('class', 'title')
-            .attr('x', width / 2)
-            .attr('y', -20)
-            .attr('text-anchor', 'middle')
-            .style('font-size', `${Math.min(width * 0.02, 24)}px`)
-            .style('font-weight', 'bold')
-            .style('fill', '#023047')
-            .text('Crecimiento del Parque Vehicular en Cancún (2010-2023)');
-
-        // Etiquetas de ejes
-        svg.append('text')
-            .attr('class', 'axis-label')
-            .attr('x', width / 2)
-            .attr('y', height + 45)
-            .attr('text-anchor', 'middle')
-            .style('font-size', '14px')
-            .style('fill', '#023047')
-            .text('Año');
-
-        svg.append('text')
-            .attr('class', 'axis-label')
-            .attr('transform', 'rotate(-90)')
-            .attr('x', -height / 2)
-            .attr('y', -80)
-            .attr('text-anchor', 'middle')
-            .style('font-size', '14px')
-            .style('fill', '#023047')
-            .text('Número de Vehículos');
-
-        // Tooltip
-        const tooltip = d3.select('.tooltip');
-
-        // Función para mostrar tooltip
-        function showTooltip(d) {
-            tooltip.style('opacity', 1)
-                .html(`
-                    <div><strong>Año:</strong> ${d.year}</div>
-                    <div><strong>Vehículos:</strong> ${d.vehicles.toLocaleString()}</div>
-                    <div><strong>Vehículos por hogar:</strong> ${d.vehiclesPerHousehold}</div>
-                `)
-                .style('left', (d3.event.pageX + 10) + 'px')
-                .style('top', (d3.event.pageY - 10) + 'px');
-        }
-
-        // Función para ocultar tooltip
-        function hideTooltip() {
-            tooltip.style('opacity', 0);
-        }
-
-        // Agregar eventos a los puntos
-        svg.selectAll('.vehicle-point')
-            .on('mouseover', showTooltip)
-            .on('mouseout', hideTooltip);
-
-        // Información adicional
-        const infoBox = svg.append('g')
-            .attr('class', 'info-box')
-            .attr('transform', `translate(${width - 150}, 0)`);
-
-        infoBox.append('rect')
-            .attr('width', 140)
-            .attr('height', 60)
-            .attr('fill', 'rgba(255, 255, 255, 0.9)')
-            .attr('stroke', '#FB8500')
-            .attr('stroke-width', 1)
-            .attr('rx', 5);
-
-        infoBox.append('text')
-            .attr('x', 10)
-            .attr('y', 20)
-            .style('font-size', '11px')
-            .style('fill', '#023047')
-            .text('Crecimiento:');
-
-        infoBox.append('text')
-            .attr('x', 10)
-            .attr('y', 35)
-            .style('font-size', '11px')
-            .style('fill', '#FB8500')
-            .style('font-weight', 'bold')
-            .text('+142% (2010-2023)');
-
-        infoBox.append('text')
-            .attr('x', 10)
-            .attr('y', 50)
-            .style('font-size', '10px')
-            .style('fill', '#219EBC')
-            .text('Vehículos por hogar: ↑67%');
-    }
-
-    // Inicializar cuando se llegue al step correspondiente
-    function initializeVehicleChart() {
-        const vehicleChartStep = document.querySelector('section[data-step="27"]');
-        console.log('Buscando step 27:', vehicleChartStep);
-
-        if (vehicleChartStep) {
-            console.log('Step 27 encontrado, configurando observer');
-
-            // Usar Scrollama para detectar cuando llegamos al step
-            if (typeof scroller !== 'undefined' && scroller) {
-                // Si Scrollama está disponible, usar sus eventos
-                console.log('Usando Scrollama para inicializar gráfico de vehículos');
-                // El gráfico se inicializará cuando Scrollama llegue al step 27
-            } else {
-                // Fallback con IntersectionObserver
-                const observer = new IntersectionObserver((entries) => {
-                    entries.forEach(entry => {
-                        console.log('IntersectionObserver - Step 27 visible:', entry.isIntersecting);
-                        if (entry.isIntersecting && !chart) {
-                            console.log('Inicializando gráfico de vehículos via IntersectionObserver');
-                            loadData();
-                            chart = true;
-                        }
-                    });
-                }, { threshold: 0.5 });
-
-                observer.observe(vehicleChartStep);
-            }
-        } else {
-            console.error('No se encontró el step 27 para el gráfico de vehículos');
-        }
-    }
-
-    // Función para inicializar manualmente (llamada desde el script principal)
-    window.initVehicleChart = function() {
-        if (!chart) {
-            console.log('Inicializando gráfico de vehículos manualmente');
-            loadData();
-            chart = true;
-        }
+    const palette = {
+        primary: '#219EBC', // Barras (vehículos)
+        accent: '#FB8500',  // Línea (autos/vivienda)
+        text: '#023047',
+        grid: 'rgba(2,48,71,0.08)'
     };
 
-    // Inicializar
-    initializeVehicleChart();
+    const state = {
+        data: [],
+        hasDrawn: false,
+        hasLoaded: false,
+        resizeObserver: null
+    };
+
+    function normalizeKey(str) {
+        return String(str || '')
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '') // quitar acentos
+            .replace(/[^a-z0-9_]+/g, '_')
+            .replace(/^_+|_+$/g, '');
+    }
+
+    function parseCsvRow(row) {
+        // Soportar variaciones de encabezados
+        const map = {};
+        for (const k in row) {
+            map[normalizeKey(k)] = row[k];
+        }
+        const year = +map['ano'] || +map['anio'] || +map['year'];
+        const vehicles = +map['vehiculos_totales'] || +map['vehiculos'] || +map['total'];
+        const vphRaw = map['vehiculos_por_vivienda'] || map['autos_por_vivienda'] || map['vph'];
+        const vehiclesPerHousehold = vphRaw === undefined || vphRaw === '' ? null : +vphRaw;
+        return { year, vehicles, vehiclesPerHousehold };
+    }
+
+    function getContainerDims() {
+        const el = document.getElementById(TARGET_ID);
+        const rect = el.getBoundingClientRect();
+        // Márgenes amplios para ejes y leyenda
+        const margin = { top: 64, right: 68, bottom: 56, left: 96 };
+        const width = Math.max(600, rect.width);
+        const height = Math.max(420, rect.height);
+        return { width, height, margin, innerW: width - margin.left - margin.right, innerH: height - margin.top - margin.bottom };
+    }
+
+    function formatK(n) {
+        if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+        if (n >= 1_000) return (n / 1_000).toFixed(0) + 'k';
+        return String(n);
+    }
+
+    function computeFontSizes(width) {
+        // Escalar tipografías con el ancho, con límites
+        const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+        return {
+            axis: clamp(width * 0.015, 12, 18),
+            title: clamp(width * 0.026, 18, 28),
+            labels: clamp(width * 0.016, 12, 18),
+            legend: clamp(width * 0.015, 12, 18)
+        };
+    }
+
+    function render() {
+        const target = d3.select(`#${TARGET_ID}`);
+        if (target.empty() || !state.data.length) return;
+
+        // Limpiar
+        target.html('');
+
+        const dims = getContainerDims();
+        const font = computeFontSizes(dims.width);
+
+        const svg = target.append('svg')
+            .attr('width', '100%')
+            .attr('height', '100%')
+            .attr('viewBox', `0 0 ${dims.width} ${dims.height}`)
+            .attr('preserveAspectRatio', 'xMidYMid meet');
+
+        const g = svg.append('g')
+            .attr('transform', `translate(${dims.margin.left},${dims.margin.top})`);
+
+        // Escalas
+        const years = state.data.map(d => d.year);
+        const x = d3.scaleBand()
+            .domain(years)
+            .range([0, dims.innerW])
+            .padding(0.2);
+
+        const yLeft = d3.scaleLinear()
+            .domain([0, d3.max(state.data, d => d.vehicles) * 1.1]).nice()
+            .range([dims.innerH, 0]);
+
+        const maxVph = d3.max(state.data, d => d.vehiclesPerHousehold || 0) || 1;
+        const yRight = d3.scaleLinear()
+            .domain([0, maxVph * 1.15]).nice()
+            .range([dims.innerH, 0]);
+
+        // Ejes
+        const xAxis = d3.axisBottom(x)
+            .tickValues(years.filter((y, i) => years.length > 10 ? i % 1 === 0 : true))
+            .tickFormat(d3.format('d'));
+
+        const yAxisLeft = d3.axisLeft(yLeft).ticks(6).tickFormat(d => formatK(d));
+        const yAxisRight = d3.axisRight(yRight).ticks(5);
+
+        g.append('g')
+            .attr('class', 'x-axis')
+            .attr('transform', `translate(0,${dims.innerH})`)
+            .call(xAxis)
+            .selectAll('text')
+            .style('font-size', `${font.axis}px`)
+            .style('fill', palette.text);
+
+        g.append('g')
+            .attr('class', 'y-axis-left')
+            .call(yAxisLeft)
+            .selectAll('text')
+            .style('font-size', `${font.axis}px`)
+            .style('fill', palette.text);
+
+        g.append('g')
+            .attr('class', 'y-axis-right')
+            .attr('transform', `translate(${dims.innerW},0)`)
+            .call(yAxisRight)
+            .selectAll('text')
+            .style('font-size', `${font.axis}px`)
+            .style('fill', palette.text);
+
+        // Grid horizontal
+        g.append('g')
+            .attr('class', 'grid')
+            .call(d3.axisLeft(yLeft).tickSize(-dims.innerW).tickFormat(''))
+            .selectAll('line')
+            .attr('stroke', palette.grid);
+
+        // Barras (vehículos)
+        const barWidth = x.bandwidth() * 0.6;
+        const bars = g.selectAll('.bar')
+            .data(state.data, d => d.year)
+            .enter()
+            .append('rect')
+            .attr('class', 'bar')
+            .attr('x', d => x(d.year) + (x.bandwidth() - barWidth) / 2)
+            .attr('y', dims.innerH)
+            .attr('width', barWidth)
+            .attr('height', 0)
+            .attr('fill', palette.primary)
+            .attr('rx', Math.max(2, barWidth * 0.08));
+
+        // Etiquetas de valores de barras
+        const valueLabels = g.selectAll('.value-label')
+            .data(state.data, d => d.year)
+            .enter()
+            .append('text')
+            .attr('class', 'value-label')
+            .attr('x', d => x(d.year) + x.bandwidth() / 2)
+            .attr('y', d => yLeft(d.vehicles) - 8)
+            .attr('text-anchor', 'middle')
+            .style('font-size', `${font.labels}px`)
+            .style('fill', palette.text)
+            .style('opacity', 0)
+            .text(d => d3.format(',')(d.vehicles));
+
+        // Línea (autos por vivienda)
+        const defined = d => d.vehiclesPerHousehold != null && !isNaN(d.vehiclesPerHousehold);
+        const line = d3.line()
+            .defined(defined)
+            .x(d => x(d.year) + x.bandwidth() / 2)
+            .y(d => yRight(d.vehiclesPerHousehold))
+            .curve(d3.curveMonotoneX);
+
+        const path = g.append('path')
+            .datum(state.data.filter(defined))
+            .attr('class', 'vph-line')
+            .attr('fill', 'none')
+            .attr('stroke', palette.accent)
+            .attr('stroke-width', 3)
+            .attr('d', line);
+
+        // Puntos de la línea
+        const points = g.selectAll('.vph-point')
+            .data(state.data.filter(defined))
+            .enter()
+            .append('circle')
+            .attr('class', 'vph-point')
+            .attr('cx', d => x(d.year) + x.bandwidth() / 2)
+            .attr('cy', d => yRight(d.vehiclesPerHousehold))
+            .attr('r', 0)
+            .attr('fill', palette.accent)
+            .attr('stroke', '#fff')
+            .attr('stroke-width', 1.5);
+
+        // Título
+        g.append('text')
+            .attr('x', 0)
+            .attr('y', -24)
+            .attr('text-anchor', 'start')
+            .style('font-size', `${font.title}px`)
+            .style('font-weight', '700')
+            .style('fill', palette.text)
+            .text('Parque vehicular (2010–2023) y autos por vivienda');
+
+        // Leyenda (arriba-izquierda, bajo el título)
+        const legend = g.append('g')
+            .attr('class', 'legend')
+            .attr('transform', 'translate(0, 4)');
+
+        const legendItems = [
+            { color: palette.primary, type: 'rect', label: 'Parque vehicular (total)' },
+            { color: palette.accent, type: 'line', label: 'Autos por vivienda' }
+        ];
+
+        let lx = 0;
+        const lg = legend.selectAll('.legend-item')
+            .data(legendItems)
+            .enter()
+            .append('g')
+            .attr('class', 'legend-item')
+            .attr('transform', (d, i) => {
+                const tx = lx;
+                const itemW = 18 + 6 + (d.label.length * (font.legend * 0.6));
+                lx += itemW + 18;
+                return `translate(${tx}, 0)`;
+            });
+
+        lg.each(function (d) {
+            const gItem = d3.select(this);
+            if (d.type === 'rect') {
+                gItem.append('rect')
+                    .attr('x', 0)
+                    .attr('y', -font.legend + 4)
+                    .attr('width', 18)
+                    .attr('height', 12)
+                    .attr('fill', d.color)
+                    .attr('rx', 2);
+            } else {
+                gItem.append('line')
+                    .attr('x1', 0)
+                    .attr('y1', -font.legend / 2 + 2)
+                    .attr('x2', 18)
+                    .attr('y2', -font.legend / 2 + 2)
+                    .attr('stroke', d.color)
+                    .attr('stroke-width', 3);
+            }
+            gItem.append('text')
+                .attr('x', 24)
+                .attr('y', 0)
+                .attr('dominant-baseline', 'ideographic')
+                .style('font-size', `${font.legend}px`)
+                .style('fill', palette.text)
+                .text(d.label);
+        });
+
+        // Etiquetas de ejes
+        g.append('text')
+            .attr('x', dims.innerW / 2)
+            .attr('y', dims.innerH + 40)
+            .attr('text-anchor', 'middle')
+            .style('font-size', `${font.axis}px`)
+            .style('fill', palette.text)
+            .text('Año');
+
+        g.append('text')
+            .attr('transform', 'rotate(-90)')
+            .attr('x', -dims.innerH / 2)
+            .attr('y', -64)
+            .attr('text-anchor', 'middle')
+            .style('font-size', `${font.axis}px`)
+            .style('fill', palette.text)
+            .text('Vehículos (total)');
+
+        g.append('text')
+            .attr('transform', `translate(${dims.innerW + 48}, ${dims.innerH / 2}) rotate(90)`) 
+            .attr('text-anchor', 'middle')
+            .style('font-size', `${font.axis}px`)
+            .style('fill', palette.text)
+            .text('Autos por vivienda');
+
+        // Tooltip (busca el hermano .tooltip dentro del contenedor padre)
+        const parent = document.getElementById(TARGET_ID).parentNode;
+        const tooltip = d3.select(parent).select('.tooltip');
+
+        const showBarTip = (event, d) => {
+            tooltip
+                .style('opacity', 1)
+                .html(`<div><strong>Año:</strong> ${d.year}</div>
+                             <div><strong>Vehículos:</strong> ${d3.format(',')(d.vehicles)}</div>`)
+                .style('left', `${event.pageX + 12}px`)
+                .style('top', `${event.pageY - 28}px`);
+        };
+        const showPointTip = (event, d) => {
+            tooltip
+                .style('opacity', 1)
+                .html(`<div><strong>Año:</strong> ${d.year}</div>
+                             <div><strong>Autos por vivienda:</strong> ${d.vehiclesPerHousehold.toFixed(2)}</div>`) 
+                .style('left', `${event.pageX + 12}px`)
+                .style('top', `${event.pageY - 28}px`);
+        };
+        const hideTip = () => tooltip.style('opacity', 0);
+
+        bars.on('mousemove', showBarTip).on('mouseenter', showBarTip).on('mouseleave', hideTip);
+        points.on('mousemove', showPointTip).on('mouseenter', showPointTip).on('mouseleave', hideTip);
+
+        // Animaciones de entrada (solo primera vez)
+        if (!state.hasDrawn) {
+            const t = g.transition().duration(900).ease(d3.easeCubicOut);
+            bars.transition(t)
+                .attr('y', d => yLeft(d.vehicles))
+                .attr('height', d => dims.innerH - yLeft(d.vehicles));
+
+            // Label aparece luego de barras
+            valueLabels.transition().delay(700).duration(400)
+                .style('opacity', 1)
+                .attr('y', d => yLeft(d.vehicles) - 8);
+
+            // Línea dibujada con trazo animado
+            const totalLen = path.node().getTotalLength();
+            path
+                .attr('stroke-dasharray', `${totalLen} ${totalLen}`)
+                .attr('stroke-dashoffset', totalLen)
+                .transition().delay(350).duration(900).ease(d3.easeCubicOut)
+                .attr('stroke-dashoffset', 0);
+
+            // Puntos emergen
+            points.transition().delay(900).duration(400)
+                .attr('r', Math.max(3, barWidth * 0.2));
+
+            state.hasDrawn = true;
+        } else {
+            // Actualización sin animaciones fuertes (en redimensionamiento)
+            bars
+                .attr('y', d => yLeft(d.vehicles))
+                .attr('height', d => dims.innerH - yLeft(d.vehicles));
+            valueLabels
+                .style('opacity', 1)
+                .attr('y', d => yLeft(d.vehicles) - 8)
+                .style('font-size', `${font.labels}px`);
+            points
+                .attr('r', Math.max(3, barWidth * 0.2));
+        }
+    }
+
+    function initResizeObserver() {
+        const el = document.getElementById(TARGET_ID);
+        if (!el) return;
+        if (state.resizeObserver) return;
+        state.resizeObserver = new ResizeObserver(() => {
+            if (state.hasLoaded) {
+                render();
+            }
+        });
+        state.resizeObserver.observe(el);
+    }
+
+    function loadData() {
+        if (state.hasLoaded) {
+            render();
+            return;
+        }
+        d3.csv(DATA_URL, parseCsvRow).then(rows => {
+            state.data = rows
+                .filter(d => d.year && d.vehicles)
+                .sort((a, b) => d3.ascending(a.year, b.year));
+            state.hasLoaded = true;
+            initResizeObserver();
+            render();
+        }).catch(err => {
+            console.error('Error cargando CSV, usando datos vacíos:', err);
+            state.data = [];
+            state.hasLoaded = true;
+            initResizeObserver();
+            render();
+        });
+    }
+
+    // Exponer para ser llamado desde Scrollama (main.js en step 27)
+    window.initVehicleChart = function () {
+        loadData();
+    };
 });
