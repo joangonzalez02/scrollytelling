@@ -16,7 +16,9 @@ document.addEventListener('DOMContentLoaded', function() {
             return isNaN(num) ? null : num;
         }
         
-        d3.csv('public/data/Población - Valores.csv')
+        // Evitar caché del navegador/CDN en GitHub Pages para ver cambios recientes
+        // Usamos nombre de archivo sin acentos para máxima compatibilidad
+        d3.csv(`public/data/poblacion-valores.csv?v=${Date.now()}`, undefined, { cache: 'no-store' })
             .then(function(csvData) {
                 populationData = csvData.map(d => {
                     return {

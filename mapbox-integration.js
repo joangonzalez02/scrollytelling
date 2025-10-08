@@ -393,7 +393,10 @@ function reprojectGeoJSONToWGS84(geojson) {
 
 // Cargar GeoJSON desde URL, con reproyección si trae CRS distinto a 4326
 async function loadGeoJSONWithReprojection(url) {
-    const res = await fetch(url);
+    // Evitar caché para reflejar cambios recientes en GitHub Pages
+    const sep = url.includes('?') ? '&' : '?';
+    const noCacheUrl = `${url}${sep}v=${Date.now()}`;
+    const res = await fetch(noCacheUrl, { cache: 'no-store' });
     const data = await res.json();
     return reprojectGeoJSONToWGS84(data);
 }

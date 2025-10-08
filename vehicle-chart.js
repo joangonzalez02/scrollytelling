@@ -5,7 +5,8 @@
 
 document.addEventListener('DOMContentLoaded', function () {
     const TARGET_ID = 'vehicleGrowthChart';
-    const DATA_URL = 'public/data/parque-vehicular.csv';
+    // Agregar parámetro de caché-busting para evitar datos obsoletos en GitHub Pages
+    const DATA_URL = `public/data/parque-vehicular.csv?v=${Date.now()}`;
 
     // Alinear estilos del contenedor con el gráfico de población (reutilizar .chart-container)
     const container = document.getElementById(TARGET_ID);
@@ -646,7 +647,7 @@ document.addEventListener('DOMContentLoaded', function () {
             render();
             return;
         }
-        d3.csv(DATA_URL, parseCsvRow).then(rows => {
+        d3.csv(DATA_URL, parseCsvRow, { cache: 'no-store' }).then(rows => {
             state.data = rows
                 .filter(d => d.year && d.vehicles)
                 .sort((a, b) => d3.ascending(a.year, b.year));
