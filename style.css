@@ -319,25 +319,13 @@ body {
     cursor: pointer;
 }
 
-/* Estilos para el gráfico de vehículos */
+/* Estilos generales para chart-container (mantener compatibilidad) */
 .chart-container {
     background-color: transparent;
     border-radius: 12px;
-    /* box-shadow: 0 4px 20px rgba(2, 48, 71, 0.1); */
     padding: 1.5rem;
     margin: 2rem auto;
-    width: 90%;
-    max-width: 700px;
-    height: 380px;
     overflow: visible;
-    position: relative;
-}
-
-#vehicleGrowthChart {
-    width: 100% !important;
-    height: 100% !important; /* Fill the container */
-    margin: 0 auto;
-    display: block; /* Remove flex which was centering the small SVG */
     position: relative;
 }
 
@@ -366,15 +354,35 @@ body {
 }
 
 .step[data-step="27"] .chart-container {
-    display: inline-block !important; /* keep container sized to content */
-    width: auto !important;
-    max-width: 900px !important; /* Aumentado para mejor visualización */
-    height: 600px !important;    /* Aumentado para que se vea completa */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important; /* Igual que población */
+    max-width: none !important;
     padding: 1.5rem !important;
     margin: 2rem auto !important;
-    background-color: transparent !important; /* Fondo transparente */
+    background-color: white !important; /* Fondo blanco como population chart */
     border-radius: 12px !important;
-    /* Sin box-shadow para fondo completamente transparente */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important; /* Sombra como population chart */
+}
+
+/* Asegurar que el contenedor tenga fondo blanco con máxima especificidad */
+/* No necesitamos una clase especial para vehicle-chart-container cuando reutilizamos .chart-container */
+
+/* Eliminar sombras de texto en la gráfica de vehículos */
+.step[data-step="27"] text,
+.step[data-step="27"] .vehicle-chart-container text,
+#vehicleGrowthChart text,
+#vehicleGrowthChart .axis text,
+#vehicleGrowthChart .axis-label,
+#vehicleGrowthChart svg text {
+    text-shadow: none !important;
+}
+
+/* Eliminar sombras específicamente de las etiquetas de ejes */
+.step[data-step="27"] svg text[fill="#023047"],
+.vehicle-chart-container svg text[fill="#023047"] {
+    text-shadow: none !important;
 }
 
 /* Ensure tooltip is positioned relative to the chart container */
@@ -386,23 +394,10 @@ body {
 }
 
 /* Force the SVG to respect the exact pixel height inside the chart container */
-.step[data-step="27"] #vehicleGrowthChart,
-.step[data-step="27"] #vehicleGrowthChart svg {
-    height: 600px !important;
-    max-height: 600px !important;
-    width: 100% !important;
-    display: block !important;
-}
+/* El tamaño del SVG se manejará con viewBox + height:100% heredada del contenedor */
 
 /* Small screens: reduce chart height to avoid overflow */
-@media (max-width: 600px) {
-    .step[data-step="27"] .chart-container,
-    .step[data-step="27"] #vehicleGrowthChart,
-    .step[data-step="27"] #vehicleGrowthChart svg {
-        height: 500px !important;
-        max-height: 500px !important;
-    }
-}
+/* Alturas responsivas ya controladas por .chart-container y IDs de gráficos */
 
 #vehicleGrowthChart .line {
     fill: none;
@@ -418,12 +413,28 @@ body {
     transition: r 0.2s ease;
 }
 
+/* Suavizar hover en barras (fallback al handler JS) */
+.veh-bar { transition: opacity 0.2s ease; }
+.veh-bar:hover { opacity: 0.8; }
+
 /* Desactivado el cambio de tamaño por hover para evitar flicker al pasar sobre barras */
 
 #vehicleGrowthChart .x-axis path,
 #vehicleGrowthChart .y-axis path {
     stroke: #023047;
     stroke-width: 1;
+}
+
+/* Force consistent axis line color (domain + ticks) in vehicle chart */
+#vehicleGrowthChart .y-axis-left .domain,
+#vehicleGrowthChart .y-axis-left .tick line,
+#vehicleGrowthChart .y-axis-right .domain,
+#vehicleGrowthChart .y-axis-right .tick line,
+#vehicleGrowthChart .x-axis .domain,
+#vehicleGrowthChart .x-axis .tick line {
+    stroke: rgba(120, 120, 120, 0.2) !important;
+    stroke-width: 1 !important;
+    shape-rendering: crispEdges;
 }
 
 #vehicleGrowthChart .x-axis text,

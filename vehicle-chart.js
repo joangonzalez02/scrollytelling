@@ -7,6 +7,20 @@ document.addEventListener('DOMContentLoaded', function () {
     const TARGET_ID = 'vehicleGrowthChart';
     const DATA_URL = 'public/data/parque-vehicular.csv';
 
+    // Alinear estilos del contenedor con el gráfico de población (reutilizar .chart-container)
+    const container = document.getElementById(TARGET_ID);
+    if (container && container.parentElement) {
+        const parent = container.parentElement;
+        // No cambiar clases ni forzar estilos; dejar que .chart-container controle el layout
+        // Asegurar que el contenedor interno ocupe todo el tamaño disponible
+        container.style.display = 'flex';
+        container.style.flexDirection = 'column';
+        container.style.width = '100%';
+        container.style.height = '100%';
+        container.style.position = 'relative';
+        container.style.overflow = 'hidden';
+    }
+
     const palette = {
         primary: '#219EBC', // Barras (vehículos)
         accent: '#FB8500',  // Línea (autos/vivienda)
@@ -78,13 +92,42 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function getContainerDims() {
+        // Usar viewBox fijo para responsividad, como population chart
         const el = document.getElementById(TARGET_ID);
-        const rect = el.getBoundingClientRect();
-        // Márgenes amplios para ejes y leyenda
-        const margin = { top: 64, right: 78, bottom: 66, left: 106 };
-        const width = Math.max(800, rect.width);
-        const height = Math.max(520, rect.height);
-        return { width, height, margin, innerW: width - margin.left - margin.right, innerH: height - margin.top - margin.bottom };
+        const containerRect = el ? el.getBoundingClientRect() : null;
+        const containerWidth = containerRect ? containerRect.width : 1000;
+        
+        const baseWidth = 1000;  // Más ancho que antes para mejor aprovechamiento del espacio
+        const baseHeight = 400;
+        
+        // Márgenes simétricos y responsivos
+        let leftRightMargin;
+        if (containerWidth <= 480) {
+            leftRightMargin = 80;  // Móviles - márgenes más pequeños
+        } else if (containerWidth <= 768) {
+            leftRightMargin = 100; // Tablets - márgenes intermedios
+        } else {
+            leftRightMargin = 120; // Desktop - márgenes amplios
+        }
+        
+        const margin = { 
+            top: 40, 
+            right: leftRightMargin, 
+            bottom: 80, 
+            left: leftRightMargin 
+        };
+        
+        // Dimensiones internas del área de dibujo
+        const width = baseWidth - margin.left - margin.right;
+        const height = baseHeight - margin.top - margin.bottom;
+        
+        return { 
+            width: baseWidth, 
+            height: baseHeight, 
+            margin, 
+            innerW: width, 
+            innerH: height 
+        };
     }
 
     function formatK(n) {
@@ -94,14 +137,13 @@ document.addEventListener('DOMContentLoaded', function () {
         return String(n);
     }
 
-    function computeFontSizes(width) {
-        // Escalar tipografías con el ancho, con límites
-        const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+    function computeFontSizes() {
+        // Fuentes fijas y responsive a través de CSS
         return {
-            axis: clamp(width * 0.015, 12, 18),
-            title: clamp(width * 0.026, 18, 28),
-            labels: clamp(width * 0.016, 12, 18),
-            legend: clamp(width * 0.015, 12, 18)
+            axis: 14,
+            title: 18,
+            labels: 14,
+            legend: 14
         };
     }
 
@@ -140,13 +182,16 @@ document.addEventListener('DOMContentLoaded', function () {
         ensureTooltip();
 
         const dims = getContainerDims();
-        const font = computeFontSizes(dims.width);
+        const font = computeFontSizes();
 
         const svg = target.append('svg')
             .attr('width', '100%')
             .attr('height', '100%')
             .attr('viewBox', `0 0 ${dims.width} ${dims.height}`)
-            .attr('preserveAspectRatio', 'xMidYMid meet');
+            .attr('preserveAspectRatio', 'xMidYMid meet')
+            .style('width', '100%')
+            .style('height', '100%')
+            .style('max-width', '100%');
 
         const g = svg.append('g')
             .attr('transform', `translate(${dims.margin.left},${dims.margin.top})`);
@@ -167,12 +212,37 @@ document.addEventListener('DOMContentLoaded', function () {
             .attr('offset', '100%')
             .attr('stop-color', '#8ECAE6');
 
+        // Calcular incrementos respecto al dato anterior
+        let prevVehicles = null;
+        let prevVPH = null;
+        state.data.forEach(d => {
+            // Crecimiento de vehículos vs registro inmediato anterior
+            if (prevVehicles != null && d.vehicles != null && d.vehicles > 0) {
+                d.growthVehicles = ((d.vehicles - prevVehicles) / prevVehicles) * 100;
+            } else {
+                d.growthVehicles = null;
+            }
+            prevVehicles = d.vehicles;
+
+            // Crecimiento de VPH vs último VPH no nulo anterior
+            if (d.vehiclesPerHousehold != null && !isNaN(d.vehiclesPerHousehold)) {
+                if (prevVPH != null && prevVPH > 0) {
+                    d.growthVPH = ((d.vehiclesPerHousehold - prevVPH) / prevVPH) * 100;
+                } else {
+                    d.growthVPH = null;
+                }
+                prevVPH = d.vehiclesPerHousehold;
+            } else {
+                d.growthVPH = null;
+            }
+        });
+
         // Escalas
         const years = state.data.map(d => d.year);
         const x = d3.scaleBand()
             .domain(years)
             .range([0, dims.innerW])
-            .padding(0.4);
+            .padding(0.2);
 
         const yLeft = d3.scaleLinear()
             .domain([0, d3.max(state.data, d => d.vehicles) * 1.1]).nice()
@@ -192,31 +262,40 @@ document.addEventListener('DOMContentLoaded', function () {
         const yAxisRight = d3.axisRight(yRight).ticks(5);
 
         g.append('g')
-            .attr('class', 'x-axis')
+            .attr('class', 'axis x-axis')
             .attr('transform', `translate(0,${dims.innerH})`)
             .call(xAxis)
             .selectAll('text')
             .style('font-size', `${font.axis}px`)
-            .style('fill', '#023047')
+            .style('fill', '#555')
+            .style('text-shadow', 'none')
             .attr('transform', 'rotate(-45)')
             .attr('text-anchor', 'end')
             .attr('dx', '-.8em')
             .attr('dy', '.15em');
+        // Desactivar eventos en eje X para evitar interferencia con hover de barras
+        g.select('.x-axis').style('pointer-events', 'none');
 
         g.append('g')
-            .attr('class', 'y-axis-left')
+            .attr('class', 'axis y-axis-left')
             .call(yAxisLeft)
             .selectAll('text')
             .style('font-size', `${font.axis}px`)
-            .style('fill', '#023047');
+            .style('fill', '#555')
+            .style('text-shadow', 'none');
+        // Desactivar eventos en eje Y izquierdo
+        g.select('.y-axis-left').style('pointer-events', 'none');
 
         g.append('g')
-            .attr('class', 'y-axis-right')
+            .attr('class', 'axis y-axis-right')
             .attr('transform', `translate(${dims.innerW},0)`)
             .call(yAxisRight)
             .selectAll('text')
             .style('font-size', `${font.axis}px`)
-            .style('fill', '#023047');
+            .style('fill', '#555')
+            .style('text-shadow', 'none');
+        // Desactivar eventos en eje Y derecho
+        g.select('.y-axis-right').style('pointer-events', 'none');
 
         // Grid horizontal
         g.append('g')
@@ -225,13 +304,20 @@ document.addEventListener('DOMContentLoaded', function () {
             .selectAll('line')
             .attr('stroke', palette.grid);
 
-        // Barras (vehículos)
+        // Colores de ejes (líneas y path) similares a population (forzar inline style)
+        const axisStroke = 'rgba(120, 120, 120, 0.2)';
+        ['.x-axis', '.y-axis-left', '.y-axis-right'].forEach(sel => {
+            g.select(sel).selectAll('path, line').style('stroke', axisStroke);
+        });
+
+        // Barras (vehículos) - dibujar antes pero mantenerlas por encima en z-order usando order()
         const barWidth = x.bandwidth();
         const bars = g.selectAll('.veh-bar')
             .data(state.data, d => d.year)
             .enter()
             .append('rect')
             .attr('class', 'veh-bar')
+            .style('pointer-events', 'all')
             .attr('x', d => x(d.year))
             .attr('y', dims.innerH)
             .attr('width', barWidth)
@@ -250,6 +336,8 @@ document.addEventListener('DOMContentLoaded', function () {
             .attr('text-anchor', 'middle')
             .style('font-size', `${font.labels}px`)
             .style('fill', palette.text)
+            .style('text-shadow', 'none')
+            .style('pointer-events', 'none')
             .style('opacity', 0)
             .text(d => formatK(d.vehicles));
 
@@ -267,7 +355,8 @@ document.addEventListener('DOMContentLoaded', function () {
             .attr('fill', 'none')
             .attr('stroke', palette.accent)
             .attr('stroke-width', 3)
-            .attr('d', line);
+            .attr('d', line)
+            .style('pointer-events', 'none');
 
         // Puntos de la línea
         const points = g.selectAll('.vph-point')
@@ -281,19 +370,20 @@ document.addEventListener('DOMContentLoaded', function () {
             .attr('fill', palette.accent)
             .attr('stroke', '#fff')
             .attr('stroke-width', 1.5)
+            .style('pointer-events', 'auto')
             .on('mouseover', function(event, d) {
-                // Destacar punto
-                d3.select(this)
-                    .transition()
-                    .duration(200)
-                    .attr('r', Math.max(6, x.bandwidth() * 0.3))
-                    .attr('stroke-width', 2);
-                
-                // Mostrar tooltip
+                // Solo mostrar tooltip (sin cambiar tamaño para evitar flicker visual)
                 let tooltipContent = `
                     <div><strong>Año ${d.year}</strong></div>
                     <div>Autos/vivienda: <span style="color: ${palette.accent}">${d.vehiclesPerHousehold.toFixed(2)}</span></div>
                 `;
+                if (d.growthVPH != null && !isNaN(d.growthVPH)) {
+                    const signPrefix = d.growthVPH > 0 ? '+' : '';
+                    let color = '#e5e7eb';
+                    if (d.growthVPH > 0) color = '#2ECC71';
+                    else if (d.growthVPH < 0) color = '#E63946';
+                    tooltipContent += `<div>Incremento: <span style="color:${color}">${signPrefix}${d.growthVPH.toFixed(1)}%</span></div>`;
+                }
                 
                 if (d.vehicles) {
                     tooltipContent += `<div>Vehículos totales: <span style="color: #8ECAE6">${formatK(d.vehicles)}</span></div>`;
@@ -310,13 +400,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     .style('opacity', 1);
             })
             .on('mouseout', function() {
-                // Restaurar punto
-                d3.select(this)
-                    .transition()
-                    .duration(200)
-                    .attr('r', Math.max(3, x.bandwidth() * 0.2))
-                    .attr('stroke-width', 1.5);
-                
                 // Ocultar tooltip
                 state.tooltip.style('opacity', 0);
             })
@@ -330,6 +413,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     .style('top', yPosition + 'px');
             });
 
+        // Asegurar orden: línea sobre barras, puntos sobre línea
+        path.raise();
+        points.raise();
+
         // Título
         g.append('text')
             .attr('x', dims.innerW / 2)
@@ -338,56 +425,64 @@ document.addEventListener('DOMContentLoaded', function () {
             .style('font-size', `${font.title}px`)
             .style('font-weight', '700')
             .style('fill', palette.text)
+            .style('text-shadow', 'none')
             .text('Crecimiento del Parque Vehicular y Autos por vivienda en Cancún, 2010–2023');
 
         // Leyenda (arriba-izquierda, bajo el título)
+        // Leyenda responsiva (tamaños basados en ancho disponible)
         const legend = g.append('g')
             .attr('class', 'legend')
-            .attr('transform', 'translate(0, 4)');
+            .style('pointer-events', 'none');
 
         const legendItems = [
             { color: palette.primary, type: 'rect', label: 'Parque vehicular (total)' },
             { color: palette.accent, type: 'line', label: 'Autos por vivienda' }
         ];
 
-        let lx = 0;
+        const legendSize = dims.innerW < 480 ? 12 : (dims.innerW < 768 ? 13 : 14);
+        const legendRectW = Math.round(legendSize * 1.3);
+        const legendRectH = Math.round(legendSize * 0.85);
+        const legendIconGap = Math.round(legendSize * 0.5);
+        const legendRightShift = Math.round(Math.min(16, dims.innerW * 0.02));
+
+        legend.attr('transform', `translate(${legendRightShift}, ${6})`);
+
+        const rowGap = Math.round(legendSize * 0.4) + 6;
         const lg = legend.selectAll('.legend-item')
             .data(legendItems)
             .enter()
             .append('g')
             .attr('class', 'legend-item')
-            .attr('transform', (d, i) => {
-                const tx = lx;
-                const itemW = 18 + 6 + (d.label.length * (font.legend * 0.6));
-                lx += itemW + 18;
-                return `translate(${tx}, 0)`;
-            });
+            .attr('transform', (d, i) => `translate(0, ${i * (legendSize + rowGap)})`);
 
         lg.each(function (d) {
             const gItem = d3.select(this);
             if (d.type === 'rect') {
                 gItem.append('rect')
                     .attr('x', 0)
-                    .attr('y', -font.legend + 4)
-                    .attr('width', 18)
-                    .attr('height', 12)
-                    .attr('fill', d.color)
+                    .attr('y', -Math.round(legendRectH / 2)) // centrar respecto al texto
+                    .attr('width', legendRectW)
+                    .attr('height', legendRectH)
+                    .attr('fill', `url(#${gradientId})`) // usar el mismo gradiente de las barras
                     .attr('rx', 2);
             } else {
                 gItem.append('line')
                     .attr('x1', 0)
-                    .attr('y1', -font.legend / 2 + 2)
-                    .attr('x2', 18)
-                    .attr('y2', -font.legend / 2 + 2)
+                    .attr('y1', 0)
+                    .attr('x2', legendRectW)
+                    .attr('y2', 0)
                     .attr('stroke', d.color)
-                    .attr('stroke-width', 3);
+                    .attr('stroke-width', 3)
+                    .attr('stroke-linecap', 'round')
+                    .attr('transform', 'rotate(0)');
             }
             gItem.append('text')
-                .attr('x', 24)
+                .attr('x', legendRectW + legendIconGap)
                 .attr('y', 0)
-                .attr('dominant-baseline', 'ideographic')
-                .style('font-size', `${font.legend}px`)
-                .style('fill', palette.text)
+                .attr('dominant-baseline', 'central')  // Mejor centrado vertical
+                .style('font-size', `${legendSize}px`)
+                .style('fill', '#555')
+                .style('text-shadow', 'none')  // Eliminar sombra
                 .text(d.label);
         });
 
@@ -397,6 +492,7 @@ document.addEventListener('DOMContentLoaded', function () {
             .attr('y', dims.margin.top + dims.innerH + dims.margin.bottom - 10)
             .style('text-anchor', 'middle')
             .attr('fill', '#023047')
+            .style('text-shadow', 'none')
             .text('Año');
 
         svg.append('text')
@@ -406,33 +502,41 @@ document.addEventListener('DOMContentLoaded', function () {
             .attr('dy', '1em')
             .style('text-anchor', 'middle')
             .attr('fill', '#023047')
+            .style('text-shadow', 'none')
             .text('Vehículos (total)');
 
         svg.append('text')
             .attr('transform', 'rotate(-90)')
-            .attr('y', dims.margin.left + dims.innerW + 50)
+            .attr('y', dims.margin.left + dims.innerW + 40)
             .attr('x', -(dims.margin.top + dims.innerH / 2))
             .attr('dy', '1em')
             .style('text-anchor', 'middle')
             .attr('fill', '#023047')
+            .style('text-shadow', 'none')
             .text('Autos por vivienda');
 
         // Hover con tooltip
         bars
-            .on('mouseover', function(event, d) {
+            .on('mouseenter', function(event, d) {
                 // Destacar barra
                 d3.select(this)
+                    .raise()
                     .transition()
                     .duration(300)
-                    .attr('opacity', 0.9)
-                    .attr('stroke', palette.primary)
-                    .attr('stroke-width', 2);
+                    .attr('opacity', 0.6);
                 
                 // Mostrar tooltip
                 let tooltipContent = `
                     <div><strong>Año ${d.year}</strong></div>
                     <div>Vehículos: <span style="color: #8ECAE6">${d3.format(',')(d.vehicles)}</span></div>
                 `;
+                if (d.growthVehicles != null && !isNaN(d.growthVehicles)) {
+                    const signPrefix = d.growthVehicles > 0 ? '+' : '';
+                    let color = '#e5e7eb';
+                    if (d.growthVehicles > 0) color = '#2ECC71';
+                    else if (d.growthVehicles < 0) color = '#E63946';
+                    tooltipContent += `<div>Incremento: <span style="color:${color}">${signPrefix}${d.growthVehicles.toFixed(1)}%</span></div>`;
+                }
                 
                 if (d.vehiclesPerHousehold != null) {
                     tooltipContent += `<div>Autos/vivienda: <span style="color: ${palette.accent}">${d.vehiclesPerHousehold.toFixed(2)}</span></div>`;
@@ -448,14 +552,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     .style('top', yPosition + 'px')
                     .style('opacity', 1);
             })
-            .on('mouseout', function() {
+            .on('mouseleave', function() {
                 // Restaurar barra
                 d3.select(this)
                     .transition()
                     .duration(300)
-                    .attr('opacity', 1)
-                    .attr('stroke', 'none')
-                    .attr('stroke-width', 0);
+                    .attr('opacity', 1);
                 
                 // Ocultar tooltip
                 state.tooltip.style('opacity', 0);
@@ -503,7 +605,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // Puntos emergen
             points.transition().delay(900).duration(400)
-                .attr('r', Math.max(3, barWidth * 0.2));
+                .attr('r', Math.min(5, Math.max(3, barWidth * 0.2)));
 
             state.hasDrawn = true;
         } else {
@@ -516,7 +618,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 .attr('y', d => yLeft(d.vehicles) - 8)
                 .style('font-size', `${font.labels}px`);
             points
-                .attr('r', Math.max(3, barWidth * 0.2));
+                .attr('r', Math.min(5, Math.max(3, barWidth * 0.2)));
         }
 
         // Guardar referencias para enter/exit animations
@@ -594,7 +696,7 @@ document.addEventListener('DOMContentLoaded', function () {
             points
                 .attr('r', 0)
                 .transition().delay(950).duration(350)
-                .attr('r', Math.max(3, scales.x.bandwidth() * 0.2));
+                .attr('r', Math.min(5, Math.max(3, scales.x.bandwidth() * 0.2)));
         },
         exit: function() {
             const r = state.refs;
