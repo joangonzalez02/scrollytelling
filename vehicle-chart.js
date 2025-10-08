@@ -1,11 +1,11 @@
 // Gráfico combinado (barras + línea) con doble eje Y para Parque Vehicular
 // - Barras: Vehículos totales (eje Y izquierdo)
 // - Línea: Autos por vivienda (eje Y derecho)
-// Datos desde: /public/data/parque-vehicular.csv
+// Datos desde: public/data/parque-vehicular.csv
 
 document.addEventListener('DOMContentLoaded', function () {
     const TARGET_ID = 'vehicleGrowthChart';
-    const DATA_URL = '/public/data/parque-vehicular.csv';
+    const DATA_URL = 'public/data/parque-vehicular.csv';
 
     const palette = {
         primary: '#219EBC', // Barras (vehículos)
