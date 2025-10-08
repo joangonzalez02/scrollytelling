@@ -647,9 +647,9 @@ document.addEventListener('DOMContentLoaded', function () {
             render();
             return;
         }
-        // d3.csv signature: (url, init?) or (url, rowMapper?)
-        // Usamos opciones de fetch como segundo argumento y luego mapeamos manualmente.
-        d3.csv(DATA_URL, { cache: 'no-store' }).then(rawRows => {
+        // Nota: en algunos entornos el segundo argumento puede interpretarse como row-mapper.
+        // Para máxima compatibilidad en GitHub Pages, evitamos pasar init y usamos cache-busting en la URL.
+        d3.csv(DATA_URL).then(rawRows => {
             const rows = rawRows.map(parseCsvRow);
             state.data = rows
                 .filter(d => d.year && d.vehicles)

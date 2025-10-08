@@ -20,7 +20,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Usamos nombre de archivo sin acentos para máxima compatibilidad
         // Nota: d3.csv en v7 acepta como segundo argumento EITHER un row-mapper (function)
         // o las opciones de fetch (init). No usar 3 argumentos.
-        d3.csv(`public/data/poblacion-valores.csv?v=${Date.now()}`, { cache: 'no-store' })
+        // Evitar usar segundo argumento (init) para máxima compatibilidad en GitHub Pages
+        d3.csv(`public/data/poblacion-valores.csv?v=${Date.now()}`)
             .then(function(csvData) {
                 populationData = csvData.map(d => {
                     return {
