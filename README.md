@@ -117,6 +117,16 @@ Notas:
 - Los scripts y librerías principales se cargan desde CDN en `index.html` (Mapbox GL, Scrollama, D3, etc.).
 - El servidor Express de `serve.js` sirve todo el proyecto y hace fallback a `index.html` para rutas del front.
 
+### Notas sobre las gráficas
+
+- Gráfica de población (`population-chart.js`):
+  - Barras con animación de entrada por step y tooltip enriquecido fijo al viewport.
+  - Selector para cambiar el conjunto de datos y escalas dinámicas.
+- Gráfica de parque vehicular (`vehicle-chart.js`):
+  - Animación al entrar/salir del step 27 (barras rebotan, línea se dibuja con trazo animado, puntos emergen).
+  - Tooltip con el mismo estilo que población; aparece al pasar el mouse sobre barras, puntos y también al acercarse a la línea (detección del punto más cercano).
+  - Ejes dobles: izquierdo para vehículos totales (barras) y derecho para autos por vivienda (línea).
+
 ## Despliegue
 
 - El proyecto es estático y puede desplegarse en servicios como Vercel, Netlify o en un servidor Node simple usando `node serve.js`.
