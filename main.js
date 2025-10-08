@@ -58,6 +58,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // Debug: imprimir información del step actual
                 console.log('Step activo:', currentStep, 'elemento:', response.element.classList.toString());
+
+                // Animar charts al entrar a sus steps
+                if (currentStep === 26 && window.vehicleChart && typeof window.vehicleChart.enter === 'function') {
+                    // Step 27 (index 26): parque vehicular
+                    window.vehicleChart.enter();
+                }
             })
             .onStepExit(response => {
                 console.log('Saliendo del step:', response.index);
@@ -105,6 +111,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (exitingElement && exitingElement.getAttribute('data-map') === 'true') {
                     console.log('Saliendo de un step con mapa, ocultando Mapbox');
                     hideMapVisuals(); // Función específica para ocultar elementos del mapa
+                }
+
+                // Si salimos del step del parque vehicular, ejecutar animación de salida
+                if (response.index === 26 && window.vehicleChart && typeof window.vehicleChart.exit === 'function') {
+                    window.vehicleChart.exit();
                 }
             });
     }
