@@ -7,7 +7,7 @@
 let mapboxMap = null;
 
 // Token de acceso a Mapbox
-const mapboxAccessToken = 'pk.eyJ1IjoiMHhqZmVyIiwiYSI6ImNtZjRjNjczdTA0MGsya3Bwb3B3YWw4ejgifQ.8IZ5PTYktl5ss1gREda3fg';
+const mapboxAccessToken = 'pk.eyJ1IjoiMHhqZmVyIiwiYSI6ImNtZ2huam90aDAzcGUyaXB4eDdpOHk0cGEifQ.CebHRBgURf4GHvbcI0pOew';
 
 // Configuración de cuándo mostrar el mapa en cada step
 const mapStepsConfig = {
