@@ -647,7 +647,10 @@ document.addEventListener('DOMContentLoaded', function () {
             render();
             return;
         }
-        d3.csv(DATA_URL, parseCsvRow, { cache: 'no-store' }).then(rows => {
+        // d3.csv signature: (url, init?) or (url, rowMapper?)
+        // Usamos opciones de fetch como segundo argumento y luego mapeamos manualmente.
+        d3.csv(DATA_URL, { cache: 'no-store' }).then(rawRows => {
+            const rows = rawRows.map(parseCsvRow);
             state.data = rows
                 .filter(d => d.year && d.vehicles)
                 .sort((a, b) => d3.ascending(a.year, b.year));

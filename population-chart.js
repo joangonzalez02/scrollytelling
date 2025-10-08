@@ -18,7 +18,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Evitar caché del navegador/CDN en GitHub Pages para ver cambios recientes
         // Usamos nombre de archivo sin acentos para máxima compatibilidad
-        d3.csv(`public/data/poblacion-valores.csv?v=${Date.now()}`, undefined, { cache: 'no-store' })
+        // Nota: d3.csv en v7 acepta como segundo argumento EITHER un row-mapper (function)
+        // o las opciones de fetch (init). No usar 3 argumentos.
+        d3.csv(`public/data/poblacion-valores.csv?v=${Date.now()}`, { cache: 'no-store' })
             .then(function(csvData) {
                 populationData = csvData.map(d => {
                     return {
