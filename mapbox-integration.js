@@ -1079,7 +1079,7 @@ function positionLustroPanel() {
     panel.style.bottom = '14px';
 
     // Ajustes de tamaño para móviles (compacto)
-    panel.style.minWidth = isMobile ? '160px' : '240px';
+    panel.style.minWidth = isMobile ? '190px' : '240px';
     panel.style.padding = isMobile ? '6px 8px' : '10px 12px';
     panel.style.maxHeight = isMobile ? '40vh' : '60vh';
     panel.style.overflowY = 'auto';
@@ -1091,7 +1091,10 @@ function positionLustroPanel() {
     }
     const list = panel.querySelector('.lustro-list');
     if (list) {
-        list.style.gridTemplateColumns = isMobile ? 'repeat(1, minmax(120px, 1fr))' : 'repeat(2, minmax(100px, 1fr))';
+        // En móvil: 2 columnas; en escritorio: 1 columna (según lo solicitado)
+        list.style.gridTemplateColumns = isMobile
+            ? 'repeat(2, minmax(90px, 1fr))'
+            : 'repeat(1, minmax(140px, 1fr))';
         list.style.gap = isMobile ? '4px 8px' : '6px 12px';
         // Ajustar tamaño de swatches y tipografía en items
         Array.from(list.children).forEach(lbl => {
