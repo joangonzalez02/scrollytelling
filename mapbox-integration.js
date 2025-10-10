@@ -5,9 +5,11 @@
 
 // Variable global para el mapa de Mapbox
 let mapboxMap = null;
+// Track current base style to avoid unnecessary setStyle calls
+let currentBaseStyle = 'mapbox://styles/mapbox/light-v10';
 
 // Token de acceso a Mapbox
-const mapboxAccessToken = 'pk.eyJ1IjoiMHhqZmVyIiwiYSI6ImNtZjRjNjczdTA0MGsya3Bwb3B3YWw4ejgifQ.8IZ5PTYktl5ss1gREda3fg';
+const mapboxAccessToken = 'pk.eyJ1IjoiMHhqZmVyIiwiYSI6ImNtZ2huam90aDAzcGUyaXB4eDdpOHk0cGEifQ.CebHRBgURf4GHvbcI0pOew';
 
 // Configuración de cuándo mostrar el mapa en cada step
 const mapStepsConfig = {
@@ -23,25 +25,9 @@ const mapStepsConfig = {
             pitch: 0,
             bearing: 0,
             style: 'mapbox://styles/mapbox/light-v10',
-            layers: [
-                {
-                    id: 'supermanzanas-iniciales',
-                    type: 'fill',
-                    source: {
-                        type: 'geojson',
-                        data: 'public/data/supermanzanas-iniciales.gpkg'
-                    },
-                    paint: {
-                        'fill-color': '#219EBC',
-                        'fill-opacity': 0.6,
-                        'fill-outline-color': '#023047'
-                    },
-                    popup: (properties) => {
-                        return `<h3>Supermanzana ${properties.supermanzana || ''}</h3>
-                                <p>Parte del plan maestro original de Cancún</p>`;
-                    }
-                }
-            ]
+            // Nota: El formato GPKG no es compatible directamente con Mapbox GL.
+            // Por ahora, desactivamos la capa hasta contar con un GeoJSON equivalente.
+            layers: []
         },
         // Step 4: Expansión urbana sin freno (mapa de crecimiento mancha urbana)
         "4": {
@@ -49,8 +35,29 @@ const mapStepsConfig = {
             zoom: 11,
             pitch: 30,
             bearing: 0,
-            style: 'mapbox://styles/mapbox/satellite-streets-v11',
-            layers: []
+            style: 'mapbox://styles/mapbox/light-v10',
+            layers: [
+                {
+                    id: 'crecimiento-urbano',
+                    type: 'fill',
+                    source: {
+                        type: 'geojson',
+                        data: 'public/data/crecimientoG.geojson'
+                    },
+                    paint: {
+                        'fill-color': '#219EBC',
+                        'fill-opacity': 0.6,
+                        'fill-outline-color': '#555'
+                    },
+                    popup: (properties) => {
+                        const lustro = properties.LUSTRO ?? 'N/D';
+                        const codigo = (properties.CODIGO_TEMP ?? properties.CODIGO) || '—';
+                        return `<h3>Expansión urbana</h3>
+                                <p><strong>Lustro:</strong> ${lustro}</p>
+                                <p><strong>Código:</strong> ${codigo}</p>`;
+                    }
+                }
+            ]
         },
         // Step 5: Mapa de tasa de cambio poblacional por AGEB (2010-2020)
         "5": {
@@ -94,7 +101,7 @@ const mapStepsConfig = {
             zoom: 11,
             pitch: 30,
             bearing: 0,
-            style: 'mapbox://styles/mapbox/dark-v10',
+            style: 'mapbox://styles/mapbox/light-v10',
             layers: [
                 {
                     id: 'densidad-poblacional',
@@ -114,7 +121,7 @@ const mapStepsConfig = {
                             100, '#e63946'  // alta densidad (intenso)
                         ],
                         'fill-opacity': 0.8,
-                        'fill-outline-color': '#fff'
+                        'fill-outline-color': '#555'
                     },
                     popup: (properties) => {
                         const pob = Number(properties.POBTOT || 0);
@@ -174,7 +181,7 @@ const mapStepsConfig = {
             zoom: 11,
             pitch: 20,
             bearing: 0,
-            style: 'mapbox://styles/mapbox/satellite-streets-v11',
+            style: 'mapbox://styles/mapbox/light-v10',
             layers: []
         },
         // Step 24: Densidad poblacional por distrito
@@ -183,7 +190,7 @@ const mapStepsConfig = {
             zoom: 11,
             pitch: 30,
             bearing: 0,
-            style: 'mapbox://styles/mapbox/dark-v10',
+            style: 'mapbox://styles/mapbox/light-v10',
             layers: [
                 {
                     id: 'densidad-poblacional-distritos',
@@ -203,7 +210,7 @@ const mapStepsConfig = {
                             100, '#e63946'  // alta densidad (intenso)
                         ],
                         'fill-opacity': 0.8,
-                        'fill-outline-color': '#fff'
+                        'fill-outline-color': '#555'
                     },
                     popup: (properties) => {
                         const pob = Number(properties.POBTOT || 0);
@@ -253,7 +260,7 @@ function initializeMapbox() {
     // Inicializar el mapa en el contenedor principal #map
     mapboxMap = new mapboxgl.Map({
         container: 'map',
-        style: 'mapbox://styles/mapbox/streets-v11',
+        style: currentBaseStyle,
         center: [-86.8515, 21.1619], // Centro en Cancún
         zoom: 12,
         pitch: 0,
@@ -393,7 +400,10 @@ function reprojectGeoJSONToWGS84(geojson) {
 
 // Cargar GeoJSON desde URL, con reproyección si trae CRS distinto a 4326
 async function loadGeoJSONWithReprojection(url) {
-    const res = await fetch(url);
+    // Evitar caché para reflejar cambios recientes en GitHub Pages
+    const sep = url.includes('?') ? '&' : '?';
+    const noCacheUrl = `${url}${sep}v=${Date.now()}`;
+    const res = await fetch(noCacheUrl, { cache: 'no-store' });
     const data = await res.json();
     return reprojectGeoJSONToWGS84(data);
 }
@@ -465,27 +475,15 @@ function showMapOverlay(config) {
     setTimeout(() => { if (mapboxMap) { mapboxMap.resize(); console.log('✅ Resize 2 del mapa completado (300ms)'); } }, 300);
     setTimeout(() => { if (mapboxMap) { mapboxMap.resize(); console.log('✅ Resize 3 del mapa completado (600ms)'); } }, 600);
     
-    // Aplicar configuración específica
-    console.log('🗺️ Aplicando configuración del mapa...');
-    mapboxMap.setStyle(config.style);
-    mapboxMap.flyTo({
-        center: config.center,
-        zoom: config.zoom,
-        pitch: config.pitch,
-        bearing: config.bearing,
-        duration: 2000,
-        essential: true
-    });
-    
-    // Cuando el estilo termine de cargarse, añadir capas específicas
-    mapboxMap.once('styledata', async () => {
+    // Preparar manejador para reinsertar las capas al terminar de cargar el estilo
+    const onStyleLoad = async () => {
         console.log('🎨 Estilo del mapa cargado, añadiendo capas...');
         // Eliminar capas existentes si las hay
-        const layersToRemove = ['densidad-poblacional','densidad-poblacional-distritos','tasa-cambio-poblacional','cambio-poblacional-ageb','supermanzanas-iniciales'];
+    const layersToRemove = ['densidad-poblacional','densidad-poblacional-distritos','tasa-cambio-poblacional','cambio-poblacional-ageb','supermanzanas-iniciales','crecimiento-urbano'];
         layersToRemove.forEach(layerId => { if (mapboxMap.getLayer(layerId)) { mapboxMap.removeLayer(layerId); console.log(`🗑️ Capa ${layerId} eliminada`); } });
         
         // Eliminar fuentes existentes si las hay
-        const sourcesToRemove = ['densidad-poblacional-src','densidad-poblacional-distritos-src','tasa-cambio-poblacional-src','cambio-poblacional-ageb-src','supermanzanas-iniciales-src'];
+    const sourcesToRemove = ['densidad-poblacional-src','densidad-poblacional-distritos-src','tasa-cambio-poblacional-src','cambio-poblacional-ageb-src','supermanzanas-iniciales-src','crecimiento-urbano-src'];
         sourcesToRemove.forEach(sourceId => { if (mapboxMap.getSource(sourceId)) { mapboxMap.removeSource(sourceId); console.log(`🗑️ Fuente ${sourceId} eliminada`); } });
         
         // Añadir las capas definidas en la configuración
@@ -497,6 +495,10 @@ function showMapOverlay(config) {
                     // Si la fuente es GeoJSON con URL, cargarla y reproyectar si es necesario
                     let source = { ...layer.source };
                     if (source.type === 'geojson' && typeof source.data === 'string') {
+                        if (source.data.toLowerCase().endsWith('.gpkg')) {
+                            console.warn(`⛔ Formato GPKG no soportado para ${layer.id}. Omite esta capa hasta convertir a GeoJSON.`);
+                            continue;
+                        }
                         console.log(`⬇️ Cargando GeoJSON para ${layer.id} desde ${source.data} ...`);
                         const gj = await loadGeoJSONWithReprojection(source.data);
                         source = { ...source, data: gj };
@@ -504,15 +506,8 @@ function showMapOverlay(config) {
                     mapboxMap.addSource(sourceId, source);
                     const paintProperties = { ...layer.paint };
                     if (paintProperties['fill-opacity']) { paintProperties['fill-opacity'] = 1.0; }
-                    // Añadir la capa encima de las capas base; si existe 'waterway-label' o similar, insertarla después
-                    const mapStyle = mapboxMap.getStyle();
-                    let beforeId = null;
-                    if (mapStyle && Array.isArray(mapStyle.layers)) {
-                        // Buscar la primera etiqueta para insertar antes de ella y asegurar visibilidad
-                        const labelLayer = mapStyle.layers.find(l => l.type === 'symbol' && /label/i.test(l.id));
-                        beforeId = labelLayer ? labelLayer.id : null;
-                    }
-                    mapboxMap.addLayer({ id: layer.id, type: layer.type, source: sourceId, paint: paintProperties }, beforeId || undefined);
+                    // Insertar en la parte superior para máxima visibilidad
+                    mapboxMap.addLayer({ id: layer.id, type: layer.type, source: sourceId, paint: paintProperties });
                     if (layer.popup) {
                         mapboxMap.on('click', layer.id, (e) => {
                             const properties = e.features[0].properties;
@@ -532,6 +527,32 @@ function showMapOverlay(config) {
         }
         console.log('📏 Resize final del mapa tras cargar capas...');
         setTimeout(() => { if (mapboxMap) { mapboxMap.resize(); console.log('✅ Resize final completado'); } }, 500);
+    };
+
+    // Aplicar configuración específica con manejo de estilo actual
+    console.log('🗺️ Aplicando configuración del mapa...');
+    const targetStyle = config.style || currentBaseStyle;
+    const shouldChangeStyle = targetStyle !== currentBaseStyle;
+    if (shouldChangeStyle) {
+        // Cambiaremos de estilo y esperaremos a que cargue para añadir capas
+        mapboxMap.once('style.load', onStyleLoad);
+        mapboxMap.setStyle(targetStyle);
+        currentBaseStyle = targetStyle;
+    } else {
+        // Mismo estilo: si ya está cargado, añadimos capas de inmediato; si no, esperamos a que cargue
+        if (mapboxMap.isStyleLoaded && mapboxMap.isStyleLoaded()) {
+            onStyleLoad();
+        } else {
+            mapboxMap.once('style.load', onStyleLoad);
+        }
+    }
+    mapboxMap.flyTo({
+        center: config.center,
+        zoom: config.zoom,
+        pitch: config.pitch,
+        bearing: config.bearing,
+        duration: 2000,
+        essential: true
     });
     
     console.log('=== showMapOverlay COMPLETADO ===');

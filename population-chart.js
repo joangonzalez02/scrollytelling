@@ -16,7 +16,12 @@ document.addEventListener('DOMContentLoaded', function() {
             return isNaN(num) ? null : num;
         }
         
-        d3.csv('public/data/Población - Valores.csv')
+        // Evitar caché del navegador/CDN en GitHub Pages para ver cambios recientes
+        // Usamos nombre de archivo sin acentos para máxima compatibilidad
+        // Nota: d3.csv en v7 acepta como segundo argumento EITHER un row-mapper (function)
+        // o las opciones de fetch (init). No usar 3 argumentos.
+        // Evitar usar segundo argumento (init) para máxima compatibilidad en GitHub Pages
+        d3.csv(`public/data/poblacion-valores.csv?v=${Date.now()}`)
             .then(function(csvData) {
                 populationData = csvData.map(d => {
                     return {
@@ -342,24 +347,23 @@ document.addEventListener('DOMContentLoaded', function() {
             existingTooltip.remove();
         }
         
-        // Crear un nuevo tooltip específico para este gráfico
-        const tooltipDiv = document.createElement('div');
-        tooltipDiv.id = 'population-chart-tooltip';
-        tooltipDiv.className = 'tooltip';
-        tooltipDiv.style.position = 'fixed'; // Usar fixed en lugar de absolute
-        tooltipDiv.style.padding = '12px 18px';
-        tooltipDiv.style.background = 'rgba(255, 255, 255, 0.97)';
-        tooltipDiv.style.borderRadius = '8px';
-        tooltipDiv.style.boxShadow = '0 6px 20px rgba(0,0,0,0.2)';
-        tooltipDiv.style.pointerEvents = 'none';
-        tooltipDiv.style.opacity = '0';
-        tooltipDiv.style.zIndex = '99999';
-        tooltipDiv.style.fontSize = '14px';
-        tooltipDiv.style.fontWeight = '600';
-        tooltipDiv.style.color = '#333';
-        tooltipDiv.style.borderLeft = '4px solid #FB8500';
-        tooltipDiv.style.minWidth = '180px';
-        tooltipDiv.style.transition = 'opacity 0.2s';
+    // Crear un nuevo tooltip específico para este gráfico (mismo estilo que vehicle-chart)
+    const tooltipDiv = document.createElement('div');
+    tooltipDiv.id = 'population-chart-tooltip';
+    tooltipDiv.className = 'vehicle-tooltip';
+    tooltipDiv.style.position = 'fixed';
+    tooltipDiv.style.padding = '12px 16px';
+    tooltipDiv.style.background = 'rgba(2, 48, 71, 0.95)'; // Azul oscuro
+    tooltipDiv.style.borderRadius = '8px';
+    tooltipDiv.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+    tooltipDiv.style.pointerEvents = 'none';
+    tooltipDiv.style.opacity = '0';
+    tooltipDiv.style.zIndex = '99999';
+    tooltipDiv.style.fontSize = '14px';
+    tooltipDiv.style.fontWeight = '500';
+    tooltipDiv.style.color = 'white';
+    tooltipDiv.style.maxWidth = '220px';
+    tooltipDiv.style.transition = 'opacity 0.2s ease';
         
         // Agregar el tooltip al body para que esté siempre visible
         document.body.appendChild(tooltipDiv);
@@ -393,8 +397,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Mostrar tooltip
                 let tooltipContent = `
-                    <p>Año: <strong>${d.year}</strong></p>
-                    <p>Población: <span class="value">${formatNumber(getValue(d))}</span></p>
+                    <div><strong>Año ${d.year}</strong></div>
+                    <div>Población: <span style="color: #8ECAE6; font-weight:700">${formatNumber(getValue(d))}</span></div>
                 `;
                 
                 // Añadir datos de crecimiento solo si están disponibles
@@ -404,16 +408,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (growth !== null && !isNaN(growth)) {
                     // Mostrar signo + solo para valores positivos, para negativos ya incluye el signo -
                     const signPrefix = growth > 0 ? '+' : '';
-                    const color = growth > 0 ? getColorByType(dataType, 'start') : '#e63946'; // Rojo para negativos
+                    let color = '#e5e7eb'; // neutro (gris claro) para 0%
+                    if (growth > 0) color = '#2ECC71'; // verde revertido
+                    else if (growth < 0) color = '#E63946'; // rojo
                     tooltipContent += `
-                        <p class="growth">Incremento: <span style="color:${color}; font-weight:bold">${signPrefix}${growth}%</span></p>
+                        <div>Incremento: <span style="color:${color}; font-weight:700">${signPrefix}${growth}%</span></div>
                     `;
                 }
                 // Eliminamos la condición que mostraba "Sin datos"
                 
                 // Posición del tooltip
-                const xPosition = event.clientX - 90;
-                const yPosition = event.clientY - 120;
+                const xPosition = event.clientX - 100;
+                const yPosition = event.clientY - 110;
                 
                 // Mostrar tooltip
                 tooltip
@@ -441,8 +447,8 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .on('mousemove', function(event) {
                 // Mover tooltip con el cursor
-                const xPosition = event.clientX - 90;
-                const yPosition = event.clientY - 120;
+                const xPosition = event.clientX - 100;
+                const yPosition = event.clientY - 110;
                 
                 tooltip
                     .style('left', xPosition + 'px')
