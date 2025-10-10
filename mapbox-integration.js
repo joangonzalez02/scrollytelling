@@ -877,11 +877,11 @@ window.mapboxHelper = { updateMapForStep, showMapOverlay, hideMapOverlay };
 
   // Map human titles per step/layer
   const layerTitles = {
-        'crecimiento-urbano': 'Expansión urbana por periodo',
-    'tasa-cambio-poblacional': 'Población total por AGEB',
-    'cambio-poblacional-ageb': 'Población total por AGEB',
-    'densidad-poblacional': 'Densidad (hab/ha) por distrito',
-    'densidad-poblacional-distritos': 'Densidad (hab/ha) por distrito'
+                'crecimiento-urbano': 'Expansión urbana por periodo',
+        'tasa-cambio-poblacional': 'Tasa de cambio poblacional (2010–2020)',
+        'cambio-poblacional-ageb': 'Tasa de cambio poblacional (2010–2020)',
+        'densidad-poblacional': 'Densidad poblacional (hab/ha)',
+        'densidad-poblacional-distritos': 'Densidad poblacional (hab/ha)'
   };
 
   // Override
@@ -894,7 +894,8 @@ window.mapboxHelper = { updateMapForStep, showMapOverlay, hideMapOverlay };
             if (l) {
                 const items = l.querySelector('.legend-items');
                 if (items) items.innerHTML = '';
-                                l.style.display = 'none'; // siempre oculto, dejaremos solo el selector de lustros
+                // No ocultar aún; decidiremos según la capa
+                l.style.display = 'none';
             }
             // También ocultar panel de lustros por defecto
             const panel = document.getElementById('map-lustro-control');
@@ -903,10 +904,7 @@ window.mapboxHelper = { updateMapForStep, showMapOverlay, hideMapOverlay };
 
         originalShow(config);
         try {
-            // SIEMPRE OCULTAR LEYENDA: queremos dejar únicamente el selector de lustros
-            hideLegend();
-
-                        // REGLAS ESTRICTAS PARA MOSTRAR PANEL DE LUSTROS
+            // REGLAS PARA MOSTRAR PANEL DE LUSTROS O LEYENDA
             const hasCrecimiento = (config.layers || []).some(l => l.id === 'crecimiento-urbano');
             
             // USAR EL STEP ID DE LA CONFIGURACIÓN
@@ -930,6 +928,33 @@ window.mapboxHelper = { updateMapForStep, showMapOverlay, hideMapOverlay };
                 console.log('🔍 DEBUG: Aplicando filtro de lustros');
                 // Aplicar filtro una vez que la capa exista
                 applyLustroFilterWhenReady();
+                // En este caso, ocultamos la leyenda (solo checkboxes)
+                hideLegend();
+            } else {
+                // Para otras capas, construir y mostrar la leyenda dinámicamente
+                const preferredOrder = [
+                    'densidad-poblacional',
+                    'densidad-poblacional-distritos',
+                    'tasa-cambio-poblacional',
+                    'cambio-poblacional-ageb'
+                ];
+                const layers = (config.layers || []);
+                let legendLayer = null;
+                // Priorizar por IDs conocidos
+                for (const id of preferredOrder) {
+                    const found = layers.find(l => l.id === id);
+                    if (found) { legendLayer = found; break; }
+                }
+                // Si no, tomar la primera capa tipo fill con expresión de color
+                if (!legendLayer) {
+                    legendLayer = layers.find(l => l.type === 'fill' && l.paint && l.paint['fill-color']);
+                }
+                if (legendLayer && legendLayer.paint) {
+                    const title = layerTitles[legendLayer.id] || 'Leyenda';
+                    buildLegendFromPaint(legendLayer.paint, { title });
+                } else {
+                    hideLegend();
+                }
             }
     } catch (e) {
       console.warn('No se pudo construir la leyenda:', e);
