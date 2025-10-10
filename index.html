@@ -511,6 +511,27 @@
             .lizmap-scrolly-container.overlay {
                 height: 100vh !important;
             }
+
+            /* Último step: colocar la imagen debajo del texto en móvil */
+            section[data-step="32"] > div {
+                flex-direction: column;
+                align-items: center;
+                gap: 20px;
+            }
+            section[data-step="32"] .step-content {
+                width: 100%;
+                max-width: 700px;
+            }
+            section[data-step="32"] > div > div:last-child {
+                width: 100%;
+                display: flex;
+                justify-content: center;
+            }
+            section[data-step="32"] > div > div:last-child img {
+                width: 100%;
+                height: auto;
+                max-height: none;
+            }
         }
     </style>
 </head>
@@ -518,7 +539,7 @@
     <!-- Mapa base de Mapbox -->
     <div id="map"></div>
     
-    <!-- Únicamente se usa el contenedor #map; no hay mapas embebidos -->
+    <!-- Únicamente se usa el contenedor #map -->
     
     <!-- Botón X independiente que siempre estará por encima de todo -->
     <button id="emergency-close-btn" style="position:fixed; top:20px; left:20px; z-index:999999; width:60px; height:60px; font-size:36px; background:#FB8500; color:white; border:3px solid white; border-radius:50%; cursor:pointer; display:none; box-shadow:0 6px 16px rgba(0,0,0,0.7); align-items:center; justify-content:center; pointer-events:auto;" onclick="cerrarMapaAhora()">×</button>
@@ -533,8 +554,6 @@
                 console.log("Cerrando mapa usando mapboxHelper");
                 window.mapboxHelper.hideMapOverlay();
             }
-            
-            // No hay mapas embebidos
             
             // Restaurar scroll y estados del body
             document.body.style.overflow = 'auto';
@@ -646,7 +665,7 @@
             </div>
         </section>
         
-        <!-- Step 4: Mapa histórico de la franja hotelera y supermanzanas iniciales (usando Lizmap) -->
+        <!-- Step 4: Mapa histórico de la franja hotelera y supermanzanas iniciales -->
         <section class="step has-map" data-step="4" data-map="true" data-map-layer="desarrollo_historico" data-map-view="hotelera">
             <div class="step-content">
                 <h2>Mapa histórico de la franja hotelera y supermanzanas iniciales</h2>
