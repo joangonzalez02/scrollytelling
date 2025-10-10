@@ -894,7 +894,7 @@ window.mapboxHelper = { updateMapForStep, showMapOverlay, hideMapOverlay };
             if (l) {
                 const items = l.querySelector('.legend-items');
                 if (items) items.innerHTML = '';
-                l.style.display = 'none';
+                                l.style.display = 'none'; // siempre oculto, dejaremos solo el selector de lustros
             }
             // También ocultar panel de lustros por defecto
             const panel = document.getElementById('map-lustro-control');
@@ -902,56 +902,11 @@ window.mapboxHelper = { updateMapForStep, showMapOverlay, hideMapOverlay };
         } catch {}
 
         originalShow(config);
-    try {
-      // Build legend from the first fill layer in config
-      const layer = (config.layers || []).find(l => l.type === 'fill');
-      console.log('🔍 DEBUG: Capa encontrada:', layer);
-      
-            if (layer && layer.paint) {
-        // USAR EL STEP ID DE LA CONFIGURACIÓN EN LUGAR DE DETECTAR DEL DOM
-        // Buscar el step ID en la configuración del mapa
-        let targetStepId = null;
-        
-        // Buscar en mapStepsConfig para encontrar qué step corresponde a esta configuración
-        for (const [stepKey, stepConfig] of Object.entries(mapStepsConfig.stepConfigs)) {
-          if (stepConfig === config) {
-            targetStepId = parseInt(stepKey);
-            break;
-          }
-        }
-        
-        console.log('🔍 DEBUG: Step objetivo detectado desde config:', targetStepId);
-        
-        // REGLAS ESTRICTAS PARA MOSTRAR LEYENDAS POR STEP
-                let shouldShowLegend = false;
-                // Solo mostrar leyenda en steps 4, 20 y 24
-                if (targetStepId === 4 && layer.id === 'crecimiento-urbano') {
-                    shouldShowLegend = true;
-                } else if (targetStepId === 20 && layer.id === 'cambio-poblacional-ageb') {
-                    shouldShowLegend = true;
-                } else if (targetStepId === 24 && layer.id === 'densidad-poblacional-distritos') {
-                    shouldShowLegend = true;
-                }
-        
-        console.log('🔍 DEBUG: shouldShowLegend final (reglas estrictas):', shouldShowLegend);
-        console.log('🔍 DEBUG: targetStepId:', targetStepId, 'layer.id:', layer.id);
-        
-        if (shouldShowLegend) {
-          const title = layerTitles[layer.id] || 'Leyenda';
-          console.log('🔍 DEBUG: Mostrando leyenda con título:', title);
-          // Si es crecimiento-urbano, mostrar solo lustros seleccionados en la leyenda
-          const options = (layer.id === 'crecimiento-urbano') ? { title, allowedValues: Array.from(selectedLustros) } : { title };
-          buildLegendFromPaint(layer.paint, options);
-        } else {
-          console.log('🔍 DEBUG: Ocultando leyenda (no corresponde a este step)');
-          hideLegend();
-        }
-      } else {
-        console.log('🔍 DEBUG: No hay capa o paint, ocultando leyenda');
-        hideLegend();
-      }
+        try {
+            // SIEMPRE OCULTAR LEYENDA: queremos dejar únicamente el selector de lustros
+            hideLegend();
 
-            // REGLAS ESTRICTAS PARA MOSTRAR PANEL DE LUSTROS
+                        // REGLAS ESTRICTAS PARA MOSTRAR PANEL DE LUSTROS
             const hasCrecimiento = (config.layers || []).some(l => l.id === 'crecimiento-urbano');
             
             // USAR EL STEP ID DE LA CONFIGURACIÓN
@@ -1036,7 +991,7 @@ function ensureLustroPanel() {
 
     const title = document.createElement('div');
     title.className = 'lustro-title';
-    title.textContent = 'Lustros';
+    title.textContent = 'Expansión urbana por periodo';
         title.style.fontWeight = '700';
         title.style.fontSize = '13px';
         title.style.marginBottom = '8px';
@@ -1117,53 +1072,43 @@ function positionLustroPanel() {
     const vh = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
     const isMobile = vw <= 640;
 
-    if (legend && window.getComputedStyle(legend).display !== 'none') {
-        // Posicionar el panel ARRIBA de la leyenda (visualmente más arriba en la pantalla)
-        const lrect = legend.getBoundingClientRect();
-        panel.style.right = '14px';
-        panel.style.left = '';
-        panel.style.bottom = '';
-        // Calcular posición arriba de la leyenda: top de la leyenda menos altura del panel menos gap
-        const topOffset = lrect.top - panelH - gap;
-        panel.style.top = `${Math.max(14, Math.round(topOffset))}px`; // mínimo 14px desde arriba
+    // Siempre ubicar en la esquina inferior derecha para no estorbar el mapa
+    panel.style.right = '14px';
+    panel.style.left = '';
+    panel.style.top = '';
+    panel.style.bottom = '14px';
 
-        // Modo compacto en móviles: reducir dimensiones y columnas
-        panel.style.minWidth = isMobile ? '160px' : '220px';
-        panel.style.padding = isMobile ? '6px 8px' : '10px 12px';
-        panel.style.maxHeight = isMobile ? '40vh' : '';
-        panel.style.overflowY = isMobile ? 'auto' : 'visible';
-        const titleEl = panel.querySelector('.lustro-title');
-        if (titleEl) {
-            titleEl.style.fontSize = isMobile ? '12px' : '13px';
-            titleEl.style.marginBottom = isMobile ? '6px' : '8px';
-        }
-        const list = panel.querySelector('.lustro-list');
-        if (list) {
-            list.style.gridTemplateColumns = isMobile ? 'repeat(1, minmax(120px, 1fr))' : 'repeat(2, minmax(100px, 1fr))';
-            list.style.gap = isMobile ? '4px 8px' : '6px 12px';
-            // Ajustar tamaño de swatches y tipografía en items
-            Array.from(list.children).forEach(lbl => {
-                if (!(lbl instanceof HTMLElement)) return;
-                lbl.style.gap = isMobile ? '4px' : '6px';
-                const cb = lbl.querySelector('input[type="checkbox"]');
-                if (cb) cb.style.transform = isMobile ? 'scale(0.9)' : 'scale(1)';
-                const sw = lbl.querySelector('span'); // primer span del item (swatch)
-                if (sw) {
-                    sw.style.width = isMobile ? '12px' : '14px';
-                    sw.style.height = isMobile ? '8px' : '10px';
-                }
-                const lab = lbl.querySelector('span + span'); // segundo span (etiqueta)
-                if (lab) {
-                    lab.style.fontSize = isMobile ? '12px' : '13px';
-                }
-            });
-        }
-    } else {
-        // Fallback: esquina superior derecha (ya que no hay leyenda que evitar)
-        panel.style.right = '14px';
-        panel.style.left = '';
-        panel.style.top = '14px';
-        panel.style.bottom = '';
+    // Ajustes de tamaño para móviles (compacto)
+    panel.style.minWidth = isMobile ? '160px' : '240px';
+    panel.style.padding = isMobile ? '6px 8px' : '10px 12px';
+    panel.style.maxHeight = isMobile ? '40vh' : '60vh';
+    panel.style.overflowY = 'auto';
+
+    const titleEl = panel.querySelector('.lustro-title');
+    if (titleEl) {
+        titleEl.style.fontSize = isMobile ? '12px' : '13px';
+        titleEl.style.marginBottom = isMobile ? '6px' : '8px';
+    }
+    const list = panel.querySelector('.lustro-list');
+    if (list) {
+        list.style.gridTemplateColumns = isMobile ? 'repeat(1, minmax(120px, 1fr))' : 'repeat(2, minmax(100px, 1fr))';
+        list.style.gap = isMobile ? '4px 8px' : '6px 12px';
+        // Ajustar tamaño de swatches y tipografía en items
+        Array.from(list.children).forEach(lbl => {
+            if (!(lbl instanceof HTMLElement)) return;
+            lbl.style.gap = isMobile ? '4px' : '6px';
+            const cb = lbl.querySelector('input[type="checkbox"]');
+            if (cb) cb.style.transform = isMobile ? 'scale(0.9)' : 'scale(1)';
+            const sw = lbl.querySelector('span'); // primer span del item (swatch)
+            if (sw) {
+                sw.style.width = isMobile ? '12px' : '14px';
+                sw.style.height = isMobile ? '8px' : '10px';
+            }
+            const lab = lbl.querySelector('span + span'); // segundo span (etiqueta)
+            if (lab) {
+                lab.style.fontSize = isMobile ? '12px' : '13px';
+            }
+        });
     }
 
     // Restaurar estado si fue modificado para medir
@@ -1195,29 +1140,7 @@ function applyLustroFilter() {
     matchExpr.push(false);
     mapboxMap.setFilter(layerId, matchExpr);
     try { console.debug('Filtro aplicado a crecimiento-urbano:', JSON.stringify(matchExpr)); } catch {}
-    // Reconstruir leyenda simple basada en los lustros seleccionados
-    const legend = document.getElementById('map-legend');
-    if (legend) {
-        legend.style.display = 'block';
-        const titleEl = legend.querySelector('.legend-title');
-        if (titleEl) titleEl.textContent = 'Expansión urbana por periodo';
-        const itemsEl = legend.querySelector('.legend-items');
-        if (itemsEl) {
-            itemsEl.innerHTML = '';
-            values.sort((a,b)=>a-b).forEach(v => {
-                const row = document.createElement('div');
-                row.className = 'legend-item';
-                const sw = document.createElement('span');
-                sw.className = 'legend-swatch';
-                sw.style.background = LUSTRO_COLORS[v] || '#cfd8dc';
-                const lab = document.createElement('span');
-                lab.className = 'legend-label';
-                lab.textContent = String(v);
-                row.appendChild(sw); row.appendChild(lab);
-                itemsEl.appendChild(row);
-            });
-        }
-    }
+    // No reconstruir la leyenda: dejamos únicamente el panel de lustros visible
 }
 
 function applyLustroFilterWhenReady(attempts = 0) {
