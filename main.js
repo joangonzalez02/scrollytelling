@@ -35,6 +35,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 currentStep = response.index;
                 console.log('Entrando al step:', currentStep);
                 
+                // Seguridad: ocultar leyenda/panel salvo que luego un step de mapa permitido los muestre
+                try {
+                    const legend = document.getElementById('map-legend');
+                    if (legend) legend.style.display = 'none';
+                    const panel = document.getElementById('map-lustro-control');
+                    if (panel) panel.style.display = 'none';
+                } catch {}
+
                 // Activar elementos visuales específicos para cada paso
                 activateStepVisuals(currentStep);
                 
@@ -82,6 +90,17 @@ document.addEventListener('DOMContentLoaded', function() {
                         left.style.transform = 'scale(0.9) translateX(-40px)';
                         right.style.transform = 'scale(0.9) translateX(40px)';
                     }
+                }
+                
+                // Al salir de steps con leyenda (4, 20, 24) forzar ocultado
+                if (response.index === 3 || response.index === 19 || response.index === 23) {
+                    console.log('Saliendo de step con leyenda (4/20/24), ocultando leyenda y panel de lustros');
+                    try {
+                        const legend = document.getElementById('map-legend');
+                        if (legend) legend.style.display = 'none';
+                        const panel = document.getElementById('map-lustro-control');
+                        if (panel) panel.style.display = 'none';
+                    } catch {}
                 }
                 
                 // Si salimos de cualquier step de evolución urbana (7-17), ocultar las imágenes de fondo
@@ -136,6 +155,14 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (hasMap) {
             console.log(`=== ACTIVANDO MAPA PARA STEP ${stepIndex+1} ===`);
+
+            // Solo permitir leyendas en steps 4, 20, 24; ocultar por defecto
+            try {
+                const legend = document.getElementById('map-legend');
+                if (legend) legend.style.display = 'none';
+                const panel = document.getElementById('map-lustro-control');
+                if (panel) panel.style.display = 'none';
+            } catch {}
             
             // Forzar la restauración del estado del mapa (importante para cuando se oculta con el botón naranja)
             const mapContainer = document.getElementById('map');
@@ -192,6 +219,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (emergencyBtn) {
                 emergencyBtn.style.display = 'none';
             }
+            
+            // NUEVO: Para steps sin mapa, ocultar leyenda y panel de lustros por seguridad
+            const legend = document.getElementById('map-legend');
+            if (legend) legend.style.display = 'none';
+            const panel = document.getElementById('map-lustro-control');
+            if (panel) panel.style.display = 'none';
             
             // Si no estamos en steps de evolución urbana, ocultar contenedor de evolución
             if (!(stepIndex >= 7 && stepIndex <= 17)) {
