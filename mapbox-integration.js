@@ -486,6 +486,16 @@ function showMapOverlay(config) {
     const sourcesToRemove = ['densidad-poblacional-src','densidad-poblacional-distritos-src','tasa-cambio-poblacional-src','cambio-poblacional-ageb-src','supermanzanas-iniciales-src','crecimiento-urbano-src'];
         sourcesToRemove.forEach(sourceId => { if (mapboxMap.getSource(sourceId)) { mapboxMap.removeSource(sourceId); console.log(`🗑️ Fuente ${sourceId} eliminada`); } });
         
+        // Encontrar una capa de referencia para insertar por debajo de etiquetas (símbolos)
+        const beforeLabelId = (() => {
+            try {
+                const style = mapboxMap.getStyle();
+                if (!style || !style.layers) return null;
+                const symbolLayer = style.layers.find(l => l.type === 'symbol');
+                return symbolLayer ? symbolLayer.id : null;
+            } catch { return null; }
+        })();
+
         // Añadir las capas definidas en la configuración
         if (config.layers && config.layers.length > 0) {
             console.log(`📊 Añadiendo ${config.layers.length} capas...`);
@@ -504,10 +514,14 @@ function showMapOverlay(config) {
                         source = { ...source, data: gj };
                     }
                     mapboxMap.addSource(sourceId, source);
-                    const paintProperties = { ...layer.paint };
-                    if (paintProperties['fill-opacity']) { paintProperties['fill-opacity'] = 1.0; }
-                    // Insertar en la parte superior para máxima visibilidad
-                    mapboxMap.addLayer({ id: layer.id, type: layer.type, source: sourceId, paint: paintProperties });
+                    const paintProperties = { ...layer.paint }; // Conservar opacidad definida
+                    // Insertar por debajo de etiquetas para que se vean calles y nombres
+                    const layerDef = { id: layer.id, type: layer.type, source: sourceId, paint: paintProperties };
+                    if (beforeLabelId) {
+                        mapboxMap.addLayer(layerDef, beforeLabelId);
+                    } else {
+                        mapboxMap.addLayer(layerDef);
+                    }
                     if (layer.popup) {
                         mapboxMap.on('click', layer.id, (e) => {
                             const properties = e.features[0].properties;
@@ -589,10 +603,19 @@ function updateMapForStep(stepId) {
     console.log('¿Existe configuración para step?', !!mapStepsConfig.stepConfigs[stepIdStr]);
     if (mapStepsConfig.visibleSteps.includes(Number(stepId)) && mapStepsConfig.stepConfigs[stepIdStr]) {
         console.log(`✅ Step ${stepId} debe mostrar mapa, llamando showMapOverlay...`);
-        showMapOverlay(mapStepsConfig.stepConfigs[stepIdStr]);
+        // Usar el wrapper para que también gestione la leyenda
+        if (window.mapboxHelper && typeof window.mapboxHelper.showMapOverlay === 'function') {
+            window.mapboxHelper.showMapOverlay(mapStepsConfig.stepConfigs[stepIdStr]);
+        } else {
+            showMapOverlay(mapStepsConfig.stepConfigs[stepIdStr]);
+        }
     } else {
         console.log(`❌ Step ${stepId} NO debe mostrar mapa, llamando hideMapOverlay...`);
-        hideMapOverlay();
+        if (window.mapboxHelper && typeof window.mapboxHelper.hideMapOverlay === 'function') {
+            window.mapboxHelper.hideMapOverlay();
+        } else {
+            hideMapOverlay();
+        }
     }
     console.log(`=== updateMapForStep(${stepId}) COMPLETADO ===`);
 }
@@ -658,6 +681,142 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Exportar funciones para uso en otros archivos
 window.mapboxHelper = { updateMapForStep, showMapOverlay, hideMapOverlay };
+
+// ===== Leyenda dinámica para capas GeoJSON =====
+(function() {
+  const legendEl = () => document.getElementById('map-legend');
+  const itemsEl = () => legendEl() ? legendEl().querySelector('.legend-items') : null;
+
+  function clearLegend() {
+    const el = itemsEl();
+    if (el) el.innerHTML = '';
+  }
+
+  function showLegend(title) {
+    const l = legendEl();
+    if (!l) return;
+    if (title) {
+      const t = l.querySelector('.legend-title');
+      if (t) t.textContent = title;
+    }
+    l.style.display = 'block';
+  }
+
+  function hideLegend() {
+    const l = legendEl();
+    if (l) l.style.display = 'none';
+  }
+
+  function addItem(color, label) {
+    const parent = itemsEl();
+    if (!parent) return;
+    const row = document.createElement('div');
+    row.className = 'legend-item';
+    const sw = document.createElement('span');
+    sw.className = 'legend-swatch';
+    sw.style.background = color;
+    const lab = document.createElement('span');
+    lab.className = 'legend-label';
+    lab.textContent = label;
+    row.appendChild(sw); row.appendChild(lab);
+    parent.appendChild(row);
+  }
+
+  // Interpret Mapbox GL expressions for 'step' and fixed color strings
+  function buildLegendFromPaint(paint, options = {}) {
+    clearLegend();
+    const title = options.title || 'Leyenda';
+
+    // Fixed color string
+    const fillColor = paint && paint['fill-color'];
+    if (!fillColor) return hideLegend();
+
+    // Expression: ['step', ['get', 'field'], color0, stop1, color1, stop2, color2, ...]
+    if (Array.isArray(fillColor) && fillColor[0] === 'step') {
+      const expr = fillColor;
+      // expr[1] is input, could be coalesce/to-number/get
+      const baseColor = expr[2];
+      const pairs = [];
+      // Remaining are threshold/color pairs
+      for (let i = 3; i < expr.length; i += 2) {
+        const stop = expr[i];
+        const color = expr[i + 1];
+        if (typeof stop === 'number' && typeof color === 'string') {
+          pairs.push({ stop, color });
+        }
+      }
+
+      // Build labels: < stop1, stop1–stop2, …, ≥ lastStop
+      showLegend(title);
+      if (pairs.length === 0) {
+        addItem(baseColor, 'Valor bajo');
+        return;
+      }
+      // First range: < first stop => baseColor
+      addItem(baseColor, `< ${formatNumber(pairs[0].stop)}`);
+      for (let i = 0; i < pairs.length; i++) {
+        const from = pairs[i].stop;
+        const to = (i + 1 < pairs.length) ? pairs[i + 1].stop : null;
+        const color = pairs[i].color;
+        const label = to == null
+          ? `≥ ${formatNumber(from)}`
+          : `${formatNumber(from)} – ${formatNumber(to)}`;
+        addItem(color, label);
+      }
+      return;
+    }
+
+    // Simple string color
+    if (typeof fillColor === 'string') {
+      showLegend(title);
+      addItem(fillColor, 'Área destacada');
+      return;
+    }
+
+    // Fallback: hide
+    hideLegend();
+  }
+
+  function formatNumber(n) {
+    try { return Number(n).toLocaleString('es-MX'); } catch { return String(n); }
+  }
+
+  // Hook legend into show/hide overlay
+  const originalShow = showMapOverlay;
+  const originalHide = hideMapOverlay;
+
+  // Map human titles per step/layer
+  const layerTitles = {
+    'crecimiento-urbano': 'Expansión urbana por periodo',
+    'tasa-cambio-poblacional': 'Población total por AGEB',
+    'cambio-poblacional-ageb': 'Población total por AGEB',
+    'densidad-poblacional': 'Densidad (hab/ha) por distrito',
+    'densidad-poblacional-distritos': 'Densidad (hab/ha) por distrito'
+  };
+
+  // Override
+  window.mapboxHelper.showMapOverlay = function(config) {
+    originalShow(config);
+    try {
+      // Build legend from the first fill layer in config
+      const layer = (config.layers || []).find(l => l.type === 'fill');
+      if (layer && layer.paint) {
+        const title = layerTitles[layer.id] || 'Leyenda';
+        buildLegendFromPaint(layer.paint, { title });
+      } else {
+        hideLegend();
+      }
+    } catch (e) {
+      console.warn('No se pudo construir la leyenda:', e);
+      hideLegend();
+    }
+  };
+
+  window.mapboxHelper.hideMapOverlay = function() {
+    originalHide();
+    hideLegend();
+  };
+})();
 
 // Función de debug para testing manual
 window.debugMapa = function(stepId = 20) {
