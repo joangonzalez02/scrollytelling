@@ -3,11 +3,20 @@
   "version": "1.0.0",
   "main": "main.js",
   "scripts": {
-    "start": "node serve.js"
+    "start": "node serve.js",
+    "build:js": "node scripts/build.js",
+    "build:images:webp": "npx sharp -i assets/*.jpg -o assets --suffix .webp compress webp",
+    "build:images:avif": "npx sharp -i assets/*.jpg -o assets --suffix .avif compress avif",
+    "build": "npm run build:js",
+    "preview": "node serve.js"
   },
   "license": "ISC",
   "dependencies": {
     "express": "^5.1.0",
     "node-fetch": "^2.7.0"
+  },
+  "devDependencies": {
+    "sharp-cli": "^2.1.0",
+    "terser": "^5.36.0"
   }
 }

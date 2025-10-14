@@ -654,10 +654,22 @@ async function ensureMapboxReady() {
     if (mapboxMap) return true;
     if (!mapInitPromise) {
         mapInitPromise = new Promise((resolve) => {
-            console.log('⏳ Inicializando Mapbox bajo demanda...');
-            initializeMapbox();
-            const onReady = () => { document.removeEventListener('mapbox-ready', onReady); resolve(true); };
-            document.addEventListener('mapbox-ready', onReady);
+            console.log('⏳ Cargando librería de Mapbox bajo demanda...');
+            // Insertar script de Mapbox GL dinámicamente
+            const script = document.createElement('script');
+            script.src = 'https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.js';
+            script.async = true;
+            script.onload = () => {
+                console.log('✅ Mapbox GL cargado, inicializando mapa...');
+                initializeMapbox();
+                const onReady = () => { document.removeEventListener('mapbox-ready', onReady); resolve(true); };
+                document.addEventListener('mapbox-ready', onReady);
+            };
+            script.onerror = () => {
+                console.error('❌ No se pudo cargar Mapbox GL');
+                resolve(false);
+            };
+            document.head.appendChild(script);
         });
     }
     return mapInitPromise;

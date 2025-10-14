@@ -344,9 +344,10 @@ document.addEventListener('DOMContentLoaded', function() {
             // Limpiar cualquier contenido previo
             container.innerHTML = '';
             
-            years.forEach(year => {
-                const img = document.createElement('img');
-                img.src = `assets/${year}.jpg`;
+        years.forEach(year => {
+            const img = document.createElement('img');
+            // No cargar aún: usar data-src y cargar bajo demanda por step
+            img.setAttribute('data-src', `assets/${year}.jpg`);
                 img.className = 'urban-bg-image';
                 img.id = `urban-bg-${year}`;
                 img.alt = `Cancún ${year}`;
@@ -411,6 +412,11 @@ document.addEventListener('DOMContentLoaded', function() {
         // Mostrar la imagen correspondiente al año actual
         const targetImage = document.getElementById(`urban-bg-${targetYear}`);
         if (targetImage) {
+            // Cargar la imagen si aún no tiene src
+            if (!targetImage.getAttribute('src')) {
+                const src = targetImage.getAttribute('data-src');
+                if (src) targetImage.setAttribute('src', src);
+            }
             requestAnimationFrame(() => {
                 targetImage.classList.add('active');
                 targetImage.style.opacity = '1';
@@ -418,6 +424,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 targetImage.style.display = 'block'; // Asegurar que la imagen esté visible
                 console.log(`Imagen de ${targetYear} activada`);
             });
+            // Pre-cargar la siguiente imagen para transición suave
+            const nextMap = {1975:1980,1980:1985,1985:1990,1990:1995,1995:2000,2000:2005,2005:2010,2010:2015,2015:2020,2020:2025};
+            const nextYear = nextMap[targetYear];
+            if (nextYear) {
+                const nextImg = document.getElementById(`urban-bg-${nextYear}`);
+                if (nextImg && !nextImg.getAttribute('src')) {
+                    const nsrc = nextImg.getAttribute('data-src');
+                    if (nsrc) nextImg.setAttribute('src', nsrc);
+                }
+            }
         } else {
             console.error(`No se encontró la imagen para el año ${targetYear}`);
         }

@@ -4,18 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cancún: Entre el Destino Global y la Ciudad Justa</title>
-    <link href="https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.css" rel="stylesheet">
-    <script src="https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.js" defer></script>
+    <!-- Preconnect to third-party origins to reduce DNS/TLS latency -->
+    <link rel="preconnect" href="https://api.mapbox.com" crossorigin>
+    <link rel="preconnect" href="https://d3js.org" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://unpkg.com" crossorigin>
+    
+    <!-- Defer Mapbox CSS using preload to avoid render-blocking; noscript fallback -->
+    <link rel="preload" as="style" href="https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.css" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.css"></noscript>
     <!-- Proyecciones para convertir GeoJSON en EPSG:32616 a WGS84 (lon/lat) en el navegador -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.2/proj4.js" defer></script>
     <script src="https://unpkg.com/scrollama" defer></script>
     <script src="https://d3js.org/d3.v7.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-annotation/2.5.1/d3-annotation.min.js" defer></script>
-    <script src="population-chart.js?v=20251008" defer></script>
-    <script src="vehicle-chart.js?v=20251008" defer></script>
-    <script src="urban-evolution.js?v=20251008" defer></script>
-    <script src="mapbox-integration.js?v=20251008" defer></script>
-    <script src="main.js?v=20251008" defer></script>
+    <script src="dist/population-chart.min.js" defer></script>
+    <script src="dist/vehicle-chart.min.js" defer></script>
+    <script src="dist/urban-evolution.min.js" defer></script>
+    <script src="dist/mapbox-integration.min.js" defer></script>
+    <script src="dist/main.min.js" defer></script>
     <style>
         * { box-sizing: border-box; }
 
@@ -835,11 +842,11 @@
         <section class="step" data-step="29" style="position: relative; min-height: 100vh; overflow: hidden; padding: 0; margin: 0;">
             <!-- Contenedor principal que ocupa toda la pantalla -->
             <div class="consequence-images-wrapper" style="display: flex; width: 100%; height: 100vh; position: relative;">
-                <!-- Imagen 25.jpg a la izquierda -->
-                <div class="consequence-image-left"></div>
+                <!-- Imagen 25.jpg a la izquierda (lazy) -->
+                <div class="consequence-image-left lazy-bg" data-bg="assets/25.jpg"></div>
                 
-                <!-- Imagen 20.jpg a la derecha -->
-                <div class="consequence-image-right"></div>
+                <!-- Imagen 20.jpg a la derecha (lazy) -->
+                <div class="consequence-image-right lazy-bg" data-bg="assets/20.jpg"></div>
             </div>
             
             <style>
@@ -854,12 +861,12 @@
                 }
 
                 section[data-step="29"] .consequence-image-left {
-                    background-image: url('assets/25.jpg');
+                    /* background-image aplicado de forma perezosa vía data-bg */
                     transform: scale(0.9) translateX(-40px);
                 }
 
                 section[data-step="29"] .consequence-image-right {
-                    background-image: url('assets/20.jpg');
+                    /* background-image aplicado de forma perezosa vía data-bg */
                     transform: scale(0.9) translateX(40px);
                 }
 
