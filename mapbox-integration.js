@@ -29,22 +29,12 @@ const mapboxAccessToken = 'pk.eyJ1IjoiMHhqZmVyIiwiYSI6ImNtZ2huam90aDAzcGUyaXB4eD
 
 // Configuración de cuándo mostrar el mapa en cada step
 const mapStepsConfig = {
-    // Steps donde el mapa debe estar visible
-    visibleSteps: [2, 4, 5, 7, 20, 22, 24],
+    // Steps donde el mapa debe estar visible (solo los que realmente tienen mapa)
+    visibleSteps: [4, 20, 22, 24],
     
     // Configuración específica para cada paso que muestra el mapa
     stepConfigs: {
-        // Step 2: Mapa histórico de franja hotelera y supermanzanas iniciales
-        "2": {
-            center: [-86.8515, 21.1619], // Centro en Cancún
-            zoom: 12,
-            pitch: 0,
-            bearing: 0,
-            style: 'mapbox://styles/mapbox/light-v10',
-            // Nota: El formato GPKG no es compatible directamente con Mapbox GL.
-            // Por ahora, desactivamos la capa hasta contar con un GeoJSON equivalente.
-            layers: []
-        },
+        // Eliminados steps sin mapa real para evitar cargas tempranas
         // Step 4: Expansión urbana sin freno (mapa de crecimiento mancha urbana)
         "4": {
             center: [-86.8515, 21.1619], // Centro en Cancún
@@ -89,82 +79,7 @@ const mapStepsConfig = {
                 }
             ]
         },
-        // Step 5: Mapa de tasa de cambio poblacional por AGEB (2010-2020)
-        "5": {
-            center: [-86.8515, 21.1619], 
-            zoom: 12,
-            pitch: 0,
-            bearing: 0,
-            style: 'mapbox://styles/mapbox/light-v10',
-            layers: [
-                {
-                    id: 'tasa-cambio-poblacional',
-                    type: 'fill',
-                    source: {
-                        type: 'geojson',
-                        data: 'public/data/tasa-de-cambio-poblacional-por-AGEB.geojson'
-                    },
-                    paint: {
-                        // Manejo robusto de valores nulos: si 'pobtot' no existe, usar 0 para asignar el color por defecto
-                        'fill-color': [
-                            'step',
-                            ['coalesce', ['to-number', ['get', 'pobtot']], 0],
-                            '#e63946', // bajo (rojo)
-                            1000, '#ffb703', // medio-bajo (amarillo)
-                            5000, '#8ecae6', // medio (azul claro)
-                            10000, '#219ebc', // medio-alto (azul medio)
-                            50000, '#023047'  // alto (azul oscuro)
-                        ],
-                        'fill-opacity': 0.9,
-                        'fill-outline-color': '#555'
-                    },
-                    popup: (properties) => {
-                        return `<h3>Supermanzana ${properties.supermanzana || 'N/A'}</h3>
-                                <p>Población: ${(properties.pobtot || 0).toLocaleString()} habitantes</p>`;
-                    }
-                }
-            ]
-        },
-        // Step 7: Mapa de densidad poblacional por distrito
-        "7": {
-            center: [-86.8515, 21.1619],
-            zoom: 11,
-            pitch: 30,
-            bearing: 0,
-            style: 'mapbox://styles/mapbox/light-v10',
-            layers: [
-                {
-                    id: 'densidad-poblacional',
-                    type: 'fill',
-                    source: {
-                        type: 'geojson',
-                        data: 'public/data/densidad-poblacional-por-distrito.geojson'
-                    },
-                    paint: {
-                        'fill-color': [
-                            'step',
-                            ['coalesce', ['to-number', ['get', 'DEN_HAB_HA']], 0],
-                            '#f1faee', // baja densidad (claro)
-                            10, '#a8dadc', 
-                            30, '#457b9d',
-                            60, '#1d3557',
-                            100, '#e63946'  // alta densidad (intenso)
-                        ],
-                        'fill-opacity': 0.8,
-                        'fill-outline-color': '#555'
-                    },
-                    popup: (properties) => {
-                        const pob = Number(properties.POBTOT || 0);
-                        const den = Number(properties.DEN_HAB_HA || 0);
-                        const sup = Number(properties.SUPERFICIE_HA || 0);
-                        return `<h3>Distrito ${properties.fid ?? ''}</h3>
-                                <p>Población: ${isFinite(pob) ? pob.toLocaleString() : 'N/D'} habitantes</p>
-                                <p>Densidad: ${isFinite(den) ? den.toFixed(1) : 'N/D'} hab/ha</p>
-                                <p>Superficie: ${isFinite(sup) ? sup.toFixed(1) : 'N/D'} hectáreas</p>`;
-                    }
-                }
-            ]
-        },
+        // Eliminados 5 y 7; los mapas correspondientes existen en 20 y 24
         // Step 20: Cambio poblacional por AGEB
         "20": {
             center: [-86.8515, 21.1619], 
@@ -312,6 +227,8 @@ function initializeMapbox() {
         mapContainer.style.visibility = originalVisibility || 'hidden';
         mapContainer.style.opacity = originalOpacity || '0';
         mapContainer.classList.remove('active');
+        // Notificar que Mapbox está listo
+        document.dispatchEvent(new CustomEvent('mapbox-ready'));
     });
     
     // Añadir controles al mapa
@@ -641,7 +558,7 @@ function hideMapOverlay() {
 }
 
 // Función para actualizar el mapa según el step actual
-function updateMapForStep(stepId) {
+async function updateMapForStep(stepId) {
     console.log(`=== updateMapForStep(${stepId}) INICIANDO ===`);
     
     // FORZAR LIMPIEZA TOTAL AL INICIO DE CUALQUIER ACTUALIZACIÓN
@@ -660,6 +577,8 @@ function updateMapForStep(stepId) {
     console.log('¿Existe configuración para step?', !!mapStepsConfig.stepConfigs[stepIdStr]);
     if (mapStepsConfig.visibleSteps.includes(Number(stepId)) && mapStepsConfig.stepConfigs[stepIdStr]) {
         console.log(`✅ Step ${stepId} debe mostrar mapa, llamando showMapOverlay...`);
+        // Asegurar que el mapa esté listo antes de mostrar
+        await ensureMapboxReady();
         // Usar el wrapper para que también gestione la leyenda
         if (window.mapboxHelper && typeof window.mapboxHelper.showMapOverlay === 'function') {
             window.mapboxHelper.showMapOverlay(mapStepsConfig.stepConfigs[stepIdStr]);
@@ -730,11 +649,19 @@ function addKeyboardScrollSupport() {
 }
 
 // Integración con Scrollama
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Inicializando mapa principal...');
-    initializeMapbox();
-    document.dispatchEvent(new CustomEvent('mapbox-ready'));
-});
+let mapInitPromise = null;
+async function ensureMapboxReady() {
+    if (mapboxMap) return true;
+    if (!mapInitPromise) {
+        mapInitPromise = new Promise((resolve) => {
+            console.log('⏳ Inicializando Mapbox bajo demanda...');
+            initializeMapbox();
+            const onReady = () => { document.removeEventListener('mapbox-ready', onReady); resolve(true); };
+            document.addEventListener('mapbox-ready', onReady);
+        });
+    }
+    return mapInitPromise;
+}
 
 // Exportar funciones para uso en otros archivos
 window.mapboxHelper = { updateMapForStep, showMapOverlay, hideMapOverlay };

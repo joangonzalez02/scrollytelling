@@ -5,23 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cancún: Entre el Destino Global y la Ciudad Justa</title>
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.css" rel="stylesheet">
-    <script src="https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.js"></script>
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.js" defer></script>
     <!-- Proyecciones para convertir GeoJSON en EPSG:32616 a WGS84 (lon/lat) en el navegador -->
-    <!-- Nota: se elimina integrity para evitar bloqueo por SRI desalineado -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.2/proj4.js"></script>
-    <script src="https://unpkg.com/scrollama"></script>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-annotation/2.5.1/d3-annotation.min.js"></script>
-    <script src="population-chart.js?v=20251008"></script>
-    <script src="vehicle-chart.js?v=20251008"></script>
-    <script src="urban-evolution.js?v=20251008"></script>
-    <script src="mapbox-integration.js?v=20251008"></script>
-    <script src="main.js?v=20251008"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.2/proj4.js" defer></script>
+    <script src="https://unpkg.com/scrollama" defer></script>
+    <script src="https://d3js.org/d3.v7.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-annotation/2.5.1/d3-annotation.min.js" defer></script>
+    <script src="population-chart.js?v=20251008" defer></script>
+    <script src="vehicle-chart.js?v=20251008" defer></script>
+    <script src="urban-evolution.js?v=20251008" defer></script>
+    <script src="mapbox-integration.js?v=20251008" defer></script>
+    <script src="main.js?v=20251008" defer></script>
     <style>
         * { box-sizing: border-box; }
-        /* No se permiten mapas embebidos; solo #map es válido */
-        
-        /* Asegurar que solo el mapa principal sea visible */
+
         #map {
             z-index: 1000 !important; 
         }
@@ -42,7 +39,7 @@
             display: none !important;
         }
         
-        /* Configuración del mapa base con transiciones tipo telón simplificadas */
+        /* Configuración del mapa base*/
         #map { 
             position: fixed; 
             top: 0; 
@@ -130,7 +127,7 @@
             position: absolute;
             top: 20px;
             right: 20px;
-            background-color: #FB8500; /* Color naranja de la paleta */
+            background-color: #FB8500; 
             color: white;
             font-size: 24px;
             width: 40px;
@@ -147,24 +144,6 @@
             pointer-events: auto !important; /* Asegurarse de que siempre capture clics */
         }
 
-        .lizmap-close-btn:hover {
-            background-color: #FF9E2C !important;
-            transform: scale(1.1) !important;
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.7) !important;
-        }
-
-        .lizmap-close-btn:active {
-            transform: scale(0.95) !important;
-            background-color: #FF6500 !important;
-        }
-        
-        /* Estilos para el iframe de Lizmap */
-        .lizmap-scrolly-iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            display: block;
-        }
         
         /* Asegurarse de que los steps con mapa permitan el scroll */
         .step.has-map {
@@ -213,12 +192,12 @@
         
         /* Estilos diferenciados para steps de texto vs mapa/visualizaciones */
         .step:not(.has-map):not(.urban-year-image) {
-            /* Steps de texto - fondo gradiente como demo-lizmap */
+            /* Steps de texto - fondo gradiente */
             background: linear-gradient(135deg, rgba(13, 71, 161, 0.95), rgba(25, 118, 210, 0.95));
             color: white;
         }
         
-        /* Estilo del contenido de texto similar a demo-lizmap */
+        /* Estilo del contenido de texto*/
         .step-content {
             font-size: 24px;
             font-weight: normal;
@@ -645,7 +624,7 @@
         <!-- Step 1: Portada / Hook -->
         <section class="step" data-step="1" style="position: relative; overflow: hidden; background: none !important;">
             <!-- Video de fondo con mejor implementación -->
-            <video autoplay muted loop playsinline id="background-video" style="position: absolute; width: 100%; height: 100%; object-fit: cover; z-index: -2;">
+            <video autoplay muted loop playsinline preload="metadata" poster="assets/1-poster.jpg" id="background-video" style="position: absolute; width: 100%; height: 100%; object-fit: cover; z-index: -2;">
                 <source src="assets/1.mp4" type="video/mp4">
                 Tu navegador no soporta video HTML5.
             </video>
@@ -664,7 +643,7 @@
 
         <!-- Step 2: Imagen 2.jpg -->
         <section class="step" data-step="2" style="position: relative; min-height: 100vh;">
-            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url('assets/2.jpg'); background-size: cover; background-position: center; background-attachment: fixed;"></div>
+            <div class="lazy-bg" data-bg="assets/2.jpg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center;"></div>
         </section>
 
         <!-- Step 3: Digging in (Introducción al caso) -->
@@ -704,7 +683,7 @@
 
         <!-- Step 6: Imagen 6.jpg -->
         <section class="step" data-step="6" style="position: relative; min-height: 100vh;">
-            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url('assets/6.jpg'); background-size: cover; background-position: center;"></div>
+            <div class="lazy-bg" data-bg="assets/6.jpg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center;"></div>
         </section>
 
         <!-- Step 7: Expansión urbana sin freno -->
@@ -817,7 +796,7 @@
 
         <!-- Step 25: Imagen de la desigualdad territorial (imagen 23.jpg) -->
         <section class="step" data-step="25" style="position: relative; min-height: 100vh;">
-            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url('assets/23.jpg'); background-size: cover; background-position: center;"></div>
+            <div class="lazy-bg" data-bg="assets/23.jpg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center;"></div>
         </section>
 
         <!-- Step 26: Motorización acelerada -->
@@ -939,7 +918,7 @@
                 
                 <!-- Imagen a la derecha -->
                 <div style="flex: 1; display: flex; justify-content: center; align-items: center;">
-                    <img src="assets/27.png" style="max-width: 100%; max-height: 70vh; border-radius: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);" alt="Futuro de Cancún">
+                    <img src="assets/27.png" loading="lazy" decoding="async" style="max-width: 100%; max-height: 70vh; border-radius: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);" alt="Futuro de Cancún">
                 </div>
             </div>
         </section>
@@ -959,27 +938,42 @@
         
         // Script adicional para configurar fondos de secciones específicas
         document.addEventListener('DOMContentLoaded', function() {
+            // Lazy-load para fondos de secciones con data-bg
+            (function(){
+                const lazyBgs = Array.from(document.querySelectorAll('.lazy-bg[data-bg]'));
+                if (!lazyBgs.length) return;
+                const supportIO = 'IntersectionObserver' in window;
+                const applyBg = (el) => {
+                    if (el.dataset.bgApplied) return;
+                    const url = el.getAttribute('data-bg');
+                    if (!url) return;
+                    // Preload de imagen para evitar flash
+                    const img = new Image();
+                    img.onload = () => {
+                        el.style.backgroundImage = `url('${url}')`;
+                        el.dataset.bgApplied = '1';
+                    };
+                    img.src = url;
+                };
+                if (!supportIO) {
+                    lazyBgs.forEach(applyBg);
+                    return;
+                }
+                const io = new IntersectionObserver((entries)=>{
+                    entries.forEach(entry=>{
+                        if (entry.isIntersecting || entry.intersectionRatio > 0) {
+                            applyBg(entry.target);
+                            io.unobserve(entry.target);
+                        }
+                    });
+                }, { root: null, rootMargin: '300px 0px', threshold: 0.01 });
+                lazyBgs.forEach(el=>io.observe(el));
+            })();
             // La configuración de fondo para la sección de cierre ha sido eliminada
             // El step 30 ahora usa solo el fondo de color sin imagen
             
             // Configurar otros fondos de secciones según sea necesario
-            const bgSections = {
-                // "1" ha sido reemplazado por un video con overlay
-                "2": "assets/2.jpg",
-                "6": "assets/6.jpg",
-                "25": "assets/23.jpg"
-            };
-            
-            for (const [step, bgImage] of Object.entries(bgSections)) {
-                const section = document.querySelector(`section[data-step="${step}"]`);
-                if (section) {
-                    section.classList.add('bg-image');
-                    section.style.backgroundImage = `url('${bgImage}')`;
-                    section.style.backgroundSize = "cover";
-                    section.style.backgroundPosition = "center";
-                    section.style.backgroundAttachment = "fixed";
-                }
-            }
+            // Se reemplazó la asignación inmediata de background-image por lazy-load con .lazy-bg
             // La sección con fotos de tráfico ha sido eliminada
             
             // Asegurarnos de que el video de fondo se reproduce correctamente

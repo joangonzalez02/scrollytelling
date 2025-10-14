@@ -1,7 +1,6 @@
 // Script principal para la integración de Scrollama con las visualizaciones
 document.addEventListener('DOMContentLoaded', function() {
-    // Configuración del mapa base
-    mapboxgl.accessToken = 'pk.eyJ1IjoiMHhqZmVyIiwiYSI6ImNtZjRjNjczdTA0MGsya3Bwb3B3YWw4ejgifQ.8IZ5PTYktl5ss1gREda3fg';
+    // El token y la inicialización de Mapbox ahora se manejan dentro de mapbox-integration.js bajo demanda
     
     // Ocultar el contenedor del mapa inicialmente
     const mapContainer = document.getElementById('map');
