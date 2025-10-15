@@ -159,10 +159,43 @@ Notas:
   - Tooltip con el mismo estilo que población; aparece al pasar el mouse sobre barras, puntos y también al acercarse a la línea (detección del punto más cercano).
   - Ejes dobles: izquierdo para vehículos totales (barras) y derecho para autos por vivienda (línea).
 
-## Despliegue
+## Despliegue a GitHub Pages
 
-- El proyecto es estático y puede desplegarse en servicios como Vercel, Netlify o en un servidor Node simple usando `node serve.js`.
-- Si tu proveedor requiere una variable de entorno para el puerto, `serve.js` ya respeta `process.env.PORT`.
+Este proyecto está configurado para desplegarse **automáticamente** a GitHub Pages desde la rama `main`.
+
+### Cómo funciona
+
+1. Haces cambios en tu código local
+2. Haces commit: `git commit -m "tu mensaje"`
+3. Haces push: `git push origin main`
+4. ✨ GitHub Pages se actualiza automáticamente (tarda 1-2 minutos)
+
+**URL del sitio:** `https://joangonzalez02.github.io/SCROLLAMA/`
+
+### Configuración en GitHub (ya debería estar hecho)
+
+Si es la primera vez o necesitas verificar:
+1. Ve a tu repositorio → **Settings** → **Pages**
+2. En "**Build and deployment**", selecciona:
+   - **Source**: Deploy from a branch
+   - **Branch**: `main`
+   - **Folder**: `/ (root)`
+3. Guarda y espera unos minutos
+
+**⚠️ Nota importante:** Los archivos se sirven directamente desde la rama `main`, así que asegúrate de tener `dist/` generado antes de hacer push:
+
+```powershell
+npm run build
+git add .
+git commit -m "Build para producción"
+git push origin main
+```
+
+### Otros servicios de hosting
+
+Si prefieres otros servicios:
+- **Vercel/Netlify**: Conecta tu repositorio y estos servicios construirán automáticamente con `npm run build`
+- **Servidor Node**: Despliega usando `node serve.js` (respeta `process.env.PORT`)
 
 ---
 
