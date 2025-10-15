@@ -30,22 +30,54 @@ $env:PORT=3000; npm start
 
 Luego abre el navegador en `http://localhost:3000` (o el puerto que elijas).
 
-## Estructura del proyecto (resumen)
+## Estructura del proyecto
 
-- `index.html`: Página principal del scrollytelling.
-- `style.css`: Estilos de la página.
-- `main.js`: Lógica de orquestación del scrollytelling/scrollama.
-- `mapbox-integration.js`: Inicialización y pasos del mapa de Mapbox GL.
-- `population-chart.js`, `vehicle-chart.js`, `urban-evolution.js`: Gráficas y visualizaciones D3.
-- `public/data/`: Archivos GeoJSON y CSV usados por las visualizaciones.
-- `assets/`: Imágenes y videos usados en el relato.
-- `serve.js`: Servidor Express para servir archivos estáticos.
-- `package.json`: Scripts y dependencias del proyecto.
+```
+SCROLLAMA/
+├── src/                          # Código fuente JavaScript
+│   ├── main.js                   # Lógica de scrollama
+│   ├── mapbox-integration.js     # Integración con Mapbox
+│   ├── population-chart.js       # Gráfico de población
+│   ├── vehicle-chart.js          # Gráfico de vehículos
+│   ├── urban-evolution.js        # Gráfico de evolución urbana
+├── dist/                         # Archivos JavaScript minificados
+│   ├── main.min.js
+│   ├── mapbox-integration.min.js
+│   ├── population-chart.min.js
+│   ├── vehicle-chart.min.js
+│   └── urban-evolution.min.js
+├── public/data/                  # Datos GeoJSON y CSV
+│   ├── crecimientoG.geojson
+│   ├── densidad-poblacional-por-distrito.geojson
+│   ├── parque-vehicular.csv
+│   ├── poblacion-valores.csv
+│   └── tasa-de-cambio-poblacional-por-AGEB.geojson
+├── assets/                       # Imágenes y videos
+├── scripts/                      # Scripts de build
+│   └── build.js
+├── index.html                    # Página principal
+├── style.css                     # Estilos CSS
+├── serve.js                      # Servidor de desarrollo
+├── MAPBOX-TOKEN-SETUP.md        # Guía para configurar token
+└── package.json                  # Configuración de npm
+```
+
+## Build
+
+Para minificar los archivos JavaScript:
+
+```bash
+npm run build
+```
+
+Esto lee los archivos de `src/` y genera las versiones minificadas en `dist/`.
 
 ## Mapbox
 
-- El archivo `mapbox-integration.js` contiene un token de acceso (`mapboxAccessToken`). Si necesitas usar tu propio token, reemplázalo por el tuyo.
-- El contenedor del mapa es `#map` y el servidor entrega los archivos estáticos necesarios.
+- El token de Mapbox está configurado en `src/mapbox-integration.js`.
+- **⚠️ IMPORTANTE**: Si el mapa no se muestra, necesitas crear tu propia cuenta en Mapbox y obtener un token válido.
+- Consulta `MAPBOX-TOKEN-SETUP.md` para instrucciones detalladas sobre cómo obtener y configurar tu token.
+- El contenedor del mapa es `#map` y se carga dinámicamente en los steps correspondientes.
 
 ## Mapas GeoJSON — Bibliotecas utilizadas y flujo
 

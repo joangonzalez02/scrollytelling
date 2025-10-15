@@ -25,7 +25,10 @@ const LUSTRO_COLORS = {
 let selectedLustros = new Set(LUSTROS); // por defecto, todos activos
 
 // Token de acceso a Mapbox
-const mapboxAccessToken = 'pk.eyJ1IjoiMHhqZmVyIiwiYSI6ImNtZ2huam90aDAzcGUyaXB4eDdpOHk0cGEifQ.CebHRBgURf4GHvbcI0pOew';
+// ✅ Token actualizado - Si sigue dando error 403, crea tu propia cuenta en:
+// https://account.mapbox.com/auth/signup/ (GRATIS, 50,000 vistas/mes)
+// Más detalles en: MAPBOX-TOKEN-SETUP.md
+const mapboxAccessToken = 'pk.eyJ1IjoiMHhqZmVyIiwiYSI6ImNtZjRjNjczdTA0MGsya3Bwb3B3YWw4ejgifQ.8IZ5PTYktl5ss1gREda3fg';
 
 // Configuración de cuándo mostrar el mapa en cada step
 const mapStepsConfig = {
@@ -220,15 +223,64 @@ function initializeMapbox() {
         touchZoomRotate: true
     });
     
+    console.log('🗺️ Instancia de mapa creada con estilo:', currentBaseStyle);
+    
+    // Log de eventos de estilo para debugging
+    mapboxMap.on('styledata', () => {
+        console.log('🎨 Estilo del mapa cargando datos...');
+    });
+    
+    mapboxMap.on('style.load', () => {
+        console.log('🎨 Estilo del mapa completamente cargado');
+    });
+    
+    mapboxMap.on('error', (e) => {
+        console.error('❌ Error en Mapbox:', e.error);
+    });
+    
     // RESTAURAR ESTADO ORIGINAL DEL CONTENEDOR DESPUÉS DE INICIALIZACIÓN
     mapboxMap.on('load', () => {
-        console.log('🗺️ Mapa cargado, restaurando estado original del contenedor');
-        mapContainer.style.display = originalDisplay || 'none';
-        mapContainer.style.visibility = originalVisibility || 'hidden';
-        mapContainer.style.opacity = originalOpacity || '0';
+        console.log('🗺️ Mapa cargado correctamente');
+        // NO restaurar a oculto, dejar que sea controlado por showMapOverlay/hideMapOverlay
+        // Solo remover clase active para que comience en estado neutral
         mapContainer.classList.remove('active');
+        // Asegurar que el contenedor vuelva a estado oculto inicial
+        mapContainer.style.display = 'none';
+        mapContainer.style.visibility = 'hidden';
+        mapContainer.style.opacity = '0';
+        
+        // IMPORTANTE: Forzar un resize después de la carga para asegurar dimensiones correctas
+        setTimeout(() => {
+            if (mapboxMap) {
+                mapboxMap.resize();
+                console.log('✅ Resize inicial del mapa completado');
+            }
+        }, 100);
+        
+        // Verificar que el estilo base se haya cargado
+        setTimeout(() => {
+            const style = mapboxMap.getStyle();
+            console.log('🎨 Estilo del mapa:', style ? 'Cargado' : 'NO CARGADO');
+            if (style && style.layers) {
+                console.log('📊 Capas del estilo base:', style.layers.length);
+                console.log('📋 Primeras capas:', style.layers.slice(0, 5).map(l => `${l.id} (${l.type})`));
+            }
+        }, 500);
+        
         // Notificar que Mapbox está listo
         document.dispatchEvent(new CustomEvent('mapbox-ready'));
+    });
+    
+    // Listener global para resize del window
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            if (mapboxMap && mapContainer.style.display === 'block') {
+                mapboxMap.resize();
+                console.log('✅ Mapa redimensionado por cambio en ventana');
+            }
+        }, 250);
     });
     
     // Añadir controles al mapa
@@ -379,12 +431,23 @@ function showMapOverlay(config) {
     mapContainer.style.opacity = '1';
     mapContainer.style.visibility = 'visible';
     mapContainer.style.zIndex = '1000';
+    mapContainer.style.backgroundColor = ''; // Asegurar que no haya fondo que cubra el mapa
     mapContainer.classList.add('active');
     
-    // Asegurarnos que el canvas del mapa tenga opacidad completa
+    // Asegurarnos que el canvas del mapa tenga opacidad completa y esté visible
     const mapCanvas = mapContainer.querySelector('.mapboxgl-canvas');
     if (mapCanvas) {
         mapCanvas.style.opacity = '1';
+        console.log('✅ Canvas del mapa configurado con opacidad 1');
+    } else {
+        console.warn('⚠️ No se encontró el canvas del mapa');
+    }
+    
+    // Verificar que el contenedor del canvas también esté visible
+    const canvasContainer = mapContainer.querySelector('.mapboxgl-canvas-container');
+    if (canvasContainer) {
+        canvasContainer.style.opacity = '1';
+        console.log('✅ Contenedor del canvas configurado');
     }
     
     console.log('✅ Estilos aplicados al contenedor');
@@ -392,6 +455,12 @@ function showMapOverlay(config) {
     console.log('Contenedor opacity:', mapContainer.style.opacity);
     console.log('Contenedor visibility:', mapContainer.style.visibility);
     console.log('Contenedor z-index:', mapContainer.style.zIndex);
+    
+    // RESIZE INMEDIATO después de hacer visible el contenedor
+    if (mapboxMap) {
+        mapboxMap.resize();
+        console.log('✅ Resize inmediato ejecutado');
+    }
     
     // No crear zonas de scroll superpuestas para no bloquear controles del mapa
     
@@ -515,6 +584,21 @@ function showMapOverlay(config) {
         duration: 2000,
         essential: true
     });
+    
+    // Resize adicional después del flyTo para asegurar dimensiones correctas
+    setTimeout(() => {
+        if (mapboxMap) {
+            mapboxMap.resize();
+            console.log('✅ Resize post-flyTo completado (1000ms)');
+        }
+    }, 1000);
+    
+    setTimeout(() => {
+        if (mapboxMap) {
+            mapboxMap.resize();
+            console.log('✅ Resize post-flyTo completado (2500ms)');
+        }
+    }, 2500);
     
     console.log('=== showMapOverlay COMPLETADO ===');
 }
@@ -654,8 +738,17 @@ async function ensureMapboxReady() {
     if (mapboxMap) return true;
     if (!mapInitPromise) {
         mapInitPromise = new Promise((resolve) => {
+            // Verificar si Mapbox GL ya está cargado (por ejemplo, desde HTML)
+            if (typeof mapboxgl !== 'undefined') {
+                console.log('✅ Mapbox GL ya está cargado, inicializando mapa...');
+                initializeMapbox();
+                const onReady = () => { document.removeEventListener('mapbox-ready', onReady); resolve(true); };
+                document.addEventListener('mapbox-ready', onReady);
+                return;
+            }
+            
             console.log('⏳ Cargando librería de Mapbox bajo demanda...');
-            // Insertar script de Mapbox GL dinámicamente
+            // Insertar script de Mapbox GL dinámicamente solo si no está cargado
             const script = document.createElement('script');
             script.src = 'https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.js';
             script.async = true;
