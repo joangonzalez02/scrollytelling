@@ -72,6 +72,31 @@ npm run build
 
 Esto lee los archivos de `src/` y genera las versiones minificadas en `dist/`.
 
+### ⚠️ Workflow de desarrollo (IMPORTANTE)
+
+**Cada vez que modifiques archivos `.js` en `src/`, debes:**
+
+1. **Generar los archivos minificados:**
+   ```powershell
+   npm run build
+   ```
+
+2. **Hacer commit y push de los cambios:**
+   ```powershell
+   git add .
+   git commit -m "Descripción de tus cambios"
+   git push
+   ```
+
+**¿Por qué?** GitHub Pages sirve directamente desde el repositorio, y el `index.html` carga los archivos minificados de `dist/`. Si no ejecutas `npm run build`, los cambios en `src/` no se verán reflejados en producción.
+
+**Archivos que se generan:**
+- `src/main.js` → `dist/main.min.js`
+- `src/mapbox-integration.js` → `dist/mapbox-integration.min.js`
+- `src/population-chart.js` → `dist/population-chart.min.js`
+- `src/vehicle-chart.js` → `dist/vehicle-chart.min.js`
+- `src/urban-evolution.js` → `dist/urban-evolution.min.js`
+
 ## Mapbox
 
 - El token de Mapbox está configurado en `src/mapbox-integration.js`.
