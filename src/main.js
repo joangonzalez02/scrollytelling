@@ -48,8 +48,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Agregar clase activa al paso actual
                 document.querySelectorAll('.step').forEach(el => {
                     el.classList.remove('is-active');
+                    el.classList.remove('active');
                 });
                 response.element.classList.add('is-active');
+                response.element.classList.add('active');
                 
                 // Animación específica para step 29 (index 28)
                 if (currentStep === 28) {
@@ -75,6 +77,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .onStepExit(response => {
                 console.log('Saliendo del step:', response.index);
                 response.element.classList.remove('is-active');
+                response.element.classList.remove('active');
 
                 // Reset de animaciones para step 29 al salir, para que pueda reanimarse al re-entrar
                 if (response.index === 28) {

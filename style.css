@@ -28,6 +28,74 @@ body {
     border-radius: 8px;
 }
 
+/* Estilos para la visualización de imágenes de años urbanos */
+.urban-year-image {
+    position: relative;
+    min-height: 100vh;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Estilos para la superposición de evidencia histórica */
+.evidence-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    
+    /* Reglas de Flexbox para Centrado Perfecto */
+    display: flex;
+    justify-content: center; /* CLAVE: Centra Horizontalmente */
+    align-items: center;    /* Centra Verticalmente */
+    
+    /* Reglas de Visibilidad */
+    z-index: 100;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.8s ease, visibility 0.8s ease;
+    pointer-events: none;
+}
+
+.urban-year-image.active .evidence-overlay {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.evidence-img {
+    /* Asegúrate de que la imagen sea más pequeña que el viewport */
+    max-width: 90vw; 
+    max-height: 90vh; 
+    
+    /* Déjale sus estilos estéticos */
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    border: 5px solid white;
+}
+
+.light.centered {
+    position: fixed;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 101;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 15px;
+    border-radius: 5px;
+    max-width: 80%;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    text-align: center;
+}
+
+.urban-year-image.active .light.centered {
+    opacity: 1;
+    visibility: visible;
+}
+
 .step-content li {
     text-align: center;
     color: #023047; /* Color oscuro principal */
