@@ -238,7 +238,104 @@
             margin: 0 !important;
             background: transparent !important;
             z-index: 2;
-            color: transparent !important;
+            color: #000000;
+        }
+
+        /* Mostrar cuadro de texto en el step de 1980 */
+        .step.urban-year-image .step9-caption {
+            position: absolute;
+            right: 24px;
+            bottom: 24px;
+            z-index: 3;
+            background: rgba(255, 255, 255, 0.95);
+            color: #000000;
+            padding: 16px 20px;
+            border-radius: 8px;
+            box-shadow: none;
+            max-width: 520px;
+            width: auto;
+            text-align: left;
+        }
+
+        /* Mostrar cuadro de texto en el step de 1985 */
+        .step.urban-year-image .step10-caption {
+            position: absolute;
+            right: 24px;
+            bottom: 24px;
+            z-index: 3;
+            background: rgba(255, 255, 255, 0.95);
+            color: #000000;
+            padding: 16px 20px;
+            border-radius: 8px;
+            box-shadow: none;
+            max-width: 520px;
+            width: auto;
+            text-align: left;
+        }
+
+        /* Mostrar cuadro de texto en el step de 1990 */
+        .step.urban-year-image .step11-caption {
+            position: absolute;
+            right: 24px;
+            bottom: 24px;
+            z-index: 3;
+            background: rgba(255, 255, 255, 0.95);
+            color: #000000;
+            padding: 16px 20px;
+            border-radius: 8px;
+            box-shadow: none;
+            max-width: 520px;
+            width: auto;
+            text-align: left;
+        }
+
+        /* Estilo común para captions de años (steps 12–18) */
+        .step.urban-year-image .year-caption {
+            position: absolute;
+            right: 24px;
+            bottom: 24px;
+            z-index: 3;
+            background: rgba(255, 255, 255, 0.95);
+            color: #000000;
+            padding: 16px 20px;
+            border-radius: 8px;
+            box-shadow: none;
+            max-width: 520px;
+            width: auto;
+            text-align: left;
+        }
+
+        /* Responsivo: ajustar captions en pantallas pequeñas */
+        @media (max-width: 768px) {
+            .step.urban-year-image .year-caption {
+                right: 12px;
+                bottom: 12px;
+                max-width: calc(100% - 24px);
+                padding: 12px 14px;
+            }
+            .step.urban-year-image .year-caption p { 
+                font-size: 16px; 
+                line-height: 1.5; 
+            }
+            .step.urban-year-image .year-caption strong { 
+                font-size: 17px; 
+            }
+        }
+
+        @media (max-width: 480px) {
+            .step.urban-year-image .year-caption {
+                right: 8px;
+                bottom: 8px;
+                max-width: calc(100% - 16px);
+                padding: 10px 12px;
+            }
+            .step.urban-year-image .year-caption p { 
+                font-size: 15px; 
+                line-height: 1.45; 
+            }
+            .step.urban-year-image .year-caption strong { 
+                font-size: 16px; 
+            }
         }
         
         .step.has-map {
@@ -771,44 +868,92 @@
         </section>
 
         <!-- Step 9: Imagen 1980.jpg -->
-        <section class="step urban-year-image lazy-bg" data-step="9" data-year="1980">
+        <section class="step urban-year-image lazy-bg" data-step="9" data-year="1980" style="position: relative; overflow: hidden; min-height: 100vh;">
+            <div class="year-caption">
+                <p>Este crecimiento lento pero constante se explica por un contexto nacional complicado. Los años 80 son conocidos en México como la "Década Perdida".</p>
+            </div>
             <span class="year-label-mobile" style="position:absolute; top:8px; left:8px; background:rgba(0,0,0,0.6); color:#fff; padding:4px 8px; border-radius:4px; font-size:14px; display:none;">1980</span>
         </section>
 
         <!-- Step 10: Imagen 1985.jpg -->
         <section class="step urban-year-image" data-step="10" data-year="1985">
+            <div class="year-caption">
+                <p><strong>1985: Consolidación en medio de adversidad</strong></p>
+                <p>La ciudad alcanza las 5,515 hectáreas, con un crecimiento del 11.7% desde 1980.</p>
+                <p>El contexto económico nacional dificulta el desarrollo del proyecto turístico.</p>
+            </div>
         </section>
 
         <!-- Step 11: Imagen 1990.jpg -->
-        <section class="step urban-year-image" data-step="11" data-year="1990">
+        <section class="step urban-year-image" data-step="11" data-year="1990" style="position: relative; overflow: hidden; min-height: 100vh;">
+            <div class="year-caption">
+                <p><strong>1990: Fin de la primera década</strong></p>
+                <p>La huella urbana llega a 6,244 hectáreas, con un crecimiento acumulado del 26.4% desde 1980.</p>
+                <p>Los primeros 10 años fueron de consolidación y supervivencia en un entorno nacional muy adverso.</p>
+            </div>
         </section>
 
         <!-- Step 12: Imagen 1995.jpg -->
-        <section class="step urban-year-image" data-step="12" data-year="1995">
+        <section class="step urban-year-image" data-step="12" data-year="1995" style="position: relative; overflow: hidden; min-height: 100vh;">
+            <div class="year-caption">
+                <p><strong>1995: El primer gran salto</strong></p>
+                <p>La ciudad alcanza las 8,009 hectáreas, con un crecimiento del 28.3% en solo cinco años.</p>
+                <p>El TLCAN y la devaluación del peso impulsan el turismo y la inversión.</p>
+            </div>
         </section>
 
         <!-- Step 13: Imagen 2000.jpg -->
-        <section class="step urban-year-image" data-step="13" data-year="2000">
+        <section class="step urban-year-image" data-step="13" data-year="2000" style="position: relative; overflow: hidden; min-height: 100vh;">
+            <div class="year-caption">
+                <p><strong>2000: Fin de la explosión inicial</strong></p>
+                <p>La huella urbana llega a 9,848 hectáreas, casi el doble que en 1990.</p>
+                <p>Este fue el "milagro" de Cancún, impulsado por la inversión extranjera y un tipo de cambio favorable.</p>
+            </div>
         </section>
 
         <!-- Step 14: Imagen 2005.jpg -->
-        <section class="step urban-year-image" data-step="14" data-year="2005">
+        <section class="step urban-year-image" data-step="14" data-year="2005" style="position: relative; overflow: hidden; min-height: 100vh;">
+            <div class="year-caption">
+                <p><strong>2005: Antes del huracán Wilma</strong></p>
+                <p>La ciudad alcanza las 11,247 hectáreas, con un crecimiento del 14.2% desde 2000.</p>
+                <p>El crecimiento se había desacelerado tras los ataques del 9/11.</p>
+            </div>
         </section>
 
         <!-- Step 15: Imagen 2010.jpg -->
-        <section class="step urban-year-image" data-step="15" data-year="2010">
+        <section class="step urban-year-image" data-step="15" data-year="2010" style="position: relative; overflow: hidden; min-height: 100vh;">
+            <div class="year-caption">
+                <p><strong>2010: Superando la adversidad</strong></p>
+                <p>La huella urbana llega a 12,516 hectáreas, con un crecimiento acumulado del 153.4% desde 1980.</p>
+                <p>A pesar de todo, la ciudad siguió creciendo, demostrando su increíble capacidad de recuperación.</p>
+            </div>
         </section>
 
         <!-- Step 16: Imagen 2015.jpg -->
-        <section class="step urban-year-image" data-step="16" data-year="2015">
+        <section class="step urban-year-image" data-step="16" data-year="2015" style="position: relative; overflow: hidden; min-height: 100vh;">
+            <div class="year-caption">
+                <p><strong>2015: La mayor expansión absoluta</strong></p>
+                <p>La ciudad alcanza las 15,197 hectáreas, con un crecimiento del 21.4% en cinco años.</p>
+                <p>El crecimiento ya no es solo de hoteles, sino de urbanización residencial.</p>
+            </div>
         </section>
 
-        <!-- Step 17: Imagen 2020.jpg -->
-        <section class="step urban-year-image" data-step="17" data-year="2020">
+        <!-- Step 17. Imagen 2020.jpg -->
+        <section class="step urban-year-image" data-step="17" data-year="2020" style="position: relative; overflow: hidden; min-height: 100vh;">
+            <div class="year-caption">
+                <p><strong>2020: Metropolización consolidada</strong></p>
+                <p>La huella urbana llega a 17,309 hectáreas, con un crecimiento acumulado del 250.5% desde 1980.</p>
+                <p>Cancún se ha convertido en la metrópoli regional con aeropuerto internacional, servicios especializados y vivienda para la creciente fuerza laboral.</p>
+            </div>
         </section>
 
         <!-- Step 18: Imagen 2025.jpg -->
-        <section class="step urban-year-image" data-step="18" data-year="2025">
+        <section class="step urban-year-image" data-step="18" data-year="2025" style="position: relative; overflow: hidden; min-height: 100vh;">
+            <div class="year-caption">
+                <p><strong>2025: Proyección a futuro</strong></p>
+                <p>La huella urbana proyectada es de 18,762 hectáreas, con un crecimiento acumulado del 279.9% desde 1980.</p>
+                <p>La desaceleración actual puede deberse a la saturación del mercado y nuevos retos como el sargazo y preocupaciones ambientales.</p>
+            </div>
         </section>
 
         <!-- Step 19: Dispersión poblacional y abandono del centro -->
