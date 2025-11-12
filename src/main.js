@@ -65,6 +65,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
 
+                // Animación popup para step 6 (index 5)
+                if (currentStep === 5) {
+                    const step6 = response.element; // section[data-step="6"]
+                    step6.classList.remove('animate-up', 'animate-down');
+                    if (response.direction === 'down') {
+                        step6.classList.add('animate-down');
+                    } else {
+                        step6.classList.add('animate-up');
+                    }
+                }
+
                 // Debug: imprimir información del step actual
                 console.log('Step activo:', currentStep, 'elemento:', response.element.classList.toString());
 
@@ -91,6 +102,17 @@ document.addEventListener('DOMContentLoaded', function() {
                         right.style.opacity = '0';
                         left.style.transform = 'scale(0.9) translateX(-40px)';
                         right.style.transform = 'scale(0.9) translateX(40px)';
+                    }
+                }
+
+                // Reset animación popup para step 6 al salir
+                if (response.index === 5) {
+                    const step6 = response.element;
+                    step6.classList.remove('animate-up', 'animate-down');
+                    const img6 = step6.querySelector('.floating-image');
+                    if (img6) {
+                        img6.style.opacity = '0';
+                        img6.style.transform = 'scale(0.85) translateY(0)';
                     }
                 }
                 
