@@ -747,21 +747,21 @@
             }
 
             /* Último step: colocar la imagen debajo del texto en móvil */
-            section[data-step="31"] > div {
+            section[data-step="30"] > div {
                 flex-direction: column;
                 align-items: center;
                 gap: 20px;
             }
-            section[data-step="31"] .step-content {
+            section[data-step="30"] .step-content {
                 width: 100%;
                 max-width: 700px;
             }
-            section[data-step="31"] > div > div:last-child {
+            section[data-step="30"] > div > div:last-child {
                 width: 100%;
                 display: flex;
                 justify-content: center;
             }
-            section[data-step="31"] > div > div:last-child img {
+            section[data-step="30"] > div > div:last-child img {
                 width: 100%;
                 height: auto;
                 max-height: none;
@@ -1140,13 +1140,8 @@
             </div>
         </section>
 
-        <!-- Step 24: Imagen de la desigualdad territorial (imagen 23.jpg)  -->
-        <section class="step" data-step="24" style="position: relative; min-height: 100vh;">
-            <div class="lazy-bg" data-bg="assets/23.jpg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center;"></div>
-        </section>
-
-        <!-- Step 25: Motorización acelerada  -->
-        <section class="step" data-step="25">
+        <!-- Step 24: Motorización acelerada  -->
+        <section class="step" data-step="24">
             <div class="step-content">
                 <h2>Motorización Acelerada</h2>
                 <p>El parque vehicular ha crecido significativamente: de unos <strong>220 mil autos en 2010 a casi 529 mil en 2025 (+140%)</strong>. Este desbalance es notable frente a las viviendas; pasamos de <strong>1.20 autos por vivienda en 2010 a 1.60 en 2020.</strong></p>
@@ -1155,8 +1150,8 @@
             </div>
         </section>
 
-        <!-- Step 26: Gráfico interactivo del parque vehicular  -->
-        <section class="step" data-step="26">
+        <!-- Step 25: Gráfico interactivo del parque vehicular  -->
+        <section class="step" data-step="25">
             <div class="step-content">
                 <h2>Evolución del Parque Vehicular</h2>
                 <div class="chart-container">
@@ -1167,8 +1162,8 @@
             </div>
         </section>
 
-        <!-- Step 27: Consecuencias sociales y urbanas  -->
-        <section class="step" data-step="27">
+        <!-- Step 26: Consecuencias sociales y urbanas  -->
+        <section class="step" data-step="26">
             <div class="step-content">
                 <h2>Consecuencias Sociales y Urbanas</h2>
                 <p>El modelo expansivo se refleja en la vida cotidiana: más horas en traslados, servicios lejanos, menor convivencia comunitaria. La ciudad se encarece al mantener colonias lejanas y pierde cohesión social.</p>
@@ -1177,8 +1172,8 @@
             </div>
         </section>
 
-        <!-- Step 28: Fotos de tráfico + periferias con servicios insuficientes  -->
-        <section class="step" data-step="28" style="position: relative; min-height: 100vh; overflow: hidden; padding: 0; margin: 0;">
+        <!-- Step 27: Fotos de tráfico + periferias con servicios insuficientes  -->
+        <section class="step" data-step="27" style="position: relative; min-height: 100vh; overflow: hidden; padding: 0; margin: 0;">
             <!-- Contenedor principal que ocupa toda la pantalla -->
             <div class="consequence-images-wrapper" style="display: flex; width: 100%; height: 100vh; position: relative;">
                 <!-- Imagen 25.jpg a la izquierda (lazy) -->
@@ -1190,8 +1185,8 @@
             
             <style>
                 /* Estado base (oculto) */
-                section[data-step="28"] .consequence-image-left,
-                section[data-step="28"] .consequence-image-right {
+                section[data-step="27"] .consequence-image-left,
+                section[data-step="27"] .consequence-image-right {
                     flex: 1;
                     background-size: cover;
                     background-position: center;
@@ -1199,12 +1194,12 @@
                     transform: scale(0.9);
                 }
 
-                section[data-step="28"] .consequence-image-left {
+                section[data-step="27"] .consequence-image-left {
                     /* background-image aplicado de forma perezosa vía data-bg */
                     transform: scale(0.9) translateX(-40px);
                 }
 
-                section[data-step="28"] .consequence-image-right {
+                section[data-step="27"] .consequence-image-right {
                     /* background-image aplicado de forma perezosa vía data-bg */
                     transform: scale(0.9) translateX(40px);
                 }
@@ -1221,17 +1216,17 @@
                 }
 
                 /* Entrando hacia abajo (desde arriba) */
-                section[data-step="28"].animate-down .consequence-image-left { animation: popupLeft 0.6s ease-out 0.1s forwards; }
-                section[data-step="28"].animate-down .consequence-image-right { animation: popupRight 0.6s ease-out 0.25s forwards; }
+                section[data-step="27"].animate-down .consequence-image-left { animation: popupLeft 0.6s ease-out 0.1s forwards; }
+                section[data-step="27"].animate-down .consequence-image-right { animation: popupRight 0.6s ease-out 0.25s forwards; }
 
                 /* Entrando hacia arriba (desde abajo) - reutilizamos animación para consistencia */
-                section[data-step="28"].animate-up .consequence-image-left { animation: popupLeft 0.6s ease-out 0.1s forwards; }
-                section[data-step="28"].animate-up .consequence-image-right { animation: popupRight 0.6s ease-out 0.25s forwards; }
+                section[data-step="27"].animate-up .consequence-image-left { animation: popupLeft 0.6s ease-out 0.1s forwards; }
+                section[data-step="27"].animate-up .consequence-image-right { animation: popupRight 0.6s ease-out 0.25s forwards; }
             </style>
         </section>
 
-        <!-- Step 29: Estrategias de Futuro  -->
-        <section class="step" data-step="29">
+        <!-- Step 28: Estrategias de Futuro  -->
+        <section class="step" data-step="28">
             <div class="step-content">
                 <h2>Estrategias de Futuro</h2>
                 <p>Las estrategias de futuro, como la <strong>"ciudad de la proximidad"</strong> de 15 minutos, no son solo una tendencia global importada, sino un regreso a la lógica fundacional de las supermanzanas del centro.</p>
@@ -1240,16 +1235,16 @@
             </div>
         </section>
 
-        <!-- Step 30: Imagen 26.jpg  -->
-        <section class="step" data-step="30" style="position: relative; min-height: 100vh;">
+        <!-- Step 29: Imagen 26.jpg  -->
+        <section class="step" data-step="29" style="position: relative; min-height: 100vh;">
             <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url('assets/26.jpg'); background-size: cover; background-position: center;"></div>
             <div class="photo-credit">
                 Fotografía: Parque de la Equidad en Cancún. Fuente: <a href="https://cgc.qroo.gob.mx/avanza-con-paso-firme-el-parque-de-la-equidad-en-cancun/" target="_blank" rel="noopener" title="Avanza con paso firme el Parque de la Equidad en Cancún - cgc.qroo.gob.mx">cgc.qroo.gob.mx</a>
             </div>
         </section>
 
-        <!-- Step 31: Looking ahead (Cierre / Call to action)  -->
-        <section class="step" data-step="31" style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.95)); color: white;">
+        <!-- Step 30: Looking ahead (Cierre / Call to action)  -->
+        <section class="step" data-step="30" style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.95)); color: white;">
             <div style="display: flex; align-items: center; max-width: 1200px; margin: 0 auto; gap: 30px;">
                 <!-- Columna de texto a la izquierda -->
                 <div class="step-content" style="flex: 1;">

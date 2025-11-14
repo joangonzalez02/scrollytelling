@@ -53,8 +53,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 response.element.classList.add('is-active');
                 response.element.classList.add('active');
                 
-                // Animación específica para step 28
-                if (currentStep === 27) {
+                // Animación específica para step 27
+                if (currentStep === 26) {
                     const step29 = response.element;
                     step29.classList.remove('animate-up', 'animate-down');
                     // direction: 'down' when entering while scrolling down; 'up' when entering while scrolling up
@@ -80,8 +80,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log('Step activo:', currentStep, 'elemento:', response.element.classList.toString());
 
                 // Animar charts al entrar a sus steps
-                if (currentStep === 25 && window.vehicleChart && typeof window.vehicleChart.enter === 'function') {
-                    // Nuevo Step 26 (index 25): parque vehicular
+                if (currentStep === 24 && window.vehicleChart && typeof window.vehicleChart.enter === 'function') {
+                    // Nuevo Step 25 (index 24): parque vehicular
                     window.vehicleChart.enter();
                 }
             })
@@ -90,8 +90,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 response.element.classList.remove('is-active');
                 response.element.classList.remove('active');
 
-                // Reset de animaciones para step 28 al salir, para que pueda reanimarse al re-entrar
-                if (response.index === 27) {
+                // Reset de animaciones para step 27 al salir, para que pueda reanimarse al re-entrar
+                if (response.index === 26) {
                     const step29 = response.element;
                     // Forzar reflow para reiniciar animaciones si fuese necesario
                     step29.classList.remove('animate-up', 'animate-down');
@@ -156,8 +156,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     hideMapVisuals(); // Función específica para ocultar elementos del mapa
                 }
 
-                // Si salimos del step del parque vehicular (nuevo índice 25), ejecutar animación de salida
-                if (response.index === 25 && window.vehicleChart && typeof window.vehicleChart.exit === 'function') {
+                // Si salimos del step del parque vehicular (nuevo índice 24), ejecutar animación de salida
+                if (response.index === 24 && window.vehicleChart && typeof window.vehicleChart.exit === 'function') {
                     window.vehicleChart.exit();
                 }
             });
@@ -278,8 +278,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
-        if (stepIndex === 25) { // Gráfico de parque vehicular (step 26, índice 25)
-            console.log('Activando gráfico de vehículos para el paso 27');
+        if (stepIndex === 24) { // Gráfico de parque vehicular (step 25, índice 24)
+            console.log('Activando gráfico de vehículos para el paso 26');
             if (window.initVehicleChart) {
                 window.initVehicleChart();
             }
