@@ -625,6 +625,81 @@
             text-align: center;
             pointer-events: auto;
         }
+
+        /* En pantallas pequeñas la imagen aparece debajo del texto */
+        @media (max-width: 768px) {
+            .evidence-overlay {
+                position: static !important;
+                height: auto !important;
+                width: 100% !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                justify-content: flex-start !important;
+                padding: 12px !important;
+                margin-top: 18px !important;
+            }
+            .evidence-overlay .evidence-img {
+                max-width: 100% !important;
+                max-height: 50vh !important;
+                height: auto !important;
+                width: auto !important;
+            }
+            /* Forzar que el step 3 muestre la imagen debajo del texto (el .step por defecto es flex row) */
+            section[data-step="3"] {
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: stretch !important;
+                padding: 20px !important;
+                gap: 12px;
+            }
+            section[data-step="3"] .step-content {
+                order: 1;
+                width: 100% !important;
+            }
+            section[data-step="3"] .evidence-overlay {
+                order: 2;
+                width: 100% !important;
+            }
+            /* En móvil: hacer que el Step 6 deje de usar posicionamiento absoluto
+               y que la imagen fluya debajo del texto (aparezca al final del step). */
+            section[data-step="6"] {
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: stretch !important;
+                padding: 20px !important;
+                gap: 12px;
+                min-height: auto !important;
+            }
+            section[data-step="6"] .floating-image-wrapper {
+                position: static !important;
+                inset: auto !important;
+                display: block !important;
+                width: 100% !important;
+                height: auto !important;
+                padding: 0 12px !important;
+                margin: 0 auto !important;
+            }
+            section[data-step="6"] .floating-image {
+                width: 100% !important;
+                max-width: 100% !important;
+                height: auto !important;
+                max-height: 50vh !important;
+                object-fit: cover !important;
+                transform: none !important;
+                opacity: 1 !important; /* make sure it's visible when it flows */
+                box-shadow: 0 8px 30px rgba(0,0,0,0.35) !important;
+            }
+            /* Hacer que el credit del Step 6 fluya debajo de la imagen en móvil */
+            section[data-step="6"] .photo-credit {
+                position: static !important;
+                left: auto !important;
+                transform: none !important;
+                margin: 8px auto 0 auto !important;
+                text-align: center !important;
+                display: inline-block !important;
+            }
+        }
         
         /* Animaciones */
         @keyframes fadeIn {
