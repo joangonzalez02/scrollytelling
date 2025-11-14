@@ -33,58 +33,12 @@ const mapboxAccessToken = 'pk.eyJ1IjoiMHhqZmVyIiwiYSI6ImNtZjRjNjczdTA0MGsya3Bwb3
 // Configuración de cuándo mostrar el mapa en cada step
 const mapStepsConfig = {
     // Steps donde el mapa debe estar visible (solo los que realmente tienen mapa)
-    visibleSteps: [4, 20, 22, 24],
+    visibleSteps: [19, 21, 23],
     
     // Configuración específica para cada paso que muestra el mapa
     stepConfigs: {
-        // Eliminados steps sin mapa real para evitar cargas tempranas
-        // Step 4: Expansión urbana sin freno (mapa de crecimiento mancha urbana)
-        "4": {
-            center: [-86.8515, 21.1619], // Centro en Cancún
-            zoom: 11,
-            pitch: 30,
-            bearing: 0,
-            style: 'mapbox://styles/mapbox/light-v10',
-            layers: [
-                {
-                    id: 'crecimiento-urbano',
-                    type: 'fill',
-                    source: {
-                        type: 'geojson',
-                        data: 'public/data/crecimientoG.geojson'
-                    },
-                    paint: {
-                        // Colorear por lustro (categórico) con paleta monocromática azul
-                        'fill-color': [
-                            'match', ['to-number', ['get', 'LUSTRO']],
-                            1980, LUSTRO_COLORS[1980],
-                            1985, LUSTRO_COLORS[1985],
-                            1990, LUSTRO_COLORS[1990],
-                            1995, LUSTRO_COLORS[1995],
-                            2000, LUSTRO_COLORS[2000],
-                            2005, LUSTRO_COLORS[2005],
-                            2010, LUSTRO_COLORS[2010],
-                            2015, LUSTRO_COLORS[2015],
-                            2020, LUSTRO_COLORS[2020],
-                            2025, LUSTRO_COLORS[2025],
-                            /* default */ '#cfd8dc'
-                        ],
-                        'fill-opacity': 0.6,
-                        'fill-outline-color': '#555'
-                    },
-                    popup: (properties) => {
-                        const lustro = properties.LUSTRO ?? 'N/D';
-                        const codigo = (properties.CODIGO_TEMP ?? properties.CODIGO) || '—';
-                        return `<h3>Expansión urbana</h3>
-                                <p><strong>Lustro:</strong> ${lustro}</p>
-                                <p><strong>Código:</strong> ${codigo}</p>`;
-                    }
-                }
-            ]
-        },
-        // Eliminados 5 y 7; los mapas correspondientes existen en 20 y 24
-        // Step 20: Cambio poblacional por AGEB
-        "20": {
+        // Step 19: Cambio poblacional por AGEB 
+        "19": {
             center: [-86.8515, 21.1619], 
             zoom: 11,
             pitch: 0,
@@ -123,8 +77,8 @@ const mapStepsConfig = {
                 }
             ]
         },
-        // Step 22: Pérdida de vegetación
-        "22": {
+        // Step 21: Pérdida de vegetación
+        "21": {
             center: [-86.8515, 21.1619],
             zoom: 11,
             pitch: 20,
@@ -132,8 +86,8 @@ const mapStepsConfig = {
             style: 'mapbox://styles/mapbox/light-v10',
             layers: []
         },
-        // Step 24: Densidad poblacional por distrito
-        "24": {
+        // Step 23: Densidad poblacional por distrito 
+        "23": {
             center: [-86.8515, 21.1619],
             zoom: 11,
             pitch: 30,
@@ -1217,7 +1171,7 @@ function applyLustroFilterWhenReady(attempts = 0) {
 }
 
 // Función de debug para testing manual
-window.debugMapa = function(stepId = 4) {
+window.debugMapa = function(stepId = 19) {
     console.log('=== FUNCIÓN DEBUG MAPA ===');
     console.log('Testing step:', stepId);
     const mapContainer = document.getElementById('map');
@@ -1249,41 +1203,4 @@ window.debugMapa = function(stepId = 4) {
         console.log('Llamando updateMapForStep...');
         window.mapboxHelper.updateMapForStep(stepId);
     }
-};
-
-// Función de debug para forzar mostrar leyenda y panel
-window.debugForzarStep4 = function() {
-    console.log('=== FORZANDO STEP 4 ===');
-    
-    // Forzar mostrar leyenda
-    const legend = document.getElementById('map-legend');
-    if (legend) {
-        legend.style.display = 'block';
-        const title = legend.querySelector('.legend-title');
-        if (title) title.textContent = 'Expansión urbana por periodo';
-        
-        const items = legend.querySelector('.legend-items');
-        if (items) {
-            items.innerHTML = '';
-            // Crear items de lustros manualmente
-            LUSTROS.forEach(lustro => {
-                const row = document.createElement('div');
-                row.className = 'legend-item';
-                const sw = document.createElement('span');
-                sw.className = 'legend-swatch';
-                sw.style.background = LUSTRO_COLORS[lustro];
-                const lab = document.createElement('span');
-                lab.className = 'legend-label';
-                lab.textContent = String(lustro);
-                row.appendChild(sw);
-                row.appendChild(lab);
-                items.appendChild(row);
-            });
-        }
-        console.log('✅ Leyenda forzada');
-    }
-    
-    // Forzar mostrar panel de lustros
-    toggleLustroPanel(true);
-    console.log('✅ Panel de lustros forzado');
 };
