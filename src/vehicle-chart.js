@@ -1,6 +1,6 @@
 // Gráfico combinado (barras + línea) con doble eje Y para Parque Vehicular
 // - Barras: Vehículos totales (eje Y izquierdo)
-// - Línea: Autos por vivienda (eje Y derecho)
+// - Línea: Viviendas (eje Y derecho)
 // Datos desde: public/data/parque-vehicular.csv
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const palette = {
         primary: '#219EBC', // Barras (vehículos)
-        accent: '#FB8500',  // Línea (autos/vivienda)
+        accent: '#FB8500',  // Línea (Viviendas)
         text: '#023047',
         grid: 'rgba(2,48,71,0.08)'
     };
@@ -85,11 +85,15 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
-        // Autos por vivienda (puede venir vacío)
-        const vphRaw = map['vehiculos_por_vivienda'] || map['autos_por_vivienda'] || map['vph'];
-        const vehiclesPerHousehold = vphRaw === undefined || vphRaw === '' ? null : +vphRaw;
+        // Viviendas
+        const viviendasRaw = map['viviendas'] || map['vivienda'] || map['viviendas_totales'] || map['houses'] || map['housing'];
+        const dwellings = viviendasRaw === undefined || viviendasRaw === '' ? null : +viviendasRaw;
 
-        return { year, vehicles, vehiclesPerHousehold };
+        // Autos por vivienda
+        const autosRaw = map['autos_por_vivienda'];
+        const autosPerDwelling = autosRaw === undefined || autosRaw === '' ? null : +autosRaw;
+
+        return { year, vehicles, dwellings, autosPerDwelling };
     }
 
     function getContainerDims() {
@@ -98,7 +102,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const containerRect = el ? el.getBoundingClientRect() : null;
         const containerWidth = containerRect ? containerRect.width : 1000;
         
-        const baseWidth = 1000;  // Más ancho que antes para mejor aprovechamiento del espacio
+        const baseWidth = 1000;
         const baseHeight = 400;
         
         // Márgenes simétricos y responsivos
@@ -151,7 +155,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function ensureTooltip() {
         // Remove previous instance if any
         d3.select('body').select('.vehicle-tooltip').remove();
-        
+
         // Create tooltip
         state.tooltip = d3.select('body')
             .append('div')
@@ -215,7 +219,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Calcular incrementos respecto al dato anterior
         let prevVehicles = null;
-        let prevVPH = null;
+        let prevDwellings = null;
         state.data.forEach(d => {
             // Crecimiento de vehículos vs registro inmediato anterior
             if (prevVehicles != null && d.vehicles != null && d.vehicles > 0) {
@@ -225,16 +229,16 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             prevVehicles = d.vehicles;
 
-            // Crecimiento de VPH vs último VPH no nulo anterior
-            if (d.vehiclesPerHousehold != null && !isNaN(d.vehiclesPerHousehold)) {
-                if (prevVPH != null && prevVPH > 0) {
-                    d.growthVPH = ((d.vehiclesPerHousehold - prevVPH) / prevVPH) * 100;
+            // Crecimiento de Viviendas vs último valor no nulo anterior
+            if (d.dwellings != null && !isNaN(d.dwellings)) {
+                if (prevDwellings != null && prevDwellings > 0) {
+                    d.growthDwellings = ((d.dwellings - prevDwellings) / prevDwellings) * 100;
                 } else {
-                    d.growthVPH = null;
+                    d.growthDwellings = null;
                 }
-                prevVPH = d.vehiclesPerHousehold;
+                prevDwellings = d.dwellings;
             } else {
-                d.growthVPH = null;
+                d.growthDwellings = null;
             }
         });
 
@@ -249,31 +253,46 @@ document.addEventListener('DOMContentLoaded', function () {
             .domain([0, d3.max(state.data, d => d.vehicles) * 1.1]).nice()
             .range([dims.innerH, 0]);
 
-        const maxVph = d3.max(state.data, d => d.vehiclesPerHousehold || 0) || 1;
+        const maxDwellings = d3.max(state.data, d => d.dwellings || 0) || 1;
+        
+        // Unificar escala: usar el máximo de ambos datasets para que ambos ejes sean coherentes
+        const maxBoth = Math.max(
+            d3.max(state.data, d => d.vehicles) * 1.1,
+            maxDwellings * 1.15
+        );
+        
         const yRight = d3.scaleLinear()
-            .domain([0, maxVph * 1.15]).nice()
+            .domain([0, maxBoth]).nice()
             .range([dims.innerH, 0]);
 
         // Ejes
         const xAxis = d3.axisBottom(x)
-            .tickValues(years.filter((y, i) => years.length > 10 ? i % 1 === 0 : true))
+            .tickValues(years)
             .tickFormat(d3.format('d'));
 
         const yAxisLeft = d3.axisLeft(yLeft).ticks(6).tickFormat(d => formatK(d));
-        const yAxisRight = d3.axisRight(yRight).ticks(5);
+        const yAxisRight = d3.axisRight(yRight).ticks(5).tickFormat(d => formatK(d));
 
-        g.append('g')
+        // Ajustar posición del eje X
+        const xAxisYOffset = Math.max(20, font.axis + 8);
+        const xAxisGroup = g.append('g')
             .attr('class', 'axis x-axis')
             .attr('transform', `translate(0,${dims.innerH})`)
-            .call(xAxis)
-            .selectAll('text')
+            .call(xAxis);
+
+        // Centrar ticks bajo las barras (en el medio de cada banda)
+        const bandWidth = x.bandwidth();
+        xAxisGroup.selectAll('.tick')
+            .attr('transform', d => `translate(${x(d) + bandWidth / 2},0)`);
+
+        xAxisGroup.selectAll('text')
             .style('font-size', `${font.axis}px`)
             .style('fill', '#555')
             .style('text-shadow', 'none')
-            .attr('transform', 'rotate(-45)')
-            .attr('text-anchor', 'end')
-            .attr('dx', '-.8em')
-            .attr('dy', '.15em');
+            .style('text-anchor', 'start')
+            .attr('transform', d => `translate(0, 40) rotate(-90)`)
+            .attr('dx', '0em')
+            .attr('dy', '0em');
         // Desactivar eventos en eje X para evitar interferencia con hover de barras
         g.select('.x-axis').style('pointer-events', 'none');
 
@@ -332,64 +351,56 @@ document.addEventListener('DOMContentLoaded', function () {
             .enter()
             .append('text')
             .attr('class', 'value-label')
-            .attr('x', d => x(d.year) + x.bandwidth() / 2)
-            .attr('y', d => yLeft(d.vehicles) - 8)
-            .attr('text-anchor', 'middle')
-            .style('font-size', `${font.labels}px`)
-            .style('fill', palette.text)
-            .style('text-shadow', 'none')
-            .style('pointer-events', 'none')
-            .style('opacity', 0)
-            .text(d => formatK(d.vehicles));
+            .style('display', 'none');
 
-        // Línea (autos por vivienda)
-        const defined = d => d.vehiclesPerHousehold != null && !isNaN(d.vehiclesPerHousehold);
+        // Línea (Viviendas)
+        const defined = d => d.dwellings != null && !isNaN(d.dwellings);
         const line = d3.line()
             .defined(defined)
             .x(d => x(d.year) + x.bandwidth() / 2)
-            .y(d => yRight(d.vehiclesPerHousehold))
+            .y(d => yRight(d.dwellings))
             .curve(d3.curveMonotoneX);
 
         const path = g.append('path')
             .datum(state.data.filter(defined))
-            .attr('class', 'vph-line')
+            .attr('class', 'dwellings-line')
             .attr('fill', 'none')
             .attr('stroke', palette.accent)
             .attr('stroke-width', 3)
             .attr('d', line)
             .style('pointer-events', 'none');
 
-        // Puntos de la línea
-        const points = g.selectAll('.vph-point')
+        // Puntos de la línea (Viviendas)
+        const points = g.selectAll('.dwellings-point')
             .data(state.data.filter(defined))
             .enter()
             .append('circle')
-            .attr('class', 'vph-point')
+            .attr('class', 'dwellings-point')
             .attr('cx', d => x(d.year) + x.bandwidth() / 2)
-            .attr('cy', d => yRight(d.vehiclesPerHousehold))
+            .attr('cy', d => yRight(d.dwellings))
             .attr('r', 0)
             .attr('fill', palette.accent)
             .attr('stroke', '#fff')
             .attr('stroke-width', 1.5)
             .style('pointer-events', 'auto')
             .on('mouseover', function(event, d) {
-                // Solo mostrar tooltip (sin cambiar tamaño para evitar flicker visual)
+                // Mostrar tooltip con datos de viviendas
                 let tooltipContent = `
-                    <div><strong>Año ${d.year}</strong></div>
-                    <div>Autos/vivienda: <span style="color: ${palette.accent}">${d.vehiclesPerHousehold.toFixed(2)}</span></div>
+                    <div>Viviendas: <span style="color: ${palette.accent}">${d3.format(',')(d.dwellings)}</span></div>
                 `;
-                if (d.growthVPH != null && !isNaN(d.growthVPH)) {
-                    const signPrefix = d.growthVPH > 0 ? '+' : '';
+                if (d.growthDwellings != null && !isNaN(d.growthDwellings)) {
+                    const signPrefix = d.growthDwellings > 0 ? '+' : '';
                     let color = '#e5e7eb';
-                    if (d.growthVPH > 0) color = '#2ECC71';
-                    else if (d.growthVPH < 0) color = '#E63946';
-                    tooltipContent += `<div>Incremento: <span style="color:${color}">${signPrefix}${d.growthVPH.toFixed(1)}%</span></div>`;
+                    if (d.growthDwellings > 0) color = '#2ECC71';
+                    else if (d.growthDwellings < 0) color = '#E63946';
+                    const label = d.growthDwellings < 0 ? 'Decremento' : 'Incremento';
+                    tooltipContent += `<div>${label}: <span style="color:${color}">${signPrefix}${d.growthDwellings.toFixed(1)}%</span></div>`;
                 }
-                
-                if (d.vehicles) {
-                    tooltipContent += `<div>Vehículos totales: <span style="color: #8ECAE6">${formatK(d.vehicles)}</span></div>`;
+                // Autos por vivienda
+                if (d.autosPerDwelling != null && !isNaN(d.autosPerDwelling)) {
+                    tooltipContent += `<div>Autos por vivienda: <span style="color:#FFD166">${d.autosPerDwelling.toFixed(2)}</span></div>`;
                 }
-                
+
                 // Posición del tooltip
                 const xPosition = event.pageX - 100;
                 const yPosition = event.pageY - 120;
@@ -427,7 +438,7 @@ document.addEventListener('DOMContentLoaded', function () {
             .style('font-weight', '700')
             .style('fill', palette.text)
             .style('text-shadow', 'none')
-            .text('Crecimiento del Parque Vehicular y Autos por vivienda en Cancún, 2010–2023');
+            .text('Crecimiento del Parque Vehicular y Viviendas en Cancún, 1980–2025');
 
         // Leyenda (arriba-izquierda, bajo el título)
         // Leyenda responsiva (tamaños basados en ancho disponible)
@@ -436,8 +447,8 @@ document.addEventListener('DOMContentLoaded', function () {
             .style('pointer-events', 'none');
 
         const legendItems = [
-            { color: palette.primary, type: 'rect', label: 'Parque vehicular (total)' },
-            { color: palette.accent, type: 'line', label: 'Autos por vivienda' }
+            { color: palette.primary, type: 'rect', label: 'Parque vehicular' },
+            { color: palette.accent, type: 'line', label: 'Viviendas' }
         ];
 
         const legendSize = dims.innerW < 480 ? 12 : (dims.innerW < 768 ? 13 : 14);
@@ -446,7 +457,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const legendIconGap = Math.round(legendSize * 0.5);
         const legendRightShift = Math.round(Math.min(16, dims.innerW * 0.02));
 
-        legend.attr('transform', `translate(${legendRightShift}, ${6})`);
+        legend.attr('transform', `translate(${legendRightShift}, ${28})`);
 
         const rowGap = Math.round(legendSize * 0.4) + 6;
         const lg = legend.selectAll('.legend-item')
@@ -489,6 +500,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Etiquetas de ejes (responsivas basadas en dimensiones)
         svg.append('text')
+            .attr('transform', 'rotate(-90)')
             .attr('x', dims.margin.left + dims.innerW / 2)
             .attr('y', dims.margin.top + dims.innerH + dims.margin.bottom - 10)
             .style('text-anchor', 'middle')
@@ -504,7 +516,7 @@ document.addEventListener('DOMContentLoaded', function () {
             .style('text-anchor', 'middle')
             .attr('fill', '#023047')
             .style('text-shadow', 'none')
-            .text('Vehículos (total)');
+            .text('Parque vehicular');
 
         svg.append('text')
             .attr('transform', 'rotate(-90)')
@@ -514,21 +526,19 @@ document.addEventListener('DOMContentLoaded', function () {
             .style('text-anchor', 'middle')
             .attr('fill', '#023047')
             .style('text-shadow', 'none')
-            .text('Autos por vivienda');
+            .text('Viviendas');
 
         // Hover con tooltip
         bars
             .on('mouseenter', function(event, d) {
                 // Destacar barra
                 d3.select(this)
-                    .raise()
                     .transition()
                     .duration(300)
                     .attr('opacity', 0.6);
                 
                 // Mostrar tooltip
                 let tooltipContent = `
-                    <div><strong>Año ${d.year}</strong></div>
                     <div>Vehículos: <span style="color: #8ECAE6">${d3.format(',')(d.vehicles)}</span></div>
                 `;
                 if (d.growthVehicles != null && !isNaN(d.growthVehicles)) {
@@ -536,13 +546,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     let color = '#e5e7eb';
                     if (d.growthVehicles > 0) color = '#2ECC71';
                     else if (d.growthVehicles < 0) color = '#E63946';
-                    tooltipContent += `<div>Incremento: <span style="color:${color}">${signPrefix}${d.growthVehicles.toFixed(1)}%</span></div>`;
+                    const label = d.growthVehicles < 0 ? 'Decremento' : 'Incremento';
+                    tooltipContent += `<div>${label}: <span style="color:${color}">${signPrefix}${d.growthVehicles.toFixed(1)}%</span></div>`;
                 }
-                
-                if (d.vehiclesPerHousehold != null) {
-                    tooltipContent += `<div>Autos/vivienda: <span style="color: ${palette.accent}">${d.vehiclesPerHousehold.toFixed(2)}</span></div>`;
+                // Autos por vivienda
+                if (d.autosPerDwelling != null && !isNaN(d.autosPerDwelling)) {
+                    tooltipContent += `<div>Autos por vivienda: <span style="color:#FFD166">${d.autosPerDwelling.toFixed(2)}</span></div>`;
                 }
-                
+
                 // Posición del tooltip
                 const xPosition = event.pageX - 100;
                 const yPosition = event.pageY - 120;
@@ -583,6 +594,85 @@ document.addEventListener('DOMContentLoaded', function () {
             .attr('height', dims.innerH)
             .style('fill', 'transparent')
             .style('pointer-events', 'none');
+
+        
+        g.selectAll('.dwellings-line').raise();
+        g.selectAll('.dwellings-point').raise();
+
+        // Anotación y marcador para 2006: línea roja vertical y flecha apuntando al punto de cruce
+        g.selectAll('.annotation-group.marker-2006').remove();
+        g.selectAll('.marker-2006-line').remove();
+        g.selectAll('.marker-2006-point').remove();
+        const highlight = state.data.find(d => d.year === 2006);
+        if (highlight && dims.innerW > 420) {
+            const annX = x(2006) + x.bandwidth() / 2;
+            const annY = yLeft(highlight.vehicles); // punto sobre la barra
+
+            // Línea vertical roja discontinua
+            // (creamos y luego la elevamos con .raise() para que quede por encima de todos los elementos)
+            g.append('line')
+                .attr('class', 'marker-2006-line')
+                .attr('x1', annX)
+                .attr('x2', annX)
+                .attr('y1', 0)
+                .attr('y2', dims.innerH)
+                .attr('stroke', '#E63946')
+                .attr('stroke-width', 1)
+                .attr('stroke-dasharray', '4 6')
+                .attr('opacity', 0.95)
+                .style('pointer-events', 'none');
+
+            // Calcular posición de la etiqueta para evitar que se salga del área del gráfico
+            const preferredOffsetX = 110;
+            const labelPadding = 160;
+            const placeRight = annX < (dims.innerW - labelPadding);
+            const labelX = placeRight ? Math.min(annX + preferredOffsetX, dims.innerW - 30) : Math.max(annX - preferredOffsetX, 30);
+            const labelOffsetY = -80;
+            const labelY = Math.max(20, Math.min(annY + labelOffsetY, dims.innerH - 30));
+
+            const annotations = [{
+                note: {
+                    label: 'En 2006 los vehículos registrados superaron por primera vez al número de viviendas.',
+                    wrap: 140
+                },
+                subject: {
+                    // el subject es el punto al que debe apuntar la flecha
+                    x: annX,
+                    y: annY,
+                    radius: Math.max(6, Math.min(10, x.bandwidth() * 0.12))
+                },
+                connector: {
+                    end: 'arrow',
+                    type: 'line'
+                },
+                // posición de la nota (etiqueta)
+                x: labelX,
+                y: labelY
+            }];
+
+            const makeAnnotations = d3.annotation()
+                .type(d3.annotationLabel)
+                .annotations(annotations);
+
+            const annGroup = svg.append('g')
+                .attr('class', 'annotation-group marker-2006')
+                .attr('opacity', 0)
+                .style('pointer-events', 'none')
+                .call(makeAnnotations);
+
+            // Ajustes de estilo: reducir tamaño de fuente, asegurar que no salga del área
+            annGroup.selectAll('text').style('font-size', '12px');
+            annGroup.selectAll('.annotation-note').attr('transform', null);
+            annGroup.selectAll('.annotation-note-title, .annotation-note-label, .annotation-note').style('fill', '#E63946');
+
+            annGroup.transition()
+                .delay(700)
+                .duration(700)
+                .attr('opacity', 1);
+            // Elevar la línea y el punto para que queden por encima de todos los demás elementos
+            svg.selectAll('.marker-2006-line').raise();
+            svg.selectAll('.marker-2006-point').raise();
+        }
 
         // Animaciones de entrada (solo primera vez)
         if (!state.hasDrawn) {
