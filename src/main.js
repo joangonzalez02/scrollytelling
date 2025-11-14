@@ -53,9 +53,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 response.element.classList.add('is-active');
                 response.element.classList.add('active');
                 
-                // Animación específica para step 29 (index 28)
-                if (currentStep === 28) {
-                    const step29 = response.element; // section[data-step="29"]
+                // Animación específica para step 28
+                if (currentStep === 27) {
+                    const step29 = response.element;
                     step29.classList.remove('animate-up', 'animate-down');
                     // direction: 'down' when entering while scrolling down; 'up' when entering while scrolling up
                     if (response.direction === 'down') {
@@ -65,9 +65,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
 
-                // Animación popup para step 6 (index 5)
-                if (currentStep === 5) {
-                    const step6 = response.element; // section[data-step="6"]
+                // Animación popup para step 5 
+                if (currentStep === 4) {
+                    const step6 = response.element;
                     step6.classList.remove('animate-up', 'animate-down');
                     if (response.direction === 'down') {
                         step6.classList.add('animate-down');
@@ -80,8 +80,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log('Step activo:', currentStep, 'elemento:', response.element.classList.toString());
 
                 // Animar charts al entrar a sus steps
-                if (currentStep === 26 && window.vehicleChart && typeof window.vehicleChart.enter === 'function') {
-                    // Step 27 (index 26): parque vehicular
+                if (currentStep === 25 && window.vehicleChart && typeof window.vehicleChart.enter === 'function') {
+                    // Nuevo Step 26 (index 25): parque vehicular
                     window.vehicleChart.enter();
                 }
             })
@@ -90,8 +90,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 response.element.classList.remove('is-active');
                 response.element.classList.remove('active');
 
-                // Reset de animaciones para step 29 al salir, para que pueda reanimarse al re-entrar
-                if (response.index === 28) {
+                // Reset de animaciones para step 28 al salir, para que pueda reanimarse al re-entrar
+                if (response.index === 27) {
                     const step29 = response.element;
                     // Forzar reflow para reiniciar animaciones si fuese necesario
                     step29.classList.remove('animate-up', 'animate-down');
@@ -105,8 +105,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
 
-                // Reset animación popup para step 6 al salir
-                if (response.index === 5) {
+                // Reset animación popup para step 5 al salir
+                if (response.index === 4) {
                     const step6 = response.element;
                     step6.classList.remove('animate-up', 'animate-down');
                     const img6 = step6.querySelector('.floating-image');
@@ -116,9 +116,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
                 
-                // Al salir de steps con leyenda (4, 20, 24) forzar ocultado
-                if (response.index === 3 || response.index === 19 || response.index === 23) {
-                    console.log('Saliendo de step con leyenda (4/20/24), ocultando leyenda y panel de lustros');
+                // Al salir de steps con leyenda (19, 23) forzar ocultado
+                if (response.index === 18 || response.index === 22) {
+                    console.log('Saliendo de step con leyenda (19/23)');
                     try {
                         const legend = document.getElementById('map-legend');
                         if (legend) legend.style.display = 'none';
@@ -127,10 +127,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     } catch {}
                 }
                 
-                // Si salimos de cualquier step de evolución urbana (7-17), ocultar las imágenes de fondo
-                if (response.index >= 7 && response.index <= 17) {
+                // Si salimos de cualquier step de evolución urbana (6-16), ocultar las imágenes de fondo
+                if (response.index >= 6 && response.index <= 16) {
                     // Si no estamos entrando a otro step de evolución urbana, ocultar todo
-                    if (currentStep < 7 || currentStep > 17) {
+                    if (currentStep < 6 || currentStep > 16) {
                         setTimeout(() => {
                             console.log('Saliendo de steps de evolución urbana, ocultando imágenes');
                             const evolutionBg = document.getElementById('urban-evolution-background');
@@ -156,8 +156,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     hideMapVisuals(); // Función específica para ocultar elementos del mapa
                 }
 
-                // Si salimos del step del parque vehicular, ejecutar animación de salida
-                if (response.index === 26 && window.vehicleChart && typeof window.vehicleChart.exit === 'function') {
+                // Si salimos del step del parque vehicular (nuevo índice 25), ejecutar animación de salida
+                if (response.index === 25 && window.vehicleChart && typeof window.vehicleChart.exit === 'function') {
                     window.vehicleChart.exit();
                 }
             });
@@ -180,7 +180,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (hasMap) {
             console.log(`=== ACTIVANDO MAPA PARA STEP ${stepIndex+1} ===`);
 
-            // Solo permitir leyendas en steps 4, 20, 24; ocultar por defecto
+            // Solo permitir leyendas en steps 19 y 23; ocultar por defecto
             try {
                 const legend = document.getElementById('map-legend');
                 if (legend) legend.style.display = 'none';
@@ -250,8 +250,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const panel = document.getElementById('map-lustro-control');
             if (panel) panel.style.display = 'none';
             
-            // Si no estamos en steps de evolución urbana, ocultar contenedor de evolución
-            if (!(stepIndex >= 7 && stepIndex <= 17)) {
+            // Si no estamos en steps de evolución urbana (6-16), ocultar contenedor de evolución
+            if (!(stepIndex >= 6 && stepIndex <= 16)) {
                 // Ocultar el contenedor de fondo para evolución urbana si no estamos en un step de evolución
                 const evolutionBg = document.getElementById('urban-evolution-background');
                 if (evolutionBg) {
@@ -278,12 +278,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
-        if (stepIndex === 26) { // Gráfico de parque vehicular (step 27, índice 26)
+        if (stepIndex === 25) { // Gráfico de parque vehicular (step 26, índice 25)
             console.log('Activando gráfico de vehículos para el paso 27');
             if (window.initVehicleChart) {
                 window.initVehicleChart();
             }
-        } else if (stepIndex === 5) { // Step del gráfico de población (step 6, índice 5)
+        } else if (stepIndex === 4) { // Step del gráfico de población (step 5, índice 4)
             console.log('Mostrando gráfico de población para el paso 6');
         }
         
@@ -400,17 +400,17 @@ document.addEventListener('DOMContentLoaded', function() {
     function handleUrbanEvolutionStep(stepIndex) {
         // Mapeo de índices de pasos a años
         const stepYearMap = {
-            7: 1975,
-            8: 1980, 
-            9: 1985,
-            10: 1990,
-            11: 1995,
-            12: 2000,
-            13: 2005,
-            14: 2010,
-            15: 2015,
-            16: 2020,
-            17: 2025
+            6: 1975,
+            7: 1980, 
+            8: 1985,
+            9: 1990,
+            10: 1995,
+            11: 2000,
+            12: 2005,
+            13: 2010,
+            14: 2015,
+            15: 2020,
+            16: 2025
         };
         
         // Si no estamos en un step de evolución urbana, ocultar todo

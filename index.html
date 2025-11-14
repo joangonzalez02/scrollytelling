@@ -661,9 +661,9 @@
                 order: 2;
                 width: 100% !important;
             }
-            /* En móvil: hacer que el Step 6 deje de usar posicionamiento absoluto
+            /* En móvil: hacer que el Step 5 deje de usar posicionamiento absoluto
                y que la imagen fluya debajo del texto (aparezca al final del step). */
-            section[data-step="6"] {
+            section[data-step="5"] {
                 display: flex !important;
                 flex-direction: column !important;
                 align-items: stretch !important;
@@ -671,7 +671,7 @@
                 gap: 12px;
                 min-height: auto !important;
             }
-            section[data-step="6"] .floating-image-wrapper {
+            section[data-step="5"] .floating-image-wrapper {
                 position: static !important;
                 inset: auto !important;
                 display: block !important;
@@ -680,7 +680,7 @@
                 padding: 0 12px !important;
                 margin: 0 auto !important;
             }
-            section[data-step="6"] .floating-image {
+            section[data-step="5"] .floating-image {
                 width: 100% !important;
                 max-width: 100% !important;
                 height: auto !important;
@@ -690,8 +690,8 @@
                 opacity: 1 !important; /* make sure it's visible when it flows */
                 box-shadow: 0 8px 30px rgba(0,0,0,0.35) !important;
             }
-            /* Hacer que el credit del Step 6 fluya debajo de la imagen en móvil */
-            section[data-step="6"] .photo-credit {
+            /* Hacer que el credit del Step 5 fluya debajo de la imagen en móvil */
+            section[data-step="5"] .photo-credit {
                 position: static !important;
                 left: auto !important;
                 transform: none !important;
@@ -747,21 +747,21 @@
             }
 
             /* Último step: colocar la imagen debajo del texto en móvil */
-            section[data-step="32"] > div {
+            section[data-step="31"] > div {
                 flex-direction: column;
                 align-items: center;
                 gap: 20px;
             }
-            section[data-step="32"] .step-content {
+            section[data-step="31"] .step-content {
                 width: 100%;
                 max-width: 700px;
             }
-            section[data-step="32"] > div > div:last-child {
+            section[data-step="31"] > div > div:last-child {
                 width: 100%;
                 display: flex;
                 justify-content: center;
             }
-            section[data-step="32"] > div > div:last-child img {
+            section[data-step="31"] > div > div:last-child img {
                 width: 100%;
                 height: auto;
                 max-height: none;
@@ -911,16 +911,10 @@
             </div>
         </section>
         
-        <!-- Step 4: Mapa histórico de la franja hotelera y supermanzanas iniciales -->
-        <section class="step has-map" data-step="4" data-map="true" data-map-layer="desarrollo_historico" data-map-view="hotelera">
-            <div class="step-content">
-                <h2>Mapa histórico de la franja hotelera y supermanzanas iniciales</h2>
-                <p>Visualización del desarrollo histórico de Cancún, mostrando el contraste entre la franja hotelera turística y las supermanzanas residenciales diseñadas bajo los principios de proximidad y accesibilidad peatonal.</p>
-            </div>
-        </section>
+        
 
-        <!-- Step 5: Población en perspectiva -->
-        <section class="step" data-step="5">
+        <!-- Step 4: Población en perspectiva  -->
+        <section class="step" data-step="4">
             <div class="step-content">
                 <h2>Cinco Décadas de Crecimiento Extraordinario</h2>
                 <p>Detrás de las cifras de crecimiento explosivo está el componente humano: <strong>"La Década de los Pioneros"</strong>. Los primeros equipos llegaron en enero de 1970 y tuvieron que <strong>"abrir brecha a machete"</strong> en la selva.</p>
@@ -933,22 +927,22 @@
             </div>
         </section>
 
-        <!-- Step 6: Imagen 6.jpg con animación popup flotante -->
-        <section class="step" data-step="6" style="position: relative; min-height: 100vh; overflow:hidden;">
+        <!-- Step 5: Imagen 6.jpg con animación popup flotante  -->
+        <section class="step" data-step="5" style="position: relative; min-height: 100vh; overflow:hidden;">
             <div class="floating-image-wrapper" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; padding:4vh 4vw;">
                 <img src="assets/6.jpg" alt="Imagen histórica" class="floating-image" loading="lazy" decoding="async">
             </div>
             <style>
-                /* Animaciones popup para step 6 */
-                @keyframes popupFromTopStep6 {
+                /* Animaciones popup para step 5  */
+                @keyframes popupFromTopStep5 {
                     0% { opacity:0; transform:scale(0.85) translateY(-40px); }
                     100% { opacity:1; transform:scale(1) translateY(0); }
                 }
-                @keyframes popupFromBottomStep6 {
+                @keyframes popupFromBottomStep5 {
                     0% { opacity:0; transform:scale(0.85) translateY(40px); }
                     100% { opacity:1; transform:scale(1) translateY(0); }
                 }
-                section[data-step="6"] .floating-image {
+                section[data-step="5"] .floating-image {
                     width:80vw; /* 80% horizontal */
                     height:80vh; /* 80% vertical */
                     object-fit:cover;
@@ -958,39 +952,39 @@
                     will-change:transform,opacity;
                     transition:box-shadow .3s ease;
                 }
-                section[data-step="6"] .floating-image:hover {
+                section[data-step="5"] .floating-image:hover {
                     box-shadow:0 16px 46px rgba(0,0,0,0.6);
                 }
                 /* Pantallas grandes (>=1400px) */
                 @media (min-width:1400px) {
-                    section[data-step="6"] .floating-image { width:80vw; height:80vh; }
+                    section[data-step="5"] .floating-image { width:80vw; height:80vh; }
                 }
                 /* Pantallas medianas (tablet) */
                 @media (max-width:1024px) {
-                    section[data-step="6"] .floating-image { width:80vw; height:80vh; }
+                    section[data-step="5"] .floating-image { width:80vw; height:80vh; }
                 }
                 /* Tablets / teléfonos grandes */
                 @media (max-width:768px) {
-                    section[data-step="6"] .floating-image { width:80vw; height:80vh; }
+                    section[data-step="5"] .floating-image { width:80vw; height:80vh; }
                 }
                 /* Teléfonos móviles */
                 @media (max-width:520px) {
-                    section[data-step="6"] .floating-image { width:100vw; height:100vh; }
+                    section[data-step="5"] .floating-image { width:100vw; height:100vh; }
                 }
                 /* Dispostivos muy pequeños */
                 @media (max-width:380px) {
-                    section[data-step="6"] .floating-image { width:100vw; height:100vh; }
+                    section[data-step="5"] .floating-image { width:100vw; height:100vh; }
                 }
-                section[data-step="6"].animate-down .floating-image { animation: popupFromTopStep6 0.7s cubic-bezier(.2,.8,.3,1) forwards; }
-                section[data-step="6"].animate-up .floating-image { animation: popupFromBottomStep6 0.7s cubic-bezier(.2,.8,.3,1) forwards; }
+                section[data-step="5"].animate-down .floating-image { animation: popupFromTopStep5 0.7s cubic-bezier(.2,.8,.3,1) forwards; }
+                section[data-step="5"].animate-up .floating-image { animation: popupFromBottomStep5 0.7s cubic-bezier(.2,.8,.3,1) forwards; }
             </style>
             <div class="photo-credit" style="position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); background: rgba(0, 0, 0, 0.5); color: #fff; padding: 6px 10px; border-radius: 6px; font-size: 12px; line-height: 1.3; z-index: 4;">
                 Fuente: <a href="https://www.reportur.com/agencias/2025/04/22/fotos-asi-lucia-cancun-hace-55-anos-antes-de-ser-destino-turistico/" target="_blank" rel="noopener" title="Fotos – Así lucía Cancún hace 55 años antes de ser destino turístico">https://www.reportur.com/agencias/2025/04/22/fotos-asi-lucia-cancun-hace-55-anos-antes-de-ser-destino-turistico/</a>
             </div>
         </section>
 
-        <!-- Step 7: Expansión urbana sin freno -->
-        <section class="step" data-step="7">
+        <!-- Step 6: Expansión urbana sin freno  -->
+        <section class="step" data-step="6">
             <div class="step-content">
                 <h2>Expansión Urbana Sin Freno</h2>
                 <p>El modelo expansivo no solo fue rápido, fue segregado. La expansión, especialmente en los años 90, consolidó la fragmentación de Cancún en <strong>"tres ciudades"</strong> funcional y socialmente separadas: una para los turistas en la Zona Hotelera, otra para residentes acomodados en fraccionamientos privados, y una tercera, <strong>"precaria y con servicios deficientes"</strong>, para la mayoría de la fuerza laboral en asentamientos irregulares.</p>
@@ -998,21 +992,21 @@
             </div>
         </section>
 
-        <!-- Step 8: Imagen 1975.jpg -->
-        <section class="step urban-year-image" data-step="8" data-year="1975">
+        <!-- Step 7: Imagen 1975.jpg  -->
+        <section class="step urban-year-image" data-step="7" data-year="1975">
             
         </section>
 
-        <!-- Step 9: Imagen 1980.jpg -->
-        <section class="step urban-year-image lazy-bg" data-step="9" data-year="1980" style="position: relative; overflow: hidden; min-height: 100vh;">
+        <!-- Step 8: Imagen 1980.jpg  -->
+        <section class="step urban-year-image lazy-bg" data-step="8" data-year="1980" style="position: relative; overflow: hidden; min-height: 100vh;">
             <div class="year-caption">
                 <p>Este crecimiento lento pero constante se explica por un contexto nacional complicado. Los años 80 son conocidos en México como la "Década Perdida".</p>
             </div>
             <span class="year-label-mobile" style="position:absolute; top:8px; left:8px; background:rgba(0,0,0,0.6); color:#fff; padding:4px 8px; border-radius:4px; font-size:14px; display:none;">1980</span>
         </section>
 
-        <!-- Step 10: Imagen 1985.jpg -->
-        <section class="step urban-year-image" data-step="10" data-year="1985">
+        <!-- Step 9: Imagen 1985.jpg  -->
+        <section class="step urban-year-image" data-step="9" data-year="1985">
             <div class="year-caption">
                 <p><strong>1985: Consolidación en medio de adversidad</strong></p>
                 <p>La ciudad alcanza las 5,515 hectáreas, con un crecimiento del 11.7% desde 1980.</p>
@@ -1020,8 +1014,8 @@
             </div>
         </section>
 
-        <!-- Step 11: Imagen 1990.jpg -->
-        <section class="step urban-year-image" data-step="11" data-year="1990" style="position: relative; overflow: hidden; min-height: 100vh;">
+        <!-- Step 10: Imagen 1990.jpg  -->
+        <section class="step urban-year-image" data-step="10" data-year="1990" style="position: relative; overflow: hidden; min-height: 100vh;">
             <div class="year-caption">
                 <p><strong>1990: Fin de la primera década</strong></p>
                 <p>La huella urbana llega a 6,244 hectáreas, con un crecimiento acumulado del 26.4% desde 1980.</p>
@@ -1029,8 +1023,8 @@
             </div>
         </section>
 
-        <!-- Step 12: Imagen 1995.jpg -->
-        <section class="step urban-year-image" data-step="12" data-year="1995" style="position: relative; overflow: hidden; min-height: 100vh;">
+        <!-- Step 11: Imagen 1995.jpg  -->
+        <section class="step urban-year-image" data-step="11" data-year="1995" style="position: relative; overflow: hidden; min-height: 100vh;">
             <div class="year-caption">
                 <p><strong>1995: El primer gran salto</strong></p>
                 <p>La ciudad alcanza las 8,009 hectáreas, con un crecimiento del 28.3% en solo cinco años.</p>
@@ -1038,8 +1032,8 @@
             </div>
         </section>
 
-        <!-- Step 13: Imagen 2000.jpg -->
-        <section class="step urban-year-image" data-step="13" data-year="2000" style="position: relative; overflow: hidden; min-height: 100vh;">
+        <!-- Step 12: Imagen 2000.jpg  -->
+        <section class="step urban-year-image" data-step="12" data-year="2000" style="position: relative; overflow: hidden; min-height: 100vh;">
             <div class="year-caption">
                 <p><strong>2000: Fin de la explosión inicial</strong></p>
                 <p>La huella urbana llega a 9,848 hectáreas, casi el doble que en 1990.</p>
@@ -1047,8 +1041,8 @@
             </div>
         </section>
 
-        <!-- Step 14: Imagen 2005.jpg -->
-        <section class="step urban-year-image" data-step="14" data-year="2005" style="position: relative; overflow: hidden; min-height: 100vh;">
+        <!-- Step 13: Imagen 2005.jpg  -->
+        <section class="step urban-year-image" data-step="13" data-year="2005" style="position: relative; overflow: hidden; min-height: 100vh;">
             <div class="year-caption">
                 <p><strong>2005: Antes del huracán Wilma</strong></p>
                 <p>La ciudad alcanza las 11,247 hectáreas, con un crecimiento del 14.2% desde 2000.</p>
@@ -1056,8 +1050,8 @@
             </div>
         </section>
 
-        <!-- Step 15: Imagen 2010.jpg -->
-        <section class="step urban-year-image" data-step="15" data-year="2010" style="position: relative; overflow: hidden; min-height: 100vh;">
+        <!-- Step 14: Imagen 2010.jpg  -->
+        <section class="step urban-year-image" data-step="14" data-year="2010" style="position: relative; overflow: hidden; min-height: 100vh;">
             <div class="year-caption">
                 <p><strong>2010: Superando la adversidad</strong></p>
                 <p>La huella urbana llega a 12,516 hectáreas, con un crecimiento acumulado del 153.4% desde 1980.</p>
@@ -1065,8 +1059,8 @@
             </div>
         </section>
 
-        <!-- Step 16: Imagen 2015.jpg -->
-        <section class="step urban-year-image" data-step="16" data-year="2015" style="position: relative; overflow: hidden; min-height: 100vh;">
+        <!-- Step 15: Imagen 2015.jpg  -->
+        <section class="step urban-year-image" data-step="15" data-year="2015" style="position: relative; overflow: hidden; min-height: 100vh;">
             <div class="year-caption">
                 <p><strong>2015: La mayor expansión absoluta</strong></p>
                 <p>La ciudad alcanza las 15,197 hectáreas, con un crecimiento del 21.4% en cinco años.</p>
@@ -1074,8 +1068,8 @@
             </div>
         </section>
 
-        <!-- Step 17. Imagen 2020.jpg -->
-        <section class="step urban-year-image" data-step="17" data-year="2020" style="position: relative; overflow: hidden; min-height: 100vh;">
+        <!-- Step 16. Imagen 2020.jpg  -->
+        <section class="step urban-year-image" data-step="16" data-year="2020" style="position: relative; overflow: hidden; min-height: 100vh;">
             <div class="year-caption">
                 <p><strong>2020: Metropolización consolidada</strong></p>
                 <p>La huella urbana llega a 17,309 hectáreas, con un crecimiento acumulado del 250.5% desde 1980.</p>
@@ -1083,8 +1077,8 @@
             </div>
         </section>
 
-        <!-- Step 18: Imagen 2025.jpg -->
-        <section class="step urban-year-image" data-step="18" data-year="2025" style="position: relative; overflow: hidden; min-height: 100vh;">
+        <!-- Step 17: Imagen 2025.jpg  -->
+        <section class="step urban-year-image" data-step="17" data-year="2025" style="position: relative; overflow: hidden; min-height: 100vh;">
             <div class="year-caption">
                 <p><strong>2025: Proyección a futuro</strong></p>
                 <p>La huella urbana proyectada es de 18,762 hectáreas, con un crecimiento acumulado del 279.9% desde 1980.</p>
@@ -1092,8 +1086,8 @@
             </div>
         </section>
 
-        <!-- Step 19: Dispersión poblacional y abandono del centro -->
-        <section class="step" data-step="19">
+        <!-- Step 18: Dispersión poblacional y abandono del centro  -->
+        <section class="step" data-step="18">
             <div class="step-content">
                 <h2>Dispersión Poblacional y Abandono del Centro</h2>
                 <p><strong>Entre 2010 y 2020, las zonas centrales perdieron más del 10% de su población, mientras que las periferias crecieron hasta un 30%</strong>. Más suelo para menos personas: un fenómeno que incrementa costos de transporte, servicios e infraestructura.</p>
@@ -1102,16 +1096,16 @@
             </div>
         </section>
         
-        <!-- Step 20: Mapa de tasa de cambio poblacional por AGEB (2010-2020) -->
-        <section class="step has-map" data-step="20" data-map="true" data-map-layer="cambio_poblacional_ageb" data-map-view="ciudad_central">
+        <!-- Step 19: Mapa de tasa de cambio poblacional por AGEB (2010-2020)  -->
+        <section class="step has-map" data-step="19" data-map="true" data-map-layer="cambio_poblacional_ageb" data-map-view="ciudad_central">
             <div class="step-content">
                 <h2>Mapa de tasa de cambio poblacional por AGEB (2010-2020)</h2>
                 <p>Visualización del cambio poblacional en la ciudad, mostrando cómo las zonas centrales perdieron población mientras las periferias experimentaron crecimiento acelerado.</p>
             </div>
         </section>
 
-        <!-- Step 21: Impacto ambiental -->
-        <section class="step" data-step="21">
+        <!-- Step 20: Impacto ambiental  -->
+        <section class="step" data-step="20">
             <div class="step-content">
                 <h2>El Costo Ambiental del Crecimiento</h2>
                 <p>La vulnerabilidad a huracanes ha forjado el carácter de la ciudad. <strong>"Gilberto"</strong> en 1988 fue el <strong>"bautismo de fuego"</strong>, y la respuesta colectiva para reconstruir la ciudad creó un fuerte sentido de comunidad y una <strong>"cultura de huracanes"</strong>.</p>
@@ -1120,16 +1114,16 @@
             </div>
         </section>
         
-        <!-- Step 22: Mapa de pérdida de cobertura forestal (2000-2020) + ANP Nichupté -->
-        <section class="step has-map" data-step="22" data-map="true" data-map-layer="perdida_vegetacion" data-map-view="area_natural">
+        <!-- Step 21: Mapa de pérdida de cobertura forestal (2000-2020) + ANP Nichupté  -->
+        <section class="step has-map" data-step="21" data-map="true" data-map-layer="perdida_vegetacion" data-map-view="area_natural">
             <div class="step-content">
                 <h2>Mapa de pérdida de cobertura forestal (2000-2020)</h2>
                 <p>Visualización de la pérdida de cobertura forestal y áreas naturales protegidas, destacando las más de 90 km² de vegetación perdidos y el impacto en la recarga de acuíferos y protección ante huracanes.</p>
             </div>
         </section>
 
-        <!-- Step 23: Desigualdad territorial -->
-        <section class="step" data-step="23">
+        <!-- Step 22: Desigualdad territorial  -->
+        <section class="step" data-step="22">
             <div class="step-content">
                 <h2>Desigualdad Territorial</h2>
                 <p>El municipio está organizado en 22 distritos con densidades contrastantes: <strong>algunos superan los 100 habitantes por hectárea, mientras que otros no alcanzan los 10</strong>.</p>
@@ -1138,21 +1132,21 @@
             </div>
         </section>
         
-        <!-- Step 24: Mapa de densidad poblacional por distrito -->
-        <section class="step has-map" data-step="24" data-map="true" data-map-layer="densidad_poblacional" data-map-view="distritos">
+        <!-- Step 23: Mapa de densidad poblacional por distrito  -->
+        <section class="step has-map" data-step="23" data-map="true" data-map-layer="densidad_poblacional" data-map-view="distritos">
             <div class="step-content">
                 <h2>Mapa de densidad poblacional por distrito</h2>
                 <p>Visualización de los 22 distritos del municipio con sus densidades contrastantes, donde algunos superan los 100 habitantes por hectárea mientras otros no alcanzan los 10, evidenciando la desigualdad territorial.</p>
             </div>
         </section>
 
-        <!-- Step 25: Imagen de la desigualdad territorial (imagen 23.jpg) -->
-        <section class="step" data-step="25" style="position: relative; min-height: 100vh;">
+        <!-- Step 24: Imagen de la desigualdad territorial (imagen 23.jpg)  -->
+        <section class="step" data-step="24" style="position: relative; min-height: 100vh;">
             <div class="lazy-bg" data-bg="assets/23.jpg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center;"></div>
         </section>
 
-        <!-- Step 26: Motorización acelerada -->
-        <section class="step" data-step="26">
+        <!-- Step 25: Motorización acelerada  -->
+        <section class="step" data-step="25">
             <div class="step-content">
                 <h2>Motorización Acelerada</h2>
                 <p>El parque vehicular ha crecido más rápido que la población: <strong>de 186 mil autos en 2010 a más de 452 mil en 2023 (+142%)</strong>. Pasamos de 0.41 autos por vivienda en 2010 a casi 0.7 en 2020.</p>
@@ -1161,8 +1155,8 @@
             </div>
         </section>
 
-        <!-- Step 27: Gráfico interactivo del parque vehicular -->
-        <section class="step" data-step="27">
+        <!-- Step 26: Gráfico interactivo del parque vehicular  -->
+        <section class="step" data-step="26">
             <div class="step-content">
                 <h2>Evolución del Parque Vehicular</h2>
                 <div class="chart-container">
@@ -1173,8 +1167,8 @@
             </div>
         </section>
 
-        <!-- Step 28: Consecuencias sociales y urbanas -->
-        <section class="step" data-step="28">
+        <!-- Step 27: Consecuencias sociales y urbanas  -->
+        <section class="step" data-step="27">
             <div class="step-content">
                 <h2>Consecuencias Sociales y Urbanas</h2>
                 <p>El modelo expansivo se refleja en la vida cotidiana: más horas en traslados, servicios lejanos, menor convivencia comunitaria. La ciudad se encarece al mantener colonias lejanas y pierde cohesión social.</p>
@@ -1183,8 +1177,8 @@
             </div>
         </section>
 
-        <!-- Step 29: Fotos de tráfico + periferias con servicios insuficientes -->
-        <section class="step" data-step="29" style="position: relative; min-height: 100vh; overflow: hidden; padding: 0; margin: 0;">
+        <!-- Step 28: Fotos de tráfico + periferias con servicios insuficientes  -->
+        <section class="step" data-step="28" style="position: relative; min-height: 100vh; overflow: hidden; padding: 0; margin: 0;">
             <!-- Contenedor principal que ocupa toda la pantalla -->
             <div class="consequence-images-wrapper" style="display: flex; width: 100%; height: 100vh; position: relative;">
                 <!-- Imagen 25.jpg a la izquierda (lazy) -->
@@ -1196,8 +1190,8 @@
             
             <style>
                 /* Estado base (oculto) */
-                section[data-step="29"] .consequence-image-left,
-                section[data-step="29"] .consequence-image-right {
+                section[data-step="28"] .consequence-image-left,
+                section[data-step="28"] .consequence-image-right {
                     flex: 1;
                     background-size: cover;
                     background-position: center;
@@ -1205,12 +1199,12 @@
                     transform: scale(0.9);
                 }
 
-                section[data-step="29"] .consequence-image-left {
+                section[data-step="28"] .consequence-image-left {
                     /* background-image aplicado de forma perezosa vía data-bg */
                     transform: scale(0.9) translateX(-40px);
                 }
 
-                section[data-step="29"] .consequence-image-right {
+                section[data-step="28"] .consequence-image-right {
                     /* background-image aplicado de forma perezosa vía data-bg */
                     transform: scale(0.9) translateX(40px);
                 }
@@ -1227,17 +1221,17 @@
                 }
 
                 /* Entrando hacia abajo (desde arriba) */
-                section[data-step="29"].animate-down .consequence-image-left { animation: popupLeft 0.6s ease-out 0.1s forwards; }
-                section[data-step="29"].animate-down .consequence-image-right { animation: popupRight 0.6s ease-out 0.25s forwards; }
+                section[data-step="28"].animate-down .consequence-image-left { animation: popupLeft 0.6s ease-out 0.1s forwards; }
+                section[data-step="28"].animate-down .consequence-image-right { animation: popupRight 0.6s ease-out 0.25s forwards; }
 
                 /* Entrando hacia arriba (desde abajo) - reutilizamos animación para consistencia */
-                section[data-step="29"].animate-up .consequence-image-left { animation: popupLeft 0.6s ease-out 0.1s forwards; }
-                section[data-step="29"].animate-up .consequence-image-right { animation: popupRight 0.6s ease-out 0.25s forwards; }
+                section[data-step="28"].animate-up .consequence-image-left { animation: popupLeft 0.6s ease-out 0.1s forwards; }
+                section[data-step="28"].animate-up .consequence-image-right { animation: popupRight 0.6s ease-out 0.25s forwards; }
             </style>
         </section>
 
-        <!-- Step 30: Estrategias de Futuro -->
-        <section class="step" data-step="30">
+        <!-- Step 29: Estrategias de Futuro  -->
+        <section class="step" data-step="29">
             <div class="step-content">
                 <h2>Estrategias de Futuro</h2>
                 <p>Las estrategias de futuro, como la <strong>"ciudad de la proximidad"</strong> de 15 minutos, no son solo una tendencia global importada, sino un regreso a la lógica fundacional de las supermanzanas del centro.</p>
@@ -1246,16 +1240,16 @@
             </div>
         </section>
 
-        <!-- Step 31: Imagen 26.jpg -->
-        <section class="step" data-step="31" style="position: relative; min-height: 100vh;">
+        <!-- Step 30: Imagen 26.jpg  -->
+        <section class="step" data-step="30" style="position: relative; min-height: 100vh;">
             <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url('assets/26.jpg'); background-size: cover; background-position: center;"></div>
             <div class="photo-credit">
                 Fotografía: Parque de la Equidad en Cancún. Fuente: <a href="https://cgc.qroo.gob.mx/avanza-con-paso-firme-el-parque-de-la-equidad-en-cancun/" target="_blank" rel="noopener" title="Avanza con paso firme el Parque de la Equidad en Cancún - cgc.qroo.gob.mx">cgc.qroo.gob.mx</a>
             </div>
         </section>
 
-        <!-- Step 32: Looking ahead (Cierre / Call to action) -->
-        <section class="step" data-step="32" style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.95)); color: white;">
+        <!-- Step 31: Looking ahead (Cierre / Call to action)  -->
+        <section class="step" data-step="31" style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.95)); color: white;">
             <div style="display: flex; align-items: center; max-width: 1200px; margin: 0 auto; gap: 30px;">
                 <!-- Columna de texto a la izquierda -->
                 <div class="step-content" style="flex: 1;">
