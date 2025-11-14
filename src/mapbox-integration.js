@@ -493,13 +493,40 @@ function showMapOverlay(config) {
                         mapboxMap.addLayer(layerDef);
                     }
                     if (layer.popup) {
-                        mapboxMap.on('click', layer.id, (e) => {
+                        // Variable para almacenar el popup activo
+                        let currentPopup = null;
+                        
+                        // Mostrar popup al pasar el mouse
+                        mapboxMap.on('mousemove', layer.id, (e) => {
+                            // Remover popup anterior si existe
+                            if (currentPopup) {
+                                currentPopup.remove();
+                            }
+                            
                             const properties = e.features[0].properties;
                             const content = layer.popup(properties);
-                            new mapboxgl.Popup().setLngLat(e.lngLat).setHTML(content).addTo(mapboxMap);
+                            currentPopup = new mapboxgl.Popup({
+                                closeButton: false,
+                                closeOnClick: false
+                            })
+                            .setLngLat(e.lngLat)
+                            .setHTML(content)
+                            .addTo(mapboxMap);
                         });
-                        mapboxMap.on('mouseenter', layer.id, () => { mapboxMap.getCanvas().style.cursor = 'pointer'; });
-                        mapboxMap.on('mouseleave', layer.id, () => { mapboxMap.getCanvas().style.cursor = ''; });
+                        
+                        // Cambiar cursor al entrar
+                        mapboxMap.on('mouseenter', layer.id, () => { 
+                            mapboxMap.getCanvas().style.cursor = 'pointer'; 
+                        });
+                        
+                        // Remover popup y restaurar cursor al salir
+                        mapboxMap.on('mouseleave', layer.id, () => { 
+                            mapboxMap.getCanvas().style.cursor = '';
+                            if (currentPopup) {
+                                currentPopup.remove();
+                                currentPopup = null;
+                            }
+                        });
                     }
                     console.log(`✅ Capa ${layer.id} añadida correctamente`);
                 } catch (error) {
