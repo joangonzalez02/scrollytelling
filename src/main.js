@@ -18,7 +18,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Configurar Scrollama
     function initScrollama() {
-        console.log('Inicializando Scrollama...');
         scroller
             .setup({
                 step: '.step',
@@ -26,13 +25,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 progress: true,
                 debug: false
             })
-            .onStepProgress(response => {
-                // Manejo de progreso de pasos para animaciones (opcional)
-                // console.log('Progress step', response.index, response.progress);
-            })
             .onStepEnter(response => {
                 currentStep = response.index;
-                console.log('Entrando al step:', currentStep);
                 
                 // Seguridad: ocultar leyenda/panel salvo que luego un step de mapa permitido los muestre
                 try {
@@ -53,8 +47,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 response.element.classList.add('is-active');
                 response.element.classList.add('active');
                 
-                // Animación específica para step 27
-                if (currentStep === 26) {
+                // Animación específica para step 29
+                if (currentStep === 28) {
                     const step29 = response.element;
                     step29.classList.remove('animate-up', 'animate-down');
                     // direction: 'down' when entering while scrolling down; 'up' when entering while scrolling up
@@ -80,7 +74,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log('Step activo:', currentStep, 'elemento:', response.element.classList.toString());
 
                 // Animar charts al entrar a sus steps
-                if (currentStep === 24 && window.vehicleChart && typeof window.vehicleChart.enter === 'function') {
+                if (currentStep === 26 && window.vehicleChart && typeof window.vehicleChart.enter === 'function') {
                     // Nuevo Step 25 (index 24): parque vehicular
                     window.vehicleChart.enter();
                 }
@@ -90,8 +84,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 response.element.classList.remove('is-active');
                 response.element.classList.remove('active');
 
-                // Reset de animaciones para step 27 al salir, para que pueda reanimarse al re-entrar
-                if (response.index === 26) {
+                // Reset de animaciones para step 29 al salir, para que pueda reanimarse al re-entrar
+                if (response.index === 28) {
                     const step29 = response.element;
                     // Forzar reflow para reiniciar animaciones si fuese necesario
                     step29.classList.remove('animate-up', 'animate-down');
@@ -116,8 +110,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
                 
-                // Al salir de steps con leyenda (19, 23) forzar ocultado
-                if (response.index === 18 || response.index === 22) {
+                // Al salir de steps con leyenda (19, 25) forzar ocultado
+                if (response.index === 18 || response.index === 24) {
                     console.log('Saliendo de step con leyenda (19/23)');
                     try {
                         const legend = document.getElementById('map-legend');
@@ -125,6 +119,26 @@ document.addEventListener('DOMContentLoaded', function() {
                         const panel = document.getElementById('map-lustro-control');
                         if (panel) panel.style.display = 'none';
                     } catch {}
+                }
+                
+                // Al salir de steps de pérdida forestal (21-23 -> índices 20-22), ocultar fondo si corresponde
+                if (response.index >= 20 && response.index <= 22) {
+                    if (currentStep < 20 || currentStep > 22) {
+                        setTimeout(() => {
+                            const forestBg = document.getElementById('forest-loss-background');
+                            if (forestBg) {
+                                forestBg.style.display = 'none';
+                                forestBg.style.visibility = 'hidden';
+                                forestBg.style.opacity = '0';
+                            }
+                            document.querySelectorAll('.forest-bg-frame').forEach(frame => {
+                                frame.classList.remove('active');
+                                frame.style.opacity = '0';
+                                frame.style.visibility = 'hidden';
+                                frame.style.display = 'none';
+                            });
+                        }, 200);
+                    }
                 }
                 
                 // Si salimos de cualquier step de evolución urbana (6-16), ocultar las imágenes de fondo
@@ -156,8 +170,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     hideMapVisuals(); // Función específica para ocultar elementos del mapa
                 }
 
-                // Si salimos del step del parque vehicular (nuevo índice 24), ejecutar animación de salida
-                if (response.index === 24 && window.vehicleChart && typeof window.vehicleChart.exit === 'function') {
+                // Si salimos del step del parque vehicular (nuevo índice 26), ejecutar animación de salida
+                if (response.index === 26 && window.vehicleChart && typeof window.vehicleChart.exit === 'function') {
                     window.vehicleChart.exit();
                 }
             });
@@ -276,9 +290,33 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 handleUrbanEvolutionStep(stepIndex);
             }
+
+            // Serie de pérdida forestal (steps 21–23 => índices 20–22)
+            if (stepIndex >= 20 && stepIndex <= 22) {
+                const forestBg = document.getElementById('forest-loss-background');
+                if (forestBg) {
+                    forestBg.style.display = 'block';
+                    forestBg.style.visibility = 'visible';
+                    forestBg.style.opacity = '1';
+                }
+                handleForestLossStep(stepIndex);
+            } else {
+                const forestBg = document.getElementById('forest-loss-background');
+                if (forestBg) {
+                    forestBg.style.display = 'none';
+                    forestBg.style.visibility = 'hidden';
+                    forestBg.style.opacity = '0';
+                    document.querySelectorAll('.forest-bg-frame').forEach(frame => {
+                        frame.classList.remove('active');
+                        frame.style.opacity = '0';
+                        frame.style.visibility = 'hidden';
+                        frame.style.display = 'none';
+                    });
+                }
+            }
         }
         
-        if (stepIndex === 24) { // Gráfico de parque vehicular (step 25, índice 24)
+        if (stepIndex === 26) { // Gráfico de parque vehicular (step 27, índice 26)
             console.log('Activando gráfico de vehículos para el paso 26');
             if (window.initVehicleChart) {
                 window.initVehicleChart();
@@ -396,6 +434,124 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Imágenes de evolución urbana inicializadas');
     }
     
+    // Inicializar la serie de pérdida de cobertura forestal
+    function initForestLossImages() {
+        const years = [2000, 2010, 2020];
+        const container = document.getElementById('forest-loss-background');
+
+        container.style.display = 'none';
+        container.style.visibility = 'hidden';
+        container.style.opacity = '0';
+        container.innerHTML = '';
+
+        years.forEach(year => {
+            const frame = document.createElement('div');
+            frame.className = 'forest-bg-frame';
+            frame.id = `forest-frame-${year}`;
+            frame.style.position = 'absolute';
+            frame.style.inset = '0';
+            frame.style.opacity = '0';
+            frame.style.visibility = 'hidden';
+            frame.style.display = 'none';
+            frame.style.zIndex = '1';
+            frame.style.transition = 'opacity 0.8s ease-in-out, visibility 0.8s ease-in-out';
+
+            const blur = document.createElement('div');
+            blur.className = 'forest-blur-layer';
+            blur.style.position = 'absolute';
+            blur.style.inset = '0';
+            blur.style.backgroundSize = 'cover';
+            blur.style.backgroundPosition = 'center';
+            blur.style.filter = 'blur(20px) brightness(0.9)';
+            blur.style.transform = 'scale(1.05)';
+            blur.style.willChange = 'transform, filter';
+            blur.setAttribute('data-bg', `assets/perdida-forestal-${year}.jpeg`);
+
+            const img = document.createElement('img');
+            img.className = 'forest-main-image';
+            img.setAttribute('data-src', `assets/perdida-forestal-${year}.jpeg`);
+            img.alt = `Pérdida de cobertura forestal ${year}`;
+            img.style.position = 'absolute';
+            img.style.top = '50%';
+            img.style.left = '50%';
+            img.style.transform = 'translate(-50%, -50%)';
+            img.style.height = '100vh';
+            img.style.maxHeight = '100vh';
+            img.style.width = 'auto';
+            img.style.maxWidth = '90vw';
+            img.style.objectFit = 'contain';
+            img.style.borderRadius = '12px';
+            img.style.boxShadow = '0 16px 40px rgba(0,0,0,0.35)';
+            img.style.opacity = '1';
+
+            frame.appendChild(blur);
+            frame.appendChild(img);
+            container.appendChild(frame);
+        });
+    }
+
+    function handleForestLossStep(stepIndex) {
+        const map = {20: 2000, 21: 2010, 22: 2020};
+        const year = map[stepIndex];
+        if (!year) return;
+
+
+        const activeFrames = Array.from(document.querySelectorAll('.forest-bg-frame.active'));
+
+        const frame = document.getElementById(`forest-frame-${year}`);
+        if (frame) {
+            // Elevar el nuevo por encima
+            frame.style.zIndex = '2';
+            const img = frame.querySelector('.forest-main-image');
+            if (img && !img.getAttribute('src')) {
+                const src = img.getAttribute('data-src');
+                if (src) img.setAttribute('src', src);
+            }
+            const blur = frame.querySelector('.forest-blur-layer');
+            if (blur && !blur.style.backgroundImage) {
+                const bg = blur.getAttribute('data-bg');
+                if (bg) blur.style.backgroundImage = `url('${bg}')`;
+            }
+            requestAnimationFrame(() => {
+                frame.classList.add('active');
+                frame.style.display = 'block';
+                frame.style.visibility = 'visible';
+                frame.style.opacity = '1';
+            });
+
+            // Preload siguiente
+            const nextMap = {2000: 2010, 2010: 2020};
+            const next = nextMap[year];
+            if (next) {
+                const nf = document.getElementById(`forest-frame-${next}`);
+                if (nf) {
+                    const nimg = nf.querySelector('.forest-main-image');
+                    if (nimg && !nimg.getAttribute('src')) {
+                        const nsrc = nimg.getAttribute('data-src');
+                        if (nsrc) nimg.setAttribute('src', nsrc);
+                    }
+                    const nblur = nf.querySelector('.forest-blur-layer');
+                    if (nblur && !nblur.style.backgroundImage) {
+                        const nbg = nblur.getAttribute('data-bg');
+                        if (nbg) nblur.style.backgroundImage = `url('${nbg}')`;
+                    }
+                }
+            }
+
+            // Desvanecer los anteriores y ocultarlos después de la transición
+            activeFrames.forEach(prev => {
+                if (prev === frame) return;
+                prev.style.zIndex = '1';
+                prev.style.opacity = '0';
+                prev.style.visibility = 'hidden';
+                setTimeout(() => {
+                    prev.classList.remove('active');
+                    prev.style.display = 'none';
+                }, 700);
+            });
+        }
+    }
+    
     // Función para manejar los pasos específicos de evolución urbana
     function handleUrbanEvolutionStep(stepIndex) {
         // Mapeo de índices de pasos a años
@@ -471,11 +627,11 @@ document.addEventListener('DOMContentLoaded', function() {
     function initComponents() {
         // Inicializar componentes sin depender del mapa de fondo
         initUrbanEvolutionImages();
+        initForestLossImages();
         initScrollama();
         
         // Configurar evento para cuando Mapbox esté listo (desde mapbox-integration.js)
         document.addEventListener('mapbox-ready', function() {
-            console.log('Mapbox está listo, actualizando visuales para el step actual');
             if (currentStep > 0) {
                 activateStepVisuals(currentStep);
             }
