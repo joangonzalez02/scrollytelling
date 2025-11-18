@@ -33,7 +33,7 @@ const mapboxAccessToken = 'pk.eyJ1IjoiMHhqZmVyIiwiYSI6ImNtZjRjNjczdTA0MGsya3Bwb3
 // Configuración de cuándo mostrar el mapa en cada step
 const mapStepsConfig = {
     // Steps donde el mapa debe estar visible (solo los que realmente tienen mapa)
-    visibleSteps: [19, 21, 23],
+    visibleSteps: [19, 25],
     
     // Configuración específica para cada paso que muestra el mapa
     stepConfigs: {
@@ -86,8 +86,8 @@ const mapStepsConfig = {
             style: 'mapbox://styles/mapbox/light-v10',
             layers: []
         },
-        // Step 23: Densidad poblacional por distrito 
-        "23": {
+        // Step 25: Densidad poblacional por distrito 
+        "25": {
             center: [-86.8515, 21.1619],
             zoom: 11,
             pitch: 30,
