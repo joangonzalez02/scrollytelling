@@ -448,6 +448,13 @@
             to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
+        /* Nuevo: animación de revelado deslizante hacia la izquierda (para media en 1980) */
+        @keyframes slideLeftReveal {
+            0% { opacity: 0; transform: translateX(18px); }
+            60% { opacity: 1; transform: translateX(0); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+
         /* Asignación de animaciones por año (cuando el step está activo) */
         .step.urban-year-image.is-active[data-year="1980"] .year-caption {
             animation: fadeUpSoft 700ms ease-out both;
@@ -488,6 +495,90 @@
         .step.urban-year-image.is-active[data-year="2025"] .year-caption {
             animation: fadeInScale 700ms ease-out both;
             animation-delay: 100ms;
+        }
+
+        /* Widget apilado (stack) para 1980: texto + foto deslizable */
+        /* Para 1980, hacemos el caption más compacto y fijamos un alto máximo del widget */
+        .step.urban-year-image[data-year="1980"] .year-caption { max-width: 420px; display: flex; flex-direction: column; gap: 8px; }
+        .step.urban-year-image[data-year="1980"] .year-caption .stack-widget {
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            max-height: 240px;
+        }
+        .step.urban-year-image[data-year="1980"] .year-caption .stack-track {
+            display: flex;
+            width: 200%;
+            transform: translateX(0);
+            transition: transform 350ms ease;
+            will-change: transform;
+        }
+        .step.urban-year-image[data-year="1980"] .year-caption .stack-widget.is-showing-media .stack-track {
+            transform: translateX(-100%);
+        }
+        .step.urban-year-image[data-year="1980"] .year-caption .stack-item {
+            flex: 0 0 100%;
+            width: 100%;
+            max-height: 240px; /* igual al widget */
+            overflow-y: auto; /* texto 100% legible dentro del tamaño compacto */
+            -webkit-overflow-scrolling: touch;
+            padding-right: 6px; /* espacio para scrollbar en algunos navegadores */
+        }
+        .step.urban-year-image[data-year="1980"] .year-caption .stack-item.stack-text {
+            background: transparent;
+            color: #000000;
+            border-radius: 10px;
+            padding: 10px 12px;
+        }
+        .step.urban-year-image[data-year="1980"] .year-caption .stack-item.stack-text p,
+        .step.urban-year-image[data-year="1980"] .year-caption .stack-item.stack-text li {
+            font-size: 14px;
+            line-height: 1.4;
+            margin: 4px 0;
+        }
+        .step.urban-year-image[data-year="1980"] .year-caption .stack-item.stack-text ul {
+            margin: 8px 0 0;
+            padding-left: 18px;
+        }
+        @media (max-width: 480px) {
+            .step.urban-year-image[data-year="1980"] .year-caption .stack-item.stack-text p,
+            .step.urban-year-image[data-year="1980"] .year-caption .stack-item.stack-text li {
+                font-size: 13px;
+                line-height: 1.4;
+            }
+        }
+        .step.urban-year-image[data-year="1980"] .year-caption .stack-item.stack-media img {
+            display: block;
+            width: 100%;
+            height: 100%; /* ocupar el alto del widget */
+            object-fit: cover; /* recortar/encajar la imagen al alto disponible */
+            border-radius: 10px;
+            box-shadow: 0 6px 16px rgba(2, 48, 71, 0.18);
+        }
+        .step.urban-year-image[data-year="1980"] .year-caption .stack-toggle {
+            position: relative;
+            align-self: flex-end;
+            margin-top: 8px;
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(0,0,0,0.1);
+            color: #000;
+            border-radius: 10px;
+            padding: 6px 10px;
+            font-size: 14px;
+            cursor: pointer;
+            backdrop-filter: blur(6px);
+        }
+        .step.urban-year-image[data-year="1980"] .year-caption .stack-toggle:focus {
+            outline: 2px solid rgba(2, 48, 71, 0.4);
+            outline-offset: 2px;
+        }
+        @media (max-width: 480px) {
+            .step.urban-year-image[data-year="1980"] .year-caption { max-width: 92vw; }
+            .step.urban-year-image[data-year="1980"] .year-caption .stack-widget { max-height: 200px; }
+            .step.urban-year-image[data-year="1980"] .year-caption .stack-item { max-height: 200px; }
+            .step.urban-year-image[data-year="1980"] .year-caption .stack-toggle {
+                font-size: 13px; padding: 5px 9px; margin-top: 6px;
+            }
         }
         
         .step.has-map {
@@ -1175,10 +1266,21 @@
         <!-- Step 8: Imagen 1980.jpg  -->
         <section class="step urban-year-image lazy-bg" data-step="8" data-year="1980" style="position: relative; overflow: hidden; min-height: 100vh;">
             <div class="year-caption">
-                <p>Este crecimiento lento pero constante se explica por un contexto nacional complicado. Los años 80 son conocidos en México como la "Década Perdida".</p>
-                <ul>
-                    <li><strong>Crisis de la Deuda (1982):</strong> México sufre una severa crisis económica que frena la inversión.</li>
-                </ul>
+                <div class="stack-widget" aria-live="polite">
+                    <div class="stack-track">
+                        <div class="stack-item stack-text">
+                            <p>Este crecimiento lento pero constante se explica por un contexto nacional complicado. Los años 80 son conocidos en México como la "Década Perdida".</p>
+                            <ul>
+                                <li><strong>Crisis de la Deuda (1982):</strong> México sufre una severa</li>
+                            </ul>
+                            <p>crisis económica que frena la inversión.</p>
+                        </div>
+                        <div class="stack-item stack-media">
+                            <img src="assets/evento1.jpg" alt="Evento asociado a 1980" />
+                        </div>
+                    </div>
+                </div>
+                <button class="stack-toggle" type="button" aria-label="Ver foto">Ver foto</button>
             </div>
             <span class="year-label-mobile" style="position:absolute; top:8px; left:8px; background:rgba(0,0,0,0.6); color:#fff; padding:4px 8px; border-radius:4px; font-size:14px; display:none;">1980</span>
         </section>
@@ -1532,6 +1634,116 @@
                     });
                 }, { root: null, rootMargin: '300px 0px', threshold: 0.01 });
                 lazyBgs.forEach(el=>io.observe(el));
+            })();
+            
+            // Widget apilado (texto/foto) para el step 8 (1980)
+            (function(){
+                const caption = document.querySelector('section.step.urban-year-image[data-year="1980"] .year-caption');
+                if (!caption) return;
+                const widget = caption.querySelector('.stack-widget');
+                const track = widget ? widget.querySelector('.stack-track') : null;
+                const toggle = caption ? caption.querySelector('.stack-toggle') : null;
+                const textItem = widget ? widget.querySelector('.stack-item.stack-text') : null;
+                const mediaImg = widget ? widget.querySelector('.stack-item.stack-media img') : null;
+                const section = document.querySelector('section.step.urban-year-image[data-year="1980"]');
+                if (!widget || !track || !toggle) return;
+
+                let showingMedia = false;
+                const updateToggleText = () => {
+                    toggle.textContent = showingMedia ? 'Ver texto' : 'Ver foto';
+                    toggle.setAttribute('aria-label', showingMedia ? 'Ver texto' : 'Ver foto');
+                };
+                updateToggleText();
+
+                const fitText = () => {
+                    if (!textItem) return;
+                    const targets = Array.from(textItem.querySelectorAll('p, li, strong'));
+                    let fs = 14;
+                    let lh = 1.4;
+                    let m = 4;
+                    const minFs = 12;
+                    const minLh = 1.3;
+                    const minM = 2;
+                    const widgetH = widget.clientHeight || 240;
+                    const setFs = (v) => targets.forEach(el => { el.style.fontSize = v + 'px'; });
+                    const setLh = (v) => targets.forEach(el => { el.style.lineHeight = v; });
+                    const setMargin = (v) => targets.forEach(el => { el.style.marginTop = v + 'px'; el.style.marginBottom = v + 'px'; });
+                    setFs(fs); setLh(lh); setMargin(m);
+                    let guard = 80;
+                    while (textItem.scrollHeight > widgetH && guard--) {
+                        if (fs > minFs) { fs -= 0.5; setFs(fs); continue; }
+                        if (lh > minLh) { lh -= 0.05; setLh(lh); continue; }
+                        if (m > minM) { m -= 1; setMargin(m); continue; }
+                        break;
+                    }
+                };
+                fitText();
+
+                // El widget ahora usa un alto máximo fijo vía CSS y scroll interno para texto.
+                // No forzamos la altura a la del texto para que la pila sea compacta en la esquina.
+
+                toggle.addEventListener('click', () => {
+                    showingMedia = !showingMedia;
+                    widget.classList.toggle('is-showing-media', showingMedia);
+                    updateToggleText();
+                    if (!showingMedia) fitText();
+                });
+
+                // Gestos táctiles: deslizar para cambiar
+                let startX = 0, startY = 0, dragging = false;
+                const onStart = (clientX, clientY) => { startX = clientX; startY = clientY; dragging = true; };
+                const onMove = (clientX, clientY, ev) => {
+                    if (!dragging) return;
+                    const dx = clientX - startX;
+                    const dy = clientY - startY;
+                    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 12) {
+                        // Evitar que el scroll vertical interfiera cuando el gesto es horizontal
+                        if (ev && typeof ev.preventDefault === 'function') ev.preventDefault();
+                    }
+                };
+                const onEnd = (clientX) => {
+                    if (!dragging) return; dragging = false;
+                    const dx = clientX - startX;
+                    if (dx < -60) { showingMedia = true; }
+                    else if (dx > 60) { showingMedia = false; }
+                    widget.classList.toggle('is-showing-media', showingMedia);
+                    updateToggleText();
+                    if (!showingMedia) fitText();
+                };
+
+                widget.addEventListener('touchstart', (e) => {
+                    const t = e.changedTouches[0];
+                    onStart(t.clientX, t.clientY);
+                }, { passive: true });
+                widget.addEventListener('touchmove', (e) => {
+                    const t = e.changedTouches[0];
+                    onMove(t.clientX, t.clientY, e);
+                }, { passive: false });
+                widget.addEventListener('touchend', (e) => {
+                    const t = e.changedTouches[0];
+                    onEnd(t.clientX);
+                }, { passive: true });
+
+                // Desktop: arrastre con mouse (opcional) + teclado
+                let mouseDown = false;
+                widget.addEventListener('mousedown', (e) => { mouseDown = true; onStart(e.clientX, e.clientY); });
+                widget.addEventListener('mousemove', (e) => { if (mouseDown) onMove(e.clientX, e.clientY, e); });
+                widget.addEventListener('mouseup', (e) => { if (mouseDown) { mouseDown = false; onEnd(e.clientX); } });
+
+                widget.addEventListener('keydown', (e) => {
+                    if (e.key === 'ArrowLeft') { showingMedia = false; }
+                    if (e.key === 'ArrowRight') { showingMedia = true; }
+                    widget.classList.toggle('is-showing-media', showingMedia);
+                    updateToggleText();
+                    if (!showingMedia) fitText();
+                });
+                const io = new IntersectionObserver(entries=>{
+                    entries.forEach(entry=>{ if (entry.isIntersecting) fitText(); });
+                }, { root:null, threshold:0.2 });
+                io.observe(section);
+                window.addEventListener('resize', fitText);
+                // Hacer el widget navegable con teclado
+                widget.setAttribute('tabindex', '0');
             })();
             // La configuración de fondo para la sección de cierre ha sido eliminada
             // El step 30 ahora usa solo el fondo de color sin imagen
