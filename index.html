@@ -328,9 +328,17 @@
             opacity: 0 !important;
         }
 
-        .step.urban-year-image.is-active .year-caption {
-            opacity: 1;
-        }
+        .step.urban-year-image.is-active .year-caption { opacity: 1; }
+        .step.urban-year-image .year-caption { height: auto; }
+        .step.urban-year-image .year-caption .carousel-container { position: relative; width: 100%; max-width: 520px; height: clamp(200px, 50vh, 360px); overflow: hidden; }
+        .step.urban-year-image .year-caption .carousel-track { display: flex; height: 100%; transition: transform 380ms ease; will-change: transform; }
+        .step.urban-year-image .year-caption .carousel-slide { width: 100%; height: 100%; flex: 0 0 100%; }
+        .step.urban-year-image .year-caption .carousel-slide.text-slide { overflow-y: auto; }
+        .step.urban-year-image .year-caption .carousel-slide.image-slide { display: flex; align-items: center; justify-content: center; }
+        .step.urban-year-image .year-caption .carousel-slide.image-slide img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+        .step.urban-year-image .year-caption .carousel-arrow { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.4); color: #fff; border: none; border-radius: 16px; width: 32px; height: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .step.urban-year-image .year-caption .carousel-arrow.prev { left: 8px; }
+        .step.urban-year-image .year-caption .carousel-arrow.next { right: 8px; }
 
         /* Brillo suave interior del vidrio */
         .step.urban-year-image .year-caption::before {
@@ -355,12 +363,13 @@
                 bottom: 12px;
                 max-width: calc(100% - 24px);
                 padding: 12px 14px;
-                /* Mayor legibilidad en móviles: más opacidad y menos blur */
                 background: rgba(255, 255, 255, 0.85);
                 -webkit-backdrop-filter: blur(6px) saturate(110%);
                 backdrop-filter: blur(6px) saturate(110%);
                 border: 1px solid rgba(255, 255, 255, 0.75);
             }
+            .step.urban-year-image .year-caption .carousel-container { width: 100%; }
+            .step.urban-year-image .year-caption .carousel-arrow { width: 28px; height: 28px; }
             .step.urban-year-image .year-caption p { 
                 font-size: 16px; 
                 line-height: 1.5; 
@@ -384,6 +393,8 @@
                 backdrop-filter: blur(5px) saturate(110%);
                 border: 1px solid rgba(255, 255, 255, 0.85);
             }
+            .step.urban-year-image .year-caption .carousel-container { width: 100%; }
+            .step.urban-year-image .year-caption .carousel-arrow { width: 26px; height: 26px; }
             .step.urban-year-image .year-caption p { 
                 font-size: 15px; 
                 line-height: 1.45; 
@@ -448,13 +459,6 @@
             to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        /* Nuevo: animación de revelado deslizante hacia la izquierda (para media en 1980) */
-        @keyframes slideLeftReveal {
-            0% { opacity: 0; transform: translateX(18px); }
-            60% { opacity: 1; transform: translateX(0); }
-            100% { opacity: 1; transform: translateX(0); }
-        }
-
         /* Asignación de animaciones por año (cuando el step está activo) */
         .step.urban-year-image.is-active[data-year="1980"] .year-caption {
             animation: fadeUpSoft 700ms ease-out both;
@@ -495,90 +499,6 @@
         .step.urban-year-image.is-active[data-year="2025"] .year-caption {
             animation: fadeInScale 700ms ease-out both;
             animation-delay: 100ms;
-        }
-
-        /* Widget apilado (stack) para 1980: texto + foto deslizable */
-        /* Para 1980, hacemos el caption más compacto y fijamos un alto máximo del widget */
-        .step.urban-year-image[data-year="1980"] .year-caption { max-width: 420px; display: flex; flex-direction: column; gap: 8px; }
-        .step.urban-year-image[data-year="1980"] .year-caption .stack-widget {
-            position: relative;
-            overflow: hidden;
-            width: 100%;
-            max-height: 240px;
-        }
-        .step.urban-year-image[data-year="1980"] .year-caption .stack-track {
-            display: flex;
-            width: 200%;
-            transform: translateX(0);
-            transition: transform 350ms ease;
-            will-change: transform;
-        }
-        .step.urban-year-image[data-year="1980"] .year-caption .stack-widget.is-showing-media .stack-track {
-            transform: translateX(-100%);
-        }
-        .step.urban-year-image[data-year="1980"] .year-caption .stack-item {
-            flex: 0 0 100%;
-            width: 100%;
-            max-height: 240px; /* igual al widget */
-            overflow-y: auto; /* texto 100% legible dentro del tamaño compacto */
-            -webkit-overflow-scrolling: touch;
-            padding-right: 6px; /* espacio para scrollbar en algunos navegadores */
-        }
-        .step.urban-year-image[data-year="1980"] .year-caption .stack-item.stack-text {
-            background: transparent;
-            color: #000000;
-            border-radius: 10px;
-            padding: 10px 12px;
-        }
-        .step.urban-year-image[data-year="1980"] .year-caption .stack-item.stack-text p,
-        .step.urban-year-image[data-year="1980"] .year-caption .stack-item.stack-text li {
-            font-size: 14px;
-            line-height: 1.4;
-            margin: 4px 0;
-        }
-        .step.urban-year-image[data-year="1980"] .year-caption .stack-item.stack-text ul {
-            margin: 8px 0 0;
-            padding-left: 18px;
-        }
-        @media (max-width: 480px) {
-            .step.urban-year-image[data-year="1980"] .year-caption .stack-item.stack-text p,
-            .step.urban-year-image[data-year="1980"] .year-caption .stack-item.stack-text li {
-                font-size: 13px;
-                line-height: 1.4;
-            }
-        }
-        .step.urban-year-image[data-year="1980"] .year-caption .stack-item.stack-media img {
-            display: block;
-            width: 100%;
-            height: 100%; /* ocupar el alto del widget */
-            object-fit: cover; /* recortar/encajar la imagen al alto disponible */
-            border-radius: 10px;
-            box-shadow: 0 6px 16px rgba(2, 48, 71, 0.18);
-        }
-        .step.urban-year-image[data-year="1980"] .year-caption .stack-toggle {
-            position: relative;
-            align-self: flex-end;
-            margin-top: 8px;
-            background: rgba(255, 255, 255, 0.6);
-            border: 1px solid rgba(0,0,0,0.1);
-            color: #000;
-            border-radius: 10px;
-            padding: 6px 10px;
-            font-size: 14px;
-            cursor: pointer;
-            backdrop-filter: blur(6px);
-        }
-        .step.urban-year-image[data-year="1980"] .year-caption .stack-toggle:focus {
-            outline: 2px solid rgba(2, 48, 71, 0.4);
-            outline-offset: 2px;
-        }
-        @media (max-width: 480px) {
-            .step.urban-year-image[data-year="1980"] .year-caption { max-width: 92vw; }
-            .step.urban-year-image[data-year="1980"] .year-caption .stack-widget { max-height: 200px; }
-            .step.urban-year-image[data-year="1980"] .year-caption .stack-item { max-height: 200px; }
-            .step.urban-year-image[data-year="1980"] .year-caption .stack-toggle {
-                font-size: 13px; padding: 5px 9px; margin-top: 6px;
-            }
         }
         
         .step.has-map {
@@ -1263,24 +1183,24 @@
             
         </section>
 
-        <!-- Step 8: Imagen 1980.jpg  -->
+        <!-- Step 8 -->
         <section class="step urban-year-image lazy-bg" data-step="8" data-year="1980" style="position: relative; overflow: hidden; min-height: 100vh;">
             <div class="year-caption">
-                <div class="stack-widget" aria-live="polite">
-                    <div class="stack-track">
-                        <div class="stack-item stack-text">
+                <div class="year-carousel carousel-container" id="step8-carousel">
+                    <div class="carousel-track">
+                        <div class="carousel-slide text-slide" data-slide="0">
                             <p>Este crecimiento lento pero constante se explica por un contexto nacional complicado. Los años 80 son conocidos en México como la "Década Perdida".</p>
                             <ul>
-                                <li><strong>Crisis de la Deuda (1982):</strong> México sufre una severa</li>
+                                <li><strong>Crisis de la Deuda (1982):</strong> México sufre una severa crisis económica que frena la inversión.</li>
                             </ul>
-                            <p>crisis económica que frena la inversión.</p>
                         </div>
-                        <div class="stack-item stack-media">
-                            <img src="assets/evento1.jpg" alt="Evento asociado a 1980" />
+                        <div class="carousel-slide image-slide" data-slide="1">
+                            <img src="assets/evento1.jpg" alt="Evento 1980" class="carousel-image">
                         </div>
                     </div>
+                    <button class="carousel-arrow prev" aria-label="Anterior">‹</button>
+                    <button class="carousel-arrow next" aria-label="Siguiente">›</button>
                 </div>
-                <button class="stack-toggle" type="button" aria-label="Ver foto">Ver foto</button>
             </div>
             <span class="year-label-mobile" style="position:absolute; top:8px; left:8px; background:rgba(0,0,0,0.6); color:#fff; padding:4px 8px; border-radius:4px; font-size:14px; display:none;">1980</span>
         </section>
@@ -1298,15 +1218,26 @@
             </div>
         </section>
 
-        <!-- Step 10: Imagen 1990.jpg  -->
+        <!-- Step 10: Carrusel texto/imagen (1990) -->
         <section class="step urban-year-image" data-step="10" data-year="1990" style="position: relative; overflow: hidden; min-height: 100vh;">
             <div class="year-caption">
-                <p><strong>1990: Fin de la primera década</strong></p>
-                <p>La huella urbana llega a 6,244 hectáreas, con un crecimiento acumulado del 26.4% desde 1980.</p>
-                <p>Los primeros 10 años fueron de consolidación y supervivencia en un entorno nacional muy adverso.</p>
-                <ul>
-                    <li><strong>Firma del TLCAN (NAFTA) (1992-1994): </strong> Firma del TLCAN (NAFTA) (1992-1994): Abrió a México a una inversión extranjera sin precedentes.</li>
-                </ul>
+                <div class="year-carousel carousel-container" id="step10-carousel">
+                    <div class="carousel-track">
+                        <div class="carousel-slide text-slide" data-slide="0">
+                            <p><strong>1990: Fin de la primera década</strong></p>
+                            <p>La huella urbana llega a 6,244 hectáreas, con un crecimiento acumulado del 26.4% desde 1980.</p>
+                            <p>Los primeros 10 años fueron de consolidación y supervivencia en un entorno nacional muy adverso.</p>
+                            <ul>
+                                <li><strong>Firma del TLCAN (NAFTA) (1992-1994): </strong> Abrió a México a una inversión extranjera sin precedentes.</li>
+                            </ul>
+                        </div>
+                        <div class="carousel-slide image-slide" data-slide="1">
+                            <img src="assets/evento2.jpg" alt="Evento 1990" class="carousel-image">
+                        </div>
+                    </div>
+                    <button class="carousel-arrow prev" aria-label="Anterior">‹</button>
+                    <button class="carousel-arrow next" aria-label="Siguiente">›</button>
+                </div>
             </div>
         </section>
 
@@ -1328,12 +1259,23 @@
         <!-- Step 12: Imagen 2000.jpg  -->
         <section class="step urban-year-image" data-step="12" data-year="2000" style="position: relative; overflow: hidden; min-height: 100vh;">
             <div class="year-caption">
-                <p><strong>2000: Fin de la explosión inicial</strong></p>
-                <p>La huella urbana llega a 9,848 hectáreas, casi el doble que en 1990.</p>
-                <p>Este fue el "milagro" de Cancún, impulsado por la inversión extranjera y un tipo de cambio favorable.</p>
-                <ul>
-                    <li><strong>Ataques del 9/11 (2001):</strong> Frenó en seco el turismo aéreo global.</li>
-                </ul>
+                <div class="year-carousel carousel-container" id="step12-carousel">
+                    <div class="carousel-track">
+                        <div class="carousel-slide text-slide" data-slide="0">
+                            <p><strong>2000: Fin de la explosión inicial</strong></p>
+                            <p>La huella urbana llega a 9,848 hectáreas, casi el doble que en 1990.</p>
+                            <p>Este fue el "milagro" de Cancún, impulsado por la inversión extranjera y un tipo de cambio favorable.</p>
+                            <ul>
+                                <li><strong>Ataques del 9/11 (2001):</strong> Frenó en seco el turismo aéreo global.</li>
+                            </ul>
+                        </div>
+                        <div class="carousel-slide image-slide" data-slide="1">
+                            <img src="assets/evento3.jpg" alt="Evento 2000" class="carousel-image">
+                        </div>
+                    </div>
+                    <button class="carousel-arrow prev" aria-label="Anterior">‹</button>
+                    <button class="carousel-arrow next" aria-label="Siguiente">›</button>
+                </div>
             </div>
         </section>
 
@@ -1355,13 +1297,24 @@
         <!-- Step 14: Imagen 2010.jpg  -->
         <section class="step urban-year-image" data-step="14" data-year="2010" style="position: relative; overflow: hidden; min-height: 100vh;">
             <div class="year-caption">
-                <p><strong>2010: Superando la adversidad</strong></p>
-                <p>La huella urbana llega a 12,516 hectáreas, con un crecimiento acumulado del 153.4% desde 1980.</p>
-                <p>A pesar de todo, la ciudad siguió creciendo, demostrando su increíble capacidad de recuperación.</p>
-                <ul>
-                    <li><strong>Tras sobrevivir a la década anterior, Cancún entra en una nueva fase de expansión masiva.
-                        Recuperación Post-Crisis:</strong>  El capital de inversión regresa con fuerza.</li>
-                </ul>
+                <div class="year-carousel carousel-container" id="step14-carousel">
+                    <div class="carousel-track">
+                        <div class="carousel-slide text-slide" data-slide="0">
+                            <p><strong>2010: Superando la adversidad</strong></p>
+                            <p>La huella urbana llega a 12,516 hectáreas, con un crecimiento acumulado del 153.4% desde 1980.</p>
+                            <p>A pesar de todo, la ciudad siguió creciendo, demostrando su increíble capacidad de recuperación.</p>
+                            <ul>
+                                <li><strong>Tras sobrevivir a la década anterior, Cancún entra en una nueva fase de expansión masiva.
+                                    Recuperación Post-Crisis:</strong>  El capital de inversión regresa con fuerza.</li>
+                            </ul>
+                        </div>
+                        <div class="carousel-slide image-slide" data-slide="1">
+                            <img src="assets/evento4.jpg" alt="Evento 2010" class="carousel-image">
+                        </div>
+                    </div>
+                    <button class="carousel-arrow prev" aria-label="Anterior">‹</button>
+                    <button class="carousel-arrow next" aria-label="Siguiente">›</button>
+                </div>
             </div>
         </section>
 
@@ -1381,15 +1334,26 @@
         <!-- Step 16. Imagen 2020.jpg  -->
         <section class="step urban-year-image" data-step="16" data-year="2020" style="position: relative; overflow: hidden; min-height: 100vh;">
             <div class="year-caption">
-                <p><strong>2020: Metropolización consolidada</strong></p>
-                <p>La huella urbana llega a 17,309 hectáreas, con un crecimiento acumulado del 250.5% desde 1980.</p>
-                <p>Cancún se ha convertido en la metrópoli regional con aeropuerto internacional, servicios especializados y vivienda para la creciente fuerza laboral.</p>
-                <ul>
-                    <li><strong>Pandemia de COVID-19 (2020-2021):</strong> Cancún se convirtió en un "oasis" global, atrayendo turismo y "nómadas digitales".</li>
-                </ul>
-                <ul>
-                    <li><strong>El Tren Maya (2019-Presente):</strong> Ha generado una nueva ola de especulación inmobiliaria.</li>
-                </ul>
+                <div class="year-carousel carousel-container" id="step16-carousel">
+                    <div class="carousel-track">
+                        <div class="carousel-slide text-slide" data-slide="0">
+                            <p><strong>2020: Metropolización consolidada</strong></p>
+                            <p>La huella urbana llega a 17,309 hectáreas, con un crecimiento acumulado del 250.5% desde 1980.</p>
+                            <p>Cancún se ha convertido en la metrópoli regional con aeropuerto internacional, servicios especializados y vivienda para la creciente fuerza laboral.</p>
+                            <ul>
+                                <li><strong>Pandemia de COVID-19 (2020-2021):</strong> Cancún se convirtió en un "oasis" global, atrayendo turismo y "nómadas digitales".</li>
+                            </ul>
+                            <ul>
+                                <li><strong>El Tren Maya (2019-Presente):</strong> Ha generado una nueva ola de especulación inmobiliaria.</li>
+                            </ul>
+                        </div>
+                        <div class="carousel-slide image-slide" data-slide="1">
+                            <img src="assets/evento5.jpg" alt="Evento 2020" class="carousel-image">
+                        </div>
+                    </div>
+                    <button class="carousel-arrow prev" aria-label="Anterior">‹</button>
+                    <button class="carousel-arrow next" aria-label="Siguiente">›</button>
+                </div>
             </div>
         </section>
 
@@ -1635,116 +1599,6 @@
                 }, { root: null, rootMargin: '300px 0px', threshold: 0.01 });
                 lazyBgs.forEach(el=>io.observe(el));
             })();
-            
-            // Widget apilado (texto/foto) para el step 8 (1980)
-            (function(){
-                const caption = document.querySelector('section.step.urban-year-image[data-year="1980"] .year-caption');
-                if (!caption) return;
-                const widget = caption.querySelector('.stack-widget');
-                const track = widget ? widget.querySelector('.stack-track') : null;
-                const toggle = caption ? caption.querySelector('.stack-toggle') : null;
-                const textItem = widget ? widget.querySelector('.stack-item.stack-text') : null;
-                const mediaImg = widget ? widget.querySelector('.stack-item.stack-media img') : null;
-                const section = document.querySelector('section.step.urban-year-image[data-year="1980"]');
-                if (!widget || !track || !toggle) return;
-
-                let showingMedia = false;
-                const updateToggleText = () => {
-                    toggle.textContent = showingMedia ? 'Ver texto' : 'Ver foto';
-                    toggle.setAttribute('aria-label', showingMedia ? 'Ver texto' : 'Ver foto');
-                };
-                updateToggleText();
-
-                const fitText = () => {
-                    if (!textItem) return;
-                    const targets = Array.from(textItem.querySelectorAll('p, li, strong'));
-                    let fs = 14;
-                    let lh = 1.4;
-                    let m = 4;
-                    const minFs = 12;
-                    const minLh = 1.3;
-                    const minM = 2;
-                    const widgetH = widget.clientHeight || 240;
-                    const setFs = (v) => targets.forEach(el => { el.style.fontSize = v + 'px'; });
-                    const setLh = (v) => targets.forEach(el => { el.style.lineHeight = v; });
-                    const setMargin = (v) => targets.forEach(el => { el.style.marginTop = v + 'px'; el.style.marginBottom = v + 'px'; });
-                    setFs(fs); setLh(lh); setMargin(m);
-                    let guard = 80;
-                    while (textItem.scrollHeight > widgetH && guard--) {
-                        if (fs > minFs) { fs -= 0.5; setFs(fs); continue; }
-                        if (lh > minLh) { lh -= 0.05; setLh(lh); continue; }
-                        if (m > minM) { m -= 1; setMargin(m); continue; }
-                        break;
-                    }
-                };
-                fitText();
-
-                // El widget ahora usa un alto máximo fijo vía CSS y scroll interno para texto.
-                // No forzamos la altura a la del texto para que la pila sea compacta en la esquina.
-
-                toggle.addEventListener('click', () => {
-                    showingMedia = !showingMedia;
-                    widget.classList.toggle('is-showing-media', showingMedia);
-                    updateToggleText();
-                    if (!showingMedia) fitText();
-                });
-
-                // Gestos táctiles: deslizar para cambiar
-                let startX = 0, startY = 0, dragging = false;
-                const onStart = (clientX, clientY) => { startX = clientX; startY = clientY; dragging = true; };
-                const onMove = (clientX, clientY, ev) => {
-                    if (!dragging) return;
-                    const dx = clientX - startX;
-                    const dy = clientY - startY;
-                    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 12) {
-                        // Evitar que el scroll vertical interfiera cuando el gesto es horizontal
-                        if (ev && typeof ev.preventDefault === 'function') ev.preventDefault();
-                    }
-                };
-                const onEnd = (clientX) => {
-                    if (!dragging) return; dragging = false;
-                    const dx = clientX - startX;
-                    if (dx < -60) { showingMedia = true; }
-                    else if (dx > 60) { showingMedia = false; }
-                    widget.classList.toggle('is-showing-media', showingMedia);
-                    updateToggleText();
-                    if (!showingMedia) fitText();
-                };
-
-                widget.addEventListener('touchstart', (e) => {
-                    const t = e.changedTouches[0];
-                    onStart(t.clientX, t.clientY);
-                }, { passive: true });
-                widget.addEventListener('touchmove', (e) => {
-                    const t = e.changedTouches[0];
-                    onMove(t.clientX, t.clientY, e);
-                }, { passive: false });
-                widget.addEventListener('touchend', (e) => {
-                    const t = e.changedTouches[0];
-                    onEnd(t.clientX);
-                }, { passive: true });
-
-                // Desktop: arrastre con mouse (opcional) + teclado
-                let mouseDown = false;
-                widget.addEventListener('mousedown', (e) => { mouseDown = true; onStart(e.clientX, e.clientY); });
-                widget.addEventListener('mousemove', (e) => { if (mouseDown) onMove(e.clientX, e.clientY, e); });
-                widget.addEventListener('mouseup', (e) => { if (mouseDown) { mouseDown = false; onEnd(e.clientX); } });
-
-                widget.addEventListener('keydown', (e) => {
-                    if (e.key === 'ArrowLeft') { showingMedia = false; }
-                    if (e.key === 'ArrowRight') { showingMedia = true; }
-                    widget.classList.toggle('is-showing-media', showingMedia);
-                    updateToggleText();
-                    if (!showingMedia) fitText();
-                });
-                const io = new IntersectionObserver(entries=>{
-                    entries.forEach(entry=>{ if (entry.isIntersecting) fitText(); });
-                }, { root:null, threshold:0.2 });
-                io.observe(section);
-                window.addEventListener('resize', fitText);
-                // Hacer el widget navegable con teclado
-                widget.setAttribute('tabindex', '0');
-            })();
             // La configuración de fondo para la sección de cierre ha sido eliminada
             // El step 30 ahora usa solo el fondo de color sin imagen
             
@@ -1795,6 +1649,29 @@
                 bgVideo.addEventListener('loadedmetadata', handleResize);
             }
         });
+    </script>
+    <script>
+        (function(){
+            var carousels = document.querySelectorAll('.year-carousel.carousel-container');
+            if (!carousels.length) return;
+            carousels.forEach(function(carousel){
+                var track = carousel.querySelector('.carousel-track');
+                var slides = track ? track.querySelectorAll('.carousel-slide') : [];
+                if (!track || !slides.length) return;
+                var prev = carousel.querySelector('.carousel-arrow.prev');
+                var next = carousel.querySelector('.carousel-arrow.next');
+                var idx = 0;
+                function update(){ var w = carousel.clientWidth; track.style.transform = 'translateX(' + (-idx*w) + 'px)'; }
+                update();
+                window.addEventListener('resize', update);
+                if (prev) prev.addEventListener('click', function(e){ e.stopPropagation(); idx = (idx - 1 + slides.length) % slides.length; update(); });
+                if (next) next.addEventListener('click', function(e){ e.stopPropagation(); idx = (idx + 1) % slides.length; update(); });
+                var tsX = 0, tsY = 0, teX = 0, teY = 0;
+                carousel.addEventListener('touchstart', function(e){ var t=e.touches[0]; tsX=t.clientX; tsY=t.clientY; });
+                carousel.addEventListener('touchmove', function(e){ var t=e.touches[0]; teX=t.clientX; teY=t.clientY; });
+                carousel.addEventListener('touchend', function(){ var dx=teX-tsX, dy=teY-tsY; if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) { if (dx < 0) { idx = (idx + 1) % slides.length; } else { idx = (idx - 1 + slides.length) % slides.length; } update(); } tsX=tsY=teX=teY=0; });
+            });
+        })();
     </script>
 </body>
 </html>
