@@ -966,11 +966,9 @@
     <script>
         // Función específica para cerrar el mapa directamente desde el botón X
         function cerrarMapaAhora() {
-            console.log("¡BOTÓN X PRESIONADO! - Cerrando mapa ahora");
             
             // Cerrar el mapa usando la función de Mapbox
             if (window.mapboxHelper && typeof window.mapboxHelper.hideMapOverlay === 'function') {
-                console.log("Cerrando mapa usando mapboxHelper");
                 window.mapboxHelper.hideMapOverlay();
             }
             
@@ -984,7 +982,6 @@
             
             // Intentar método programático general
             if (typeof window.hideMapVisuals === 'function') {
-                console.log("Usando hideMapVisuals");
                 try {
                     window.hideMapVisuals();
                 } catch(e) {
@@ -992,7 +989,6 @@
                 }
             }
             
-            console.log("Proceso de cierre de mapa completado");
             
             // Para evitar propagación de eventos
             return false;
@@ -1020,16 +1016,12 @@
             const emergencyButton = document.getElementById('emergency-close-btn');
             if (emergencyButton) {
                 emergencyButton.style.display = (mapVisible && currentStepHasMap) ? 'flex' : 'none';
-                console.log("Estado botón X:", (mapVisible && currentStepHasMap) ? "VISIBLE" : "oculto", 
-                           "Paso con mapa:", currentStepHasMap ? "SÍ" : "NO",
-                           mapContainer ? (mapContainer.classList.contains('overlay') ? "(overlay)" : "(integrado)") : "(sin contenedor)");
             }
         }, 1000);
         
         // Función de emergencia global para cerrar el mapa con Escape
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
-                console.log('¡Escape presionado! Intentando cerrar mapa...');
                 cerrarMapaAhora();
             }
         });
