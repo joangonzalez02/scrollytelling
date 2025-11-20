@@ -30,7 +30,9 @@ if (!fs.existsSync(distDir)) {
     const code = fs.readFileSync(srcPath, 'utf8');
     try {
       const result = await minify(code, {
-        compress: true,
+        compress: {
+          pure_funcs: ['console.log']
+        },
         mangle: true,
         format: { comments: false }
       });

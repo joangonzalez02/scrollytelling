@@ -932,13 +932,8 @@ window.mapboxHelper = { updateMapForStep, showMapOverlay, hideMapOverlay };
             // Solo mostrar panel de lustros en step 4 con capa de crecimiento
             const shouldShowLustroPanel = hasCrecimiento && targetStepId === 4;
             
-            console.log('🔍 DEBUG: hasCrecimiento:', hasCrecimiento);
-            console.log('🔍 DEBUG: targetStepId para panel:', targetStepId);
-            console.log('🔍 DEBUG: shouldShowLustroPanel:', shouldShowLustroPanel);
-            
             toggleLustroPanel(shouldShowLustroPanel);
             if (shouldShowLustroPanel) {
-                console.log('🔍 DEBUG: Aplicando filtro de lustros');
                 // Aplicar filtro una vez que la capa exista
                 applyLustroFilterWhenReady();
                 // En este caso, ocultamos la leyenda (solo checkboxes)
