@@ -86,7 +86,7 @@ const mapStepsConfig = {
             style: 'mapbox://styles/mapbox/light-v10',
             layers: []
         },
-        // Step 25: Densidad poblacional por distrito 
+        // Step 25: Grado de marginación (GM_2020)
         "25": {
             center: [-86.8515, 21.1619],
             zoom: 11,
@@ -95,33 +95,33 @@ const mapStepsConfig = {
             style: 'mapbox://styles/mapbox/light-v10',
             layers: [
                 {
-                    id: 'densidad-poblacional-distritos',
+                    id: 'indice-marginacion-distritos',
                     type: 'fill',
                     source: {
                         type: 'geojson',
-                        data: 'public/data/densidad-poblacional-por-distrito.geojson'
+                        data: 'public/data/indice-marginacion.geojson'
                     },
                     paint: {
                         'fill-color': [
-                            'step',
-                            ['coalesce', ['to-number', ['get', 'DEN_HAB_HA']], 0],
-                            '#f1faee', // baja densidad (claro)
-                            10, '#a8dadc', 
-                            30, '#457b9d',
-                            60, '#1d3557',
-                            100, '#e63946'  // alta densidad (intenso)
+                            'match', ['get', 'GM_2020'],
+                            'Muy alto', '#5e0a26',
+                            'Alto', '#a11742',
+                            'Medio', '#d24d71',
+                            'Bajo', '#ee89a6',
+                            'Muy bajo', '#f9c2d1',
+                            /* default */ '#cccccc'
                         ],
                         'fill-opacity': 0.8,
-                        'fill-outline-color': '#555'
+                        'fill-outline-color': '#ffffff'
                     },
                     popup: (properties) => {
-                        const pob = Number(properties.POBTOT || 0);
-                        const den = Number(properties.DEN_HAB_HA || 0);
-                        const sup = Number(properties.SUPERFICIE_HA || 0);
-                        return `<h3>Distrito ${properties.fid ?? ''}</h3>
-                                <p>Población: ${isFinite(pob) ? pob.toLocaleString() : 'N/D'} habitantes</p>
-                                <p>Densidad: ${isFinite(den) ? den.toFixed(1) : 'N/D'} hab/ha</p>
-                                <p>Superficie: ${isFinite(sup) ? sup.toFixed(1) : 'N/D'} hectáreas</p>`;
+                        const pob = Number(properties.POB_TOTAL || properties.POBTOT || 0);
+                        const grado = properties.GM_2020 || 'N/D';
+                        const im = Number(properties.IM_2020 || 0);
+                        return `<h3>Área ${properties.fid ?? ''}</h3>
+                                <p><strong>Grado de marginación:</strong> ${grado}</p>
+                                <p><strong>Índice de marginación (IM 2020):</strong> ${isFinite(im) ? im.toFixed(2) : 'N/D'}</p>
+                                <p><strong>Población 2020:</strong> ${isFinite(pob) ? pob.toLocaleString() : 'N/D'} habitantes</p>`;
                     }
                 }
             ]
@@ -447,13 +447,12 @@ function showMapOverlay(config) {
     
     // Preparar manejador para reinsertar las capas al terminar de cargar el estilo
     const onStyleLoad = async () => {
-        console.log('🎨 Estilo del mapa cargado, añadiendo capas...');
         // Eliminar capas existentes si las hay
-    const layersToRemove = ['densidad-poblacional','densidad-poblacional-distritos','tasa-cambio-poblacional','cambio-poblacional-ageb','supermanzanas-iniciales','crecimiento-urbano'];
+    const layersToRemove = ['densidad-poblacional','densidad-poblacional-distritos','indice-marginacion-distritos','tasa-cambio-poblacional','cambio-poblacional-ageb','supermanzanas-iniciales','crecimiento-urbano'];
         layersToRemove.forEach(layerId => { if (mapboxMap.getLayer(layerId)) { mapboxMap.removeLayer(layerId); console.log(`🗑️ Capa ${layerId} eliminada`); } });
         
         // Eliminar fuentes existentes si las hay
-    const sourcesToRemove = ['densidad-poblacional-src','densidad-poblacional-distritos-src','tasa-cambio-poblacional-src','cambio-poblacional-ageb-src','supermanzanas-iniciales-src','crecimiento-urbano-src'];
+    const sourcesToRemove = ['densidad-poblacional-src','densidad-poblacional-distritos-src','indice-marginacion-distritos-src','tasa-cambio-poblacional-src','cambio-poblacional-ageb-src','supermanzanas-iniciales-src','crecimiento-urbano-src'];
         sourcesToRemove.forEach(sourceId => { if (mapboxMap.getSource(sourceId)) { mapboxMap.removeSource(sourceId); console.log(`🗑️ Fuente ${sourceId} eliminada`); } });
         
         // Encontrar una capa de referencia para insertar por debajo de etiquetas (símbolos)
@@ -890,11 +889,12 @@ window.mapboxHelper = { updateMapForStep, showMapOverlay, hideMapOverlay };
 
   // Map human titles per step/layer
   const layerTitles = {
-                'crecimiento-urbano': 'Expansión urbana por periodo',
-        'tasa-cambio-poblacional': 'Tasa de cambio poblacional (2010–2020)',
-        'cambio-poblacional-ageb': 'Tasa de cambio poblacional (2010–2020)',
-        'densidad-poblacional': 'Densidad poblacional (hab/ha)',
-        'densidad-poblacional-distritos': 'Densidad poblacional (hab/ha)'
+      'crecimiento-urbano': 'Expansión urbana por periodo',
+      'tasa-cambio-poblacional': 'Tasa de cambio poblacional (2010–2020)',
+      'cambio-poblacional-ageb': 'Tasa de cambio poblacional (2010–2020)',
+      'densidad-poblacional': 'Densidad poblacional (hab/ha)',
+      'densidad-poblacional-distritos': 'Densidad poblacional (hab/ha)',
+      'indice-marginacion-distritos': 'Grado de marginación (GM 2020)'
   };
 
   // Override
@@ -946,6 +946,7 @@ window.mapboxHelper = { updateMapForStep, showMapOverlay, hideMapOverlay };
             } else {
                 // Para otras capas, construir y mostrar la leyenda dinámicamente
                 const preferredOrder = [
+                    'indice-marginacion-distritos',
                     'densidad-poblacional',
                     'densidad-poblacional-distritos',
                     'tasa-cambio-poblacional',
