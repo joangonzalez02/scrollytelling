@@ -71,7 +71,6 @@
         if (typeof mapboxgl === 'undefined') {
             console.error('❌ Mapbox GL JS no está cargado');
         } else {
-            console.log('✅ Mapbox GL JS cargado y disponible, versión:', mapboxgl.version);
         }
     </script>
     <script src="dist/mapbox-integration.min.js" defer></script>
@@ -1060,6 +1059,7 @@
                 <source src="assets/1.mp4" type="video/mp4">
                 Tu navegador no soporta video HTML5.
             </video>
+            <button id="bgVideoPlayBtn" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#023047;color:#fff;padding:12px 20px;border:none;border-radius:6px;font-size:16px;cursor:pointer;display:none;z-index:10;">Reproducir video</button>
             
             <!-- Capa de color con transparencia mayor -->
             <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(2, 48, 71, 0.4); z-index: -1;"></div>
@@ -1376,11 +1376,12 @@
             </div>
         </section>
         
-        <!-- Step 19: Mapa de tasa de cambio poblacional por AGEB (2010-2020)  -->
-        <section class="step has-map" data-step="19" data-map="true" data-map-layer="cambio_poblacional_ageb" data-map-view="ciudad_central">
+        <!-- Step 19: Cambio porcentual de población por AGEB (2010–2020) -->
+        <section class="step has-map" data-step="19" data-map="true" data-map-layer="cambio-poblacional-ageb" data-map-view="ciudad_central">
             <div class="step-content">
-                <h2>Mapa de tasa de cambio poblacional por AGEB (2010-2020)</h2>
-                <p>Visualización del cambio poblacional en la ciudad, mostrando cómo las zonas centrales perdieron población mientras las periferias experimentaron crecimiento acelerado.</p>
+                <h2>Cambio porcentual de población por AGEB (2010–2020)</h2>
+                <p>El mapa muestra <strong>el cambio porcentual de población por AGEB entre 2010 y 2020</strong>. Los tonos más claros indican pérdida de población y los tonos verdes oscuros crecimiento intenso.</p>
+                <p>La periferia absorbió gran parte del aumento demográfico mientras áreas centrales experimentaron estanque o retrocesos, acentuando la expansión dispersa.</p>
             </div>
         </section>
 
@@ -1527,11 +1528,16 @@
             </div>
         </section>
 
-        <!-- Step 31: Imagen 26.jpg  -->
-        <section class="step" data-step="31" style="position: relative; min-height: 100vh;">
-            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url('assets/26.jpg'); background-size: cover; background-position: center;"></div>
-            <div class="photo-credit">
-                Fotografía: Parque de la Equidad en Cancún. Fuente: <a href="https://cgc.qroo.gob.mx/avanza-con-paso-firme-el-parque-de-la-equidad-en-cancun/" target="_blank" rel="noopener" title="Avanza con paso firme el Parque de la Equidad en Cancún - cgc.qroo.gob.mx">cgc.qroo.gob.mx</a>
+        <!-- Step 31: Mapa de dimensiones de caminar -->
+        <section class="step has-map" data-step="31" data-map="true" data-map-layer="dimensiones_caminar" data-map-view="dimensiones" style="position: relative; min-height: 100vh;">
+            <div class="step-content">
+                <h2>Accesibilidad a Dimensiones de Caminar</h2>
+                <p>Este mapa experimental muestra la concentración de oportunidades cercanas para <strong>abastecerse, aprender, circular, cuidados, disfrutar, reutilizar / reparar y trabajar</strong>.</p>
+                <p>El color sintetiza el <strong>total agregado</strong> de puntos evaluados por dimensión en cada polígono: valores más intensos indican mayor diversidad y cantidad de funciones accesibles caminando.</p>
+                <p>Las categorías se calculan sumando los campos:<br>
+                    <code>Eval_D_abastecerse_cnt</code>, <code>Eval_aprender_cnt</code>, <code>Eval_D_circular_cnt</code>, <code>Eval_D_cuidados_cnt</code>, <code>Eval_D_disfrutar_cnt</code>, <code>Eval_D_reutil_reparar_cnt</code>, <code>Eval_D_trabajar_cnt</code>.
+                </p>
+                <p><em>Nota:</em> Esta capa apoya la visión de una ciudad de proximidad donde múltiples necesidades pueden resolverse a poca distancia.</p>
             </div>
         </section>
 
@@ -1609,32 +1615,39 @@
             
             // Asegurarnos de que el video de fondo se reproduce correctamente
             const bgVideo = document.getElementById('background-video');
+            const playBtn = document.getElementById('bgVideoPlayBtn');
             if (bgVideo) {
-                console.log('Video de fondo encontrado, asegurando reproducción...');
-                
-                // Forzar la reproducción del video sin añadir botón
-                const playPromise = bgVideo.play();
-                
-                if (playPromise !== undefined) {
-                    playPromise.then(_ => {
-                        console.log('Video de fondo reproduciendo correctamente');
-                    }).catch(error => {
-                        console.warn('No se pudo reproducir el video automáticamente:', error);
-                        // En caso de error, simplemente volvemos a intentar reproducir el video
-                        setTimeout(() => {
-                            bgVideo.play().catch(e => console.log('Segundo intento fallido, pero continuamos sin botón'));
-                        }, 1000);
+                bgVideo.muted = true; // asegurar mute para autoplay
+                const attemptPlay = () => {
+                    const playPromise = bgVideo.play();
+                    if (playPromise && typeof playPromise.then === 'function') {
+                        playPromise.then(() => {
+                            if (playBtn) playBtn.style.display = 'none';
+                        }).catch(err => {
+                            console.warn('Autoplay rechazado, esperando interacción del usuario:', err);
+                            if (playBtn) playBtn.style.display = 'block';
+                        });
+                    }
+                };
+                attemptPlay();
+                if (playBtn) {
+                    playBtn.addEventListener('click', () => {
+                        playBtn.disabled = true;
+                        attemptPlay();
+                        setTimeout(() => { playBtn.disabled = false; }, 1200);
                     });
                 }
-                
-                // Asegurarnos de que el video se mantenga en proporción y cubra la pantalla
+                // Un solo intento adicional tras primera interacción global
+                const oneTimeRetry = () => attemptPlay();
+                document.addEventListener('click', oneTimeRetry, { once: true });
+                document.addEventListener('keydown', oneTimeRetry, { once: true });
+                // Mantener proporciones del video
                 const handleResize = () => {
                     const step1 = document.querySelector('section[data-step="1"]');
-                    if (step1 && bgVideo) {
+                    if (step1 && bgVideo.videoWidth && bgVideo.videoHeight) {
                         const aspectRatio = bgVideo.videoWidth / bgVideo.videoHeight;
                         const containerWidth = step1.offsetWidth;
                         const containerHeight = step1.offsetHeight;
-                        
                         if ((containerWidth / containerHeight) < aspectRatio) {
                             bgVideo.style.width = 'auto';
                             bgVideo.style.height = '100%';
@@ -1644,8 +1657,6 @@
                         }
                     }
                 };
-                
-                // Llamar al resize inicial y en cada cambio de tamaño
                 window.addEventListener('resize', handleResize);
                 bgVideo.addEventListener('loadedmetadata', handleResize);
             }

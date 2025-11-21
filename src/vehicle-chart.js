@@ -57,6 +57,23 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function parseCsvRow(row) {
+        // Helper robusto para convertir a número
+        const toNum = (val) => {
+            if (val === undefined || val === null) return null;
+            if (typeof val === 'string') {
+                const cleaned = val
+                    .trim()
+                    .replace(/\u00a0/g, '') // espacios no separables
+                    .replace(/,/g, '')       // quitar separadores de miles
+                    .replace(/\s+/g, '')
+                    .replace(/%$/, '');
+                if (cleaned === '' || cleaned === '-' ) return null;
+                const num = +cleaned;
+                return isFinite(num) ? num : null;
+            }
+            return isFinite(val) ? +val : null;
+        };
+
         // Soportar variaciones y mojibake en encabezados (e.g., "A??o")
         const originalKeys = Object.keys(row);
         const map = {};
@@ -64,34 +81,26 @@ document.addEventListener('DOMContentLoaded', function () {
             map[normalizeKey(k)] = row[k];
         }
 
-        // Año: preferir claves conocidas; si no existen, usar el primer valor de la fila como fallback
-        let year = +map['ano'] || +map['anio'] || +map['year'];
-        if (!year) {
-            // Fallback por posición (primera columna) ante mojibake tipo "A??o"
-            const firstVal = row[originalKeys[0]];
-            year = +firstVal;
+        // Año
+        let year = toNum(map['ano']) ?? toNum(map['anio']) ?? toNum(map['year']);
+        if (year == null) {
+            year = toNum(row[originalKeys[0]]);
         }
 
-        // Vehículos totales: preferir claves conocidas; fallback por heurística o segunda columna
-        let vehicles = +map['vehiculos_totales'] || +map['vehiculos'] || +map['total'];
-        if (!vehicles) {
-            // Buscar alguna clave que contenga 'vehicul' y no 'por_vivienda'
+        // Vehículos
+        let vehicles = toNum(map['vehiculos_totales']) ?? toNum(map['vehiculos']) ?? toNum(map['total']);
+        if (vehicles == null) {
             const vehKey = Object.keys(map).find(k => k.includes('vehicul') && !k.includes('por_vivienda'));
-            if (vehKey) {
-                vehicles = +map[vehKey];
-            } else if (originalKeys.length > 1) {
-                // Fallback por posición: segunda columna
-                vehicles = +row[originalKeys[1]];
-            }
+            if (vehKey) vehicles = toNum(map[vehKey]);
+            if (vehicles == null && originalKeys.length > 1) vehicles = toNum(row[originalKeys[1]]);
         }
 
         // Viviendas
         const viviendasRaw = map['viviendas'] || map['vivienda'] || map['viviendas_totales'] || map['houses'] || map['housing'];
-        const dwellings = viviendasRaw === undefined || viviendasRaw === '' ? null : +viviendasRaw;
+        const dwellings = toNum(viviendasRaw);
 
         // Autos por vivienda
-        const autosRaw = map['autos_por_vivienda'];
-        const autosPerDwelling = autosRaw === undefined || autosRaw === '' ? null : +autosRaw;
+        const autosPerDwelling = toNum(map['autos_por_vivienda']);
 
         return { year, vehicles, dwellings, autosPerDwelling };
     }
@@ -243,23 +252,20 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         // Escalas
-        const years = state.data.map(d => d.year);
+        const years = state.data.map(d => d.year).filter(y => y != null && isFinite(y));
         const x = d3.scaleBand()
             .domain(years)
             .range([0, dims.innerW])
             .padding(0.2);
-
+        const vehMax = d3.max(state.data, d => isFinite(d.vehicles) ? d.vehicles : 0) || 0;
         const yLeft = d3.scaleLinear()
-            .domain([0, d3.max(state.data, d => d.vehicles) * 1.1]).nice()
+            .domain([0, vehMax * 1.1]).nice()
             .range([dims.innerH, 0]);
 
-        const maxDwellings = d3.max(state.data, d => d.dwellings || 0) || 1;
+        const maxDwellings = d3.max(state.data, d => isFinite(d.dwellings) ? d.dwellings : 0) || 1;
         
         // Unificar escala: usar el máximo de ambos datasets para que ambos ejes sean coherentes
-        const maxBoth = Math.max(
-            d3.max(state.data, d => d.vehicles) * 1.1,
-            maxDwellings * 1.15
-        );
+        const maxBoth = Math.max(vehMax * 1.1, maxDwellings * 1.15);
         
         const yRight = d3.scaleLinear()
             .domain([0, maxBoth]).nice()
@@ -270,8 +276,10 @@ document.addEventListener('DOMContentLoaded', function () {
             .tickValues(years)
             .tickFormat(d3.format('d'));
 
-        const yAxisLeft = d3.axisLeft(yLeft).ticks(6).tickFormat(d => formatK(d));
-        const yAxisRight = d3.axisRight(yRight).ticks(5).tickFormat(d => formatK(d));
+        // Formato de miles con separadores para mayor legibilidad
+        const thousands = d3.format(',');
+        const yAxisLeft = d3.axisLeft(yLeft).ticks(6).tickFormat(thousands);
+        const yAxisRight = d3.axisRight(yRight).ticks(5).tickFormat(thousands);
 
         // Ajustar posición del eje X
         const xAxisYOffset = Math.max(20, font.axis + 8);
@@ -345,34 +353,26 @@ document.addEventListener('DOMContentLoaded', function () {
             .attr('fill', `url(#${gradientId})`)
             .attr('rx', Math.max(2, barWidth * 0.08));
 
-        // Etiquetas de valores de barras
-        const valueLabels = g.selectAll('.value-label')
-            .data(state.data, d => d.year)
-            .enter()
-            .append('text')
-            .attr('class', 'value-label')
-            .style('display', 'none');
-
         // Línea (Viviendas)
-        const defined = d => d.dwellings != null && !isNaN(d.dwellings);
+        const defined = d => d.dwellings != null && isFinite(d.dwellings) && isFinite(d.year);
         const line = d3.line()
             .defined(defined)
             .x(d => x(d.year) + x.bandwidth() / 2)
             .y(d => yRight(d.dwellings))
             .curve(d3.curveMonotoneX);
-
+        const lineData = state.data.filter(defined);
         const path = g.append('path')
-            .datum(state.data.filter(defined))
+            .datum(lineData)
             .attr('class', 'dwellings-line')
             .attr('fill', 'none')
             .attr('stroke', palette.accent)
             .attr('stroke-width', 3)
-            .attr('d', line)
+            .attr('d', lineData.length ? line(lineData) : null)
             .style('pointer-events', 'none');
 
         // Puntos de la línea (Viviendas)
         const points = g.selectAll('.dwellings-point')
-            .data(state.data.filter(defined))
+            .data(lineData)
             .enter()
             .append('circle')
             .attr('class', 'dwellings-point')
@@ -520,7 +520,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         svg.append('text')
             .attr('transform', 'rotate(-90)')
-            .attr('y', dims.margin.left + dims.innerW + 40)
+            .attr('y', dims.margin.left + dims.innerW + 60)
             .attr('x', -(dims.margin.top + dims.innerH / 2))
             .attr('dy', '1em')
             .style('text-anchor', 'middle')
@@ -603,10 +603,14 @@ document.addEventListener('DOMContentLoaded', function () {
         g.selectAll('.annotation-group.marker-2006').remove();
         g.selectAll('.marker-2006-line').remove();
         g.selectAll('.marker-2006-point').remove();
-        const highlight = state.data.find(d => d.year === 2006);
+        const highlight = state.data.find(d => d.year === 2006 && isFinite(d.vehicles));
         if (highlight && dims.innerW > 420) {
             const annX = x(2006) + x.bandwidth() / 2;
             const annY = yLeft(highlight.vehicles); // punto sobre la barra
+            // Proteger contra valores NaN que rompen d3-annotation
+            if (!isFinite(annX) || !isFinite(annY)) {
+                console.warn('Anotación 2006 omitida por coordenadas inválidas');
+            } else {
 
             // Línea vertical roja discontinua
             // (creamos y luego la elevamos con .raise() para que quede por encima de todos los elementos)
@@ -650,28 +654,32 @@ document.addEventListener('DOMContentLoaded', function () {
                 y: labelY
             }];
 
-            const makeAnnotations = d3.annotation()
-                .type(d3.annotationLabel)
-                .annotations(annotations);
+            let annGroup = null;
+            try {
+                const makeAnnotations = d3.annotation()
+                    .type(d3.annotationLabel)
+                    .annotations(annotations);
+                annGroup = svg.append('g')
+                    .attr('class', 'annotation-group marker-2006')
+                    .attr('opacity', 0)
+                    .style('pointer-events', 'none')
+                    .call(makeAnnotations);
+            } catch(e) {
+                console.warn('Anotación 2006 falló y fue omitida:', e);
+            }
 
-            const annGroup = svg.append('g')
-                .attr('class', 'annotation-group marker-2006')
-                .attr('opacity', 0)
-                .style('pointer-events', 'none')
-                .call(makeAnnotations);
-
-            // Ajustes de estilo: reducir tamaño de fuente, asegurar que no salga del área
-            annGroup.selectAll('text').style('font-size', '12px');
-            annGroup.selectAll('.annotation-note').attr('transform', null);
-            annGroup.selectAll('.annotation-note-title, .annotation-note-label, .annotation-note').style('fill', '#E63946');
-
-            annGroup.transition()
-                .delay(700)
-                .duration(700)
-                .attr('opacity', 1);
-            // Elevar la línea y el punto para que queden por encima de todos los demás elementos
-            svg.selectAll('.marker-2006-line').raise();
-            svg.selectAll('.marker-2006-point').raise();
+            if (annGroup) {
+                annGroup.selectAll('text').style('font-size', '12px');
+                annGroup.selectAll('.annotation-note').attr('transform', null);
+                annGroup.selectAll('.annotation-note-title, .annotation-note-label, .annotation-note').style('fill', '#E63946');
+                annGroup.transition()
+                    .delay(700)
+                    .duration(700)
+                    .attr('opacity', 1);
+                svg.selectAll('.marker-2006-line').raise();
+                svg.selectAll('.marker-2006-point').raise();
+            }
+            }
         }
 
         // Animaciones de entrada (solo primera vez)
@@ -680,12 +688,6 @@ document.addEventListener('DOMContentLoaded', function () {
             bars.transition(t)
                 .attr('y', d => yLeft(d.vehicles))
                 .attr('height', d => dims.innerH - yLeft(d.vehicles));
-
-            // Label aparece luego de barras
-            valueLabels.transition().delay(700).duration(400)
-                .style('opacity', 1)
-                .attr('y', d => yLeft(d.vehicles) - 8);
-
             // Línea dibujada con trazo animado
             const totalLen = path.node().getTotalLength();
             path
@@ -704,17 +706,13 @@ document.addEventListener('DOMContentLoaded', function () {
             bars
                 .attr('y', d => yLeft(d.vehicles))
                 .attr('height', d => dims.innerH - yLeft(d.vehicles));
-            valueLabels
-                .style('opacity', 1)
-                .attr('y', d => yLeft(d.vehicles) - 8)
-                .style('font-size', `${font.labels}px`);
             points
                 .attr('r', Math.min(5, Math.max(3, barWidth * 0.2)));
         }
 
         // Guardar referencias para enter/exit animations
         state.refs = {
-            g, bars, labels: valueLabels, path, points, overlay,
+            g, bars, path, points, overlay,
             dims,
             scales: { x, yLeft, yRight }
         };
@@ -777,6 +775,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 .attr('y', d => scales.yLeft(d.vehicles))
                 .attr('height', d => dims.innerH - scales.yLeft(d.vehicles));
             labels.style('opacity', 0)
+                .text(d => d3.format(',')(d.vehicles))
                 .attr('y', d => scales.yLeft(d.vehicles) - 8)
                 .transition().delay(600).duration(350)
                 .style('opacity', 1);

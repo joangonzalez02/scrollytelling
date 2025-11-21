@@ -7,6 +7,9 @@
 let mapboxMap = null;
 // Track current base style to avoid unnecessary setStyle calls
 let currentBaseStyle = 'mapbox://styles/mapbox/light-v10';
+// Flag de depuración (poner en true para ver logs detallados)
+const MAPBOX_DEBUG = false;
+const dbg = (...args) => { if (MAPBOX_DEBUG) console.log('[MAPBOX]', ...args); };
 
 // Lustros disponibles y paleta monocromática basada en colores globales (azules)
 const LUSTROS = [1980, 1985, 1990, 1995, 2000, 2005, 2010, 2015, 2020, 2025];
@@ -33,13 +36,13 @@ const mapboxAccessToken = 'pk.eyJ1IjoiMHhqZmVyIiwiYSI6ImNtZjRjNjczdTA0MGsya3Bwb3
 // Configuración de cuándo mostrar el mapa en cada step
 const mapStepsConfig = {
     // Steps donde el mapa debe estar visible (solo los que realmente tienen mapa)
-    visibleSteps: [19, 25],
+    visibleSteps: [19, 25, 31],
     
     // Configuración específica para cada paso que muestra el mapa
     stepConfigs: {
-        // Step 19: Cambio poblacional por AGEB 
+        // Step 19: Cambio porcentual poblacional (2010–2020) por AGEB
         "19": {
-            center: [-86.8515, 21.1619], 
+            center: [-86.8515, 21.1619],
             zoom: 11,
             pitch: 0,
             bearing: 0,
@@ -50,29 +53,36 @@ const mapStepsConfig = {
                     type: 'fill',
                     source: {
                         type: 'geojson',
-                        data: 'public/data/tasa-de-cambio-poblacional-por-AGEB.geojson'
+                        data: 'public/data/cambio-poblacional.geojson'
                     },
                     paint: {
-                        // Manejo robusto de valores nulos: si 'pobtot' no existe, usar 0 para asignar el color por defecto
+                        // Rampa monocromática verde claro (negativos) a verde oscuro (positivos)
                         'fill-color': [
                             'step',
-                            ['coalesce', ['to-number', ['get', 'pobtot']], 0],
-                            '#f7f4f9', // muy bajo (casi blanco)
-                            100, '#e7e1ef', // bajo 
-                            500, '#d4b9da', // medio-bajo
-                            1000, '#c994c7', // medio
-                            5000, '#df65b0', // medio-alto
-                            10000, '#e7298a', // alto 
-                            50000, '#ce1256', // muy alto
-                            100000, '#91003f'  // extremo
+                            ['coalesce', ['to-number', ['get', 'p100_dife_pob']], 0],
+                            '#f7fcf5',      // -100% a -16%
+                            -16, '#e5f5e0', // -16% a -8.8%
+                            -8.8, '#c7e9c0',// -8.8% a -2%
+                            -2, '#a1d99b',  // -2% a 7.5%
+                            7.5, '#74c476', // 7.5% a 30.5%
+                            30.5, '#41ab5d',// 30.5% a 82.5%
+                            82.5, '#238b45',// 82.5% a 100%
+                            100, '#006d2c', // 100% a 101.9%
+                            101.9, '#00441b'// 101.9% a 73200%
                         ],
-                        'fill-opacity': 0.8,
+                        'fill-opacity': 0.85,
                         'fill-outline-color': '#ffffff'
                     },
-                    popup: (properties) => {
-                        return `<h3>AGEB</h3>
-                                <p><strong>Población total:</strong> ${(properties.pobtot || 0).toLocaleString()} habitantes</p>
-                                <p><strong>Supermanzana:</strong> ${properties.supermanzana || 'N/A'}</p>`;
+                    popup: (props) => {
+                        const pob2020 = Number(props.POBTOT || props.Pob2020 || 0);
+                        const pob2010 = Number(props.Pob2010 || 0);
+                        const difAbs = Number(props.Dif_pob || (pob2020 - pob2010));
+                        const difPct = Number(props.p100_dife_pob || ((pob2010 !== 0) ? ((pob2020 - pob2010) / pob2010) * 100 : 0));
+                        return `<h3>AGEB ${props.CVE_AGEB || ''}</h3>
+                                <p><strong>Población 2010:</strong> ${isFinite(pob2010) ? pob2010.toLocaleString() : 'N/D'} hab.</p>
+                                <p><strong>Población 2020:</strong> ${isFinite(pob2020) ? pob2020.toLocaleString() : 'N/D'} hab.</p>
+                                <p><strong>Diferencia absoluta:</strong> ${isFinite(difAbs) ? difAbs.toLocaleString() : 'N/D'} hab.</p>
+                                <p><strong>Cambio porcentual:</strong> ${isFinite(difPct) ? difPct.toFixed(1) : 'N/D'}%</p>`;
                     }
                 }
             ]
@@ -125,16 +135,75 @@ const mapStepsConfig = {
                     }
                 }
             ]
+        },
+        // Step 31: Dimensiones de Caminar
+        "31": {
+            center: [-86.8515, 21.1619],
+            zoom: 11,
+            pitch: 0,
+            bearing: 0,
+            style: 'mapbox://styles/mapbox/light-v10',
+            layers: [
+                {
+                    id: 'dimensiones-caminar',
+                    type: 'fill',
+                    source: {
+                        type: 'geojson',
+                        data: 'public/data/dimensiones-de-caminar.geojson'
+                    },
+                    paint: {
+                        'fill-color': [
+                            'step',
+                            ['+',
+                                ['to-number', ['get', 'Eval_D_abastecerse_cnt']],
+                                ['to-number', ['get', 'Eval_aprender_cnt']],
+                                ['to-number', ['get', 'Eval_D_circular_cnt']],
+                                ['to-number', ['get', 'Eval_D_cuidados_cnt']],
+                                ['to-number', ['get', 'Eval_D_disfrutar_cnt']],
+                                ['to-number', ['get', 'Eval_D_reutil_reparar_cnt']],
+                                ['to-number', ['get', 'Eval_D_trabajar_cnt']]
+                            ],
+                            '#f1faee', // 0 - 4 muy baja diversidad
+                            5, '#a8dadc', // 5 - 9 baja
+                            10, '#457b9d', // 10 - 19 media
+                            20, '#1d3557', // 20 - 34 alta
+                            35, '#e63946' // 35+ muy alta
+                        ],
+                        'fill-opacity': 0.85,
+                        'fill-outline-color': '#ffffff'
+                    },
+                    popup: (p) => {
+                        const abastecer = Number(p.Eval_D_abastecerse_cnt || 0);
+                        const aprender = Number(p.Eval_aprender_cnt || 0);
+                        const circular = Number(p.Eval_D_circular_cnt || 0);
+                        const cuidados = Number(p.Eval_D_cuidados_cnt || 0);
+                        const disfrutar = Number(p.Eval_D_disfrutar_cnt || 0);
+                        const reutil = Number(p.Eval_D_reutil_reparar_cnt || 0);
+                        const trabajar = Number(p.Eval_D_trabajar_cnt || 0);
+                        const total = abastecer + aprender + circular + cuidados + disfrutar + reutil + trabajar;
+                        return `<h3>Dimensiones de Caminar</h3>
+                            <p><strong>Total agregado:</strong> ${total}</p>
+                            <p><strong>Abastecerse:</strong> ${abastecer}</p>
+                            <p><strong>Aprender:</strong> ${aprender}</p>
+                            <p><strong>Circular:</strong> ${circular}</p>
+                            <p><strong>Cuidados:</strong> ${cuidados}</p>
+                            <p><strong>Disfrutar:</strong> ${disfrutar}</p>
+                            <p><strong>Reutilizar/Reparar:</strong> ${reutil}</p>
+                            <p><strong>Trabajar:</strong> ${trabajar}</p>`;
+                    }
+                }
+            ]
         }
     }
 };
 
 // Inicializar Mapbox
 function initializeMapbox() {
-    console.log('=== Inicializando Mapbox ===');
     
     // Establecer token de acceso
     mapboxgl.accessToken = mapboxAccessToken;
+    // Deshabilitar telemetría para evitar peticiones de eventos bloqueadas por adblockers
+    try { if (mapboxgl.setTelemetryEnabled) { mapboxgl.setTelemetryEnabled(false); } } catch(_) {}
     
     // Usar el contenedor principal #map en lugar de crear uno nuevo
     const mapContainer = document.getElementById('map');
@@ -155,8 +224,6 @@ function initializeMapbox() {
     mapContainer.style.width = '100vw';
     mapContainer.style.height = '100vh';
     
-    console.log('📏 Contenedor temporal visible para inicialización del mapa');
-    
     // No crear contenedores adicionales: solo usamos #map como único contenedor de mapa
     
     // Inicializar el mapa en el contenedor principal #map
@@ -176,25 +243,19 @@ function initializeMapbox() {
         doubleClickZoom: true,
         touchZoomRotate: true
     });
-    
-    console.log('🗺️ Instancia de mapa creada con estilo:', currentBaseStyle);
-    
-    // Log de eventos de estilo para debugging
-    mapboxMap.on('styledata', () => {
-        console.log('🎨 Estilo del mapa cargando datos...');
-    });
-    
-    mapboxMap.on('style.load', () => {
-        console.log('🎨 Estilo del mapa completamente cargado');
-    });
-    
-    mapboxMap.on('error', (e) => {
-        console.error('❌ Error en Mapbox:', e.error);
-    });
-    
+    // Silenciar errores de eventos de telemetría bloqueados por adblockers
+    try {
+        const origError = console.error;
+        console.error = function(...args) {
+            if (args.some(a => typeof a === 'string' && a.includes('events.mapbox.com/events'))) {
+                return; // swallow
+            }
+            origError.apply(console, args);
+        };
+    } catch(_) {}
+        
     // RESTAURAR ESTADO ORIGINAL DEL CONTENEDOR DESPUÉS DE INICIALIZACIÓN
     mapboxMap.on('load', () => {
-        console.log('🗺️ Mapa cargado correctamente');
         // NO restaurar a oculto, dejar que sea controlado por showMapOverlay/hideMapOverlay
         // Solo remover clase active para que comience en estado neutral
         mapContainer.classList.remove('active');
@@ -207,17 +268,14 @@ function initializeMapbox() {
         setTimeout(() => {
             if (mapboxMap) {
                 mapboxMap.resize();
-                console.log('✅ Resize inicial del mapa completado');
             }
         }, 100);
         
         // Verificar que el estilo base se haya cargado
         setTimeout(() => {
             const style = mapboxMap.getStyle();
-            console.log('🎨 Estilo del mapa:', style ? 'Cargado' : 'NO CARGADO');
             if (style && style.layers) {
-                console.log('📊 Capas del estilo base:', style.layers.length);
-                console.log('📋 Primeras capas:', style.layers.slice(0, 5).map(l => `${l.id} (${l.type})`));
+                dbg('Capas estilo base:', style.layers.length, style.layers.slice(0, 5).map(l => `${l.id} (${l.type})`));
             }
         }, 500);
         
@@ -232,7 +290,6 @@ function initializeMapbox() {
         resizeTimeout = setTimeout(() => {
             if (mapboxMap && mapContainer.style.display === 'block') {
                 mapboxMap.resize();
-                console.log('✅ Mapa redimensionado por cambio en ventana');
             }
         }, 250);
     });
@@ -241,7 +298,6 @@ function initializeMapbox() {
     mapboxMap.addControl(new mapboxgl.NavigationControl(), 'top-right');
     mapboxMap.addControl(new mapboxgl.FullscreenControl(), 'top-right');
     
-    console.log('Mapa de Mapbox inicializado correctamente (solo mapa principal)');
 }
 
 // === Utilidades de proyección y reproyección ===
@@ -363,8 +419,6 @@ async function loadGeoJSONWithReprojection(url) {
 
 // Función para mostrar el mapa en modo overlay
 function showMapOverlay(config) {
-    console.log('=== showMapOverlay INICIANDO ===');
-    console.log('Config recibida:', config);
     
     const mapContainer = document.getElementById('map');
     
@@ -378,8 +432,6 @@ function showMapOverlay(config) {
         return;
     }
     
-    console.log('✅ Contenedor y mapa encontrados, procediendo...');
-    
     // Asegurar que el mapa base esté visible usando múltiples métodos
     mapContainer.style.display = 'block';
     mapContainer.style.opacity = '1';
@@ -392,7 +444,6 @@ function showMapOverlay(config) {
     const mapCanvas = mapContainer.querySelector('.mapboxgl-canvas');
     if (mapCanvas) {
         mapCanvas.style.opacity = '1';
-        console.log('✅ Canvas del mapa configurado con opacidad 1');
     } else {
         console.warn('⚠️ No se encontró el canvas del mapa');
     }
@@ -401,19 +452,11 @@ function showMapOverlay(config) {
     const canvasContainer = mapContainer.querySelector('.mapboxgl-canvas-container');
     if (canvasContainer) {
         canvasContainer.style.opacity = '1';
-        console.log('✅ Contenedor del canvas configurado');
     }
-    
-    console.log('✅ Estilos aplicados al contenedor');
-    console.log('Contenedor display:', mapContainer.style.display);
-    console.log('Contenedor opacity:', mapContainer.style.opacity);
-    console.log('Contenedor visibility:', mapContainer.style.visibility);
-    console.log('Contenedor z-index:', mapContainer.style.zIndex);
     
     // RESIZE INMEDIATO después de hacer visible el contenedor
     if (mapboxMap) {
         mapboxMap.resize();
-        console.log('✅ Resize inmediato ejecutado');
     }
     
     // No crear zonas de scroll superpuestas para no bloquear controles del mapa
@@ -434,26 +477,23 @@ function showMapOverlay(config) {
     // Añadir event listener para permitir scroll con teclado
     addKeyboardScrollSupport();
     
-    // FORZAR REDIMENSIÓN DEL MAPA ANTES DE APLICAR CONFIGURACIÓN
-    console.log('📏 Forzando resize del mapa para pantalla completa...');
-    
     // Deshabilitar zoom con scroll para permitir scrollear la página
     try { mapboxMap.scrollZoom.disable(); } catch (_) {}
     
     // Múltiples resize con diferentes delays para asegurar dimensionamiento correcto
-    setTimeout(() => { if (mapboxMap) { mapboxMap.resize(); console.log('✅ Resize 1 del mapa completado (100ms)'); } }, 100);
-    setTimeout(() => { if (mapboxMap) { mapboxMap.resize(); console.log('✅ Resize 2 del mapa completado (300ms)'); } }, 300);
-    setTimeout(() => { if (mapboxMap) { mapboxMap.resize(); console.log('✅ Resize 3 del mapa completado (600ms)'); } }, 600);
+    setTimeout(() => { if (mapboxMap) { mapboxMap.resize(); dbg('Resize 1'); } }, 100);
+    setTimeout(() => { if (mapboxMap) { mapboxMap.resize(); dbg('Resize 2'); } }, 300);
+    setTimeout(() => { if (mapboxMap) { mapboxMap.resize(); dbg('Resize 3'); } }, 600);
     
     // Preparar manejador para reinsertar las capas al terminar de cargar el estilo
     const onStyleLoad = async () => {
         // Eliminar capas existentes si las hay
-    const layersToRemove = ['densidad-poblacional','densidad-poblacional-distritos','indice-marginacion-distritos','tasa-cambio-poblacional','cambio-poblacional-ageb','supermanzanas-iniciales','crecimiento-urbano'];
-        layersToRemove.forEach(layerId => { if (mapboxMap.getLayer(layerId)) { mapboxMap.removeLayer(layerId); console.log(`🗑️ Capa ${layerId} eliminada`); } });
+    const layersToRemove = ['densidad-poblacional','densidad-poblacional-distritos','indice-marginacion-distritos','tasa-cambio-poblacional','cambio-poblacional-ageb','supermanzanas-iniciales','crecimiento-urbano','dimensiones-caminar'];
+        layersToRemove.forEach(layerId => { if (mapboxMap.getLayer(layerId)) { mapboxMap.removeLayer(layerId); } });
         
         // Eliminar fuentes existentes si las hay
-    const sourcesToRemove = ['densidad-poblacional-src','densidad-poblacional-distritos-src','indice-marginacion-distritos-src','tasa-cambio-poblacional-src','cambio-poblacional-ageb-src','supermanzanas-iniciales-src','crecimiento-urbano-src'];
-        sourcesToRemove.forEach(sourceId => { if (mapboxMap.getSource(sourceId)) { mapboxMap.removeSource(sourceId); console.log(`🗑️ Fuente ${sourceId} eliminada`); } });
+    const sourcesToRemove = ['densidad-poblacional-src','densidad-poblacional-distritos-src','indice-marginacion-distritos-src','tasa-cambio-poblacional-src','cambio-poblacional-ageb-src','supermanzanas-iniciales-src','crecimiento-urbano-src','dimensiones-caminar-src'];
+        sourcesToRemove.forEach(sourceId => { if (mapboxMap.getSource(sourceId)) { mapboxMap.removeSource(sourceId); } });
         
         // Encontrar una capa de referencia para insertar por debajo de etiquetas (símbolos)
         const beforeLabelId = (() => {
@@ -467,7 +507,6 @@ function showMapOverlay(config) {
 
         // Añadir las capas definidas en la configuración
         if (config.layers && config.layers.length > 0) {
-            console.log(`📊 Añadiendo ${config.layers.length} capas...`);
             for (const layer of config.layers) {
                 try {
                     const sourceId = layer.id + '-src';
@@ -478,18 +517,33 @@ function showMapOverlay(config) {
                             console.warn(`⛔ Formato GPKG no soportado para ${layer.id}. Omite esta capa hasta convertir a GeoJSON.`);
                             continue;
                         }
-                        console.log(`⬇️ Cargando GeoJSON para ${layer.id} desde ${source.data} ...`);
-                        const gj = await loadGeoJSONWithReprojection(source.data);
-                        source = { ...source, data: gj };
+                        // Cargar y reproyectar si es GeoJSON (maneja CRS distinto a 4326, ej. EPSG:32616)
+                        if (source.data.toLowerCase().endsWith('.geojson')) {
+                            try {
+                                const geojsonData = await loadGeoJSONWithReprojection(source.data);
+                                source = { ...source, data: geojsonData };
+                            } catch (e) {
+                                console.warn('⚠️ No se pudo cargar/reproyectar', source.data, e);
+                            }
+                        }
                     }
-                    mapboxMap.addSource(sourceId, source);
+                    // Evitar error "There is already a source with ID" si ya existe
+                    if (!mapboxMap.getSource(sourceId)) {
+                        mapboxMap.addSource(sourceId, source);
+                    } else {
+                        dbg('Fuente ya existía, se reutiliza:', sourceId);
+                    }
                     const paintProperties = { ...layer.paint }; // Conservar opacidad definida
                     // Insertar por debajo de etiquetas para que se vean calles y nombres
                     const layerDef = { id: layer.id, type: layer.type, source: sourceId, paint: paintProperties };
-                    if (beforeLabelId) {
-                        mapboxMap.addLayer(layerDef, beforeLabelId);
+                    if (!mapboxMap.getLayer(layer.id)) {
+                        if (beforeLabelId) {
+                            mapboxMap.addLayer(layerDef, beforeLabelId);
+                        } else {
+                            mapboxMap.addLayer(layerDef);
+                        }
                     } else {
-                        mapboxMap.addLayer(layerDef);
+                        dbg('Capa ya existente, se omite agregar:', layer.id);
                     }
                     if (layer.popup) {
                         // Variable para almacenar el popup activo
@@ -527,20 +581,17 @@ function showMapOverlay(config) {
                             }
                         });
                     }
-                    console.log(`✅ Capa ${layer.id} añadida correctamente`);
                 } catch (error) {
                     console.error(`❌ Error añadiendo capa ${layer.id}:`, error);
                 }
             }
         } else {
-            console.log('ℹ️ No hay capas para añadir');
+            dbg('Sin capas para añadir en este step');
         }
-        console.log('📏 Resize final del mapa tras cargar capas...');
-        setTimeout(() => { if (mapboxMap) { mapboxMap.resize(); console.log('✅ Resize final completado'); } }, 500);
+        setTimeout(() => { if (mapboxMap) { mapboxMap.resize(); } }, 500);
     };
 
     // Aplicar configuración específica con manejo de estilo actual
-    console.log('🗺️ Aplicando configuración del mapa...');
     const targetStyle = config.style || currentBaseStyle;
     const shouldChangeStyle = targetStyle !== currentBaseStyle;
     if (shouldChangeStyle) {
@@ -569,23 +620,20 @@ function showMapOverlay(config) {
     setTimeout(() => {
         if (mapboxMap) {
             mapboxMap.resize();
-            console.log('✅ Resize post-flyTo completado (1000ms)');
         }
     }, 1000);
     
     setTimeout(() => {
         if (mapboxMap) {
             mapboxMap.resize();
-            console.log('✅ Resize post-flyTo completado (2500ms)');
         }
     }, 2500);
     
-    console.log('=== showMapOverlay COMPLETADO ===');
+    dbg('showMapOverlay completado');
 }
 
 // Función para ocultar el mapa en modo overlay
 function hideMapOverlay() {
-    console.log('=== hideMapOverlay INICIANDO ===');
     const mapContainer = document.getElementById('map');
     if (mapContainer) {
         mapContainer.style.display = 'none';
@@ -599,7 +647,6 @@ function hideMapOverlay() {
             mapContainer.removeEventListener('wheel', mapContainer._wheelForwardHandler, { capture: true });
         }
         
-        console.log('✅ Contenedor del mapa ocultado');
     } else {
         console.error('❌ No se encontró el contenedor #map para ocultar');
     }
@@ -608,13 +655,10 @@ function hideMapOverlay() {
     try {
         const legend = document.getElementById('map-legend');
         if (legend) {
-            legend.style.display = 'none';
-            console.log('🔍 DEBUG: Leyenda forzadamente ocultada en hideMapOverlay original');
-        }
+            legend.style.display = 'none';        }
         const panel = document.getElementById('map-lustro-control');
         if (panel) {
             panel.style.display = 'none';
-            console.log('🔍 DEBUG: Panel de lustros forzadamente ocultado en hideMapOverlay original');
         }
     } catch (e) {
         console.warn('Error en limpieza de leyendas:', e);
@@ -623,7 +667,6 @@ function hideMapOverlay() {
 
 // Función para actualizar el mapa según el step actual
 async function updateMapForStep(stepId) {
-    console.log(`=== updateMapForStep(${stepId}) INICIANDO ===`);
     
     // FORZAR LIMPIEZA TOTAL AL INICIO DE CUALQUIER ACTUALIZACIÓN
     try {
@@ -631,16 +674,11 @@ async function updateMapForStep(stepId) {
         if (legend) legend.style.display = 'none';
         const panel = document.getElementById('map-lustro-control');
         if (panel) panel.style.display = 'none';
-        console.log('🔍 DEBUG: Limpieza preventiva de leyendas realizada');
+        dbg('Limpieza preventiva leyendas');
     } catch {}
     
     const stepIdStr = String(stepId);
-    console.log('📋 Verificando configuración...');
-    console.log('Steps visibles:', mapStepsConfig.visibleSteps);
-    console.log('¿Step está en visibleSteps?', mapStepsConfig.visibleSteps.includes(Number(stepId)));
-    console.log('¿Existe configuración para step?', !!mapStepsConfig.stepConfigs[stepIdStr]);
     if (mapStepsConfig.visibleSteps.includes(Number(stepId)) && mapStepsConfig.stepConfigs[stepIdStr]) {
-        console.log(`✅ Step ${stepId} debe mostrar mapa, llamando showMapOverlay...`);
         // Asegurar que el mapa esté listo antes de mostrar
         await ensureMapboxReady();
         // Usar el wrapper para que también gestione la leyenda
@@ -650,14 +688,12 @@ async function updateMapForStep(stepId) {
             showMapOverlay(mapStepsConfig.stepConfigs[stepIdStr]);
         }
     } else {
-        console.log(`❌ Step ${stepId} NO debe mostrar mapa, llamando hideMapOverlay...`);
         if (window.mapboxHelper && typeof window.mapboxHelper.hideMapOverlay === 'function') {
             window.mapboxHelper.hideMapOverlay();
         } else {
             hideMapOverlay();
         }
     }
-    console.log(`=== updateMapForStep(${stepId}) COMPLETADO ===`);
 }
 
 // Función para crear zonas de scroll en los bordes del mapa
@@ -720,20 +756,17 @@ async function ensureMapboxReady() {
         mapInitPromise = new Promise((resolve) => {
             // Verificar si Mapbox GL ya está cargado (por ejemplo, desde HTML)
             if (typeof mapboxgl !== 'undefined') {
-                console.log('✅ Mapbox GL ya está cargado, inicializando mapa...');
                 initializeMapbox();
                 const onReady = () => { document.removeEventListener('mapbox-ready', onReady); resolve(true); };
                 document.addEventListener('mapbox-ready', onReady);
                 return;
             }
             
-            console.log('⏳ Cargando librería de Mapbox bajo demanda...');
             // Insertar script de Mapbox GL dinámicamente solo si no está cargado
             const script = document.createElement('script');
             script.src = 'https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.js';
             script.async = true;
             script.onload = () => {
-                console.log('✅ Mapbox GL cargado, inicializando mapa...');
                 initializeMapbox();
                 const onReady = () => { document.removeEventListener('mapbox-ready', onReady); resolve(true); };
                 document.addEventListener('mapbox-ready', onReady);
@@ -762,10 +795,8 @@ window.mapboxHelper = { updateMapForStep, showMapOverlay, hideMapOverlay };
   }
 
   function showLegend(title) {
-    console.log('🔍 DEBUG: showLegend llamado con título:', title);
     const l = legendEl();
     if (!l) {
-      console.log('🔍 DEBUG: No se encontró elemento de leyenda');
       return;
     }
     if (title) {
@@ -773,15 +804,12 @@ window.mapboxHelper = { updateMapForStep, showMapOverlay, hideMapOverlay };
       if (t) t.textContent = title;
     }
     l.style.display = 'block';
-    console.log('🔍 DEBUG: Leyenda mostrada, display =', l.style.display);
   }
 
   function hideLegend() {
-    console.log('🔍 DEBUG: hideLegend llamado');
     const l = legendEl();
     if (l) {
       l.style.display = 'none';
-      console.log('🔍 DEBUG: Leyenda ocultada');
     }
   }
 
@@ -803,7 +831,8 @@ window.mapboxHelper = { updateMapForStep, showMapOverlay, hideMapOverlay };
   // Interpret Mapbox GL expressions for 'step' and fixed color strings
     function buildLegendFromPaint(paint, options = {}) {
     clearLegend();
-    const title = options.title || 'Leyenda';
+        const title = options.title || 'Leyenda';
+        const layerId = options.layerId || null; // Capturar id de capa si se pasó
         const allowedValues = options.allowedValues ? new Set(options.allowedValues) : null;
 
     // Fixed color string
@@ -825,24 +854,37 @@ window.mapboxHelper = { updateMapForStep, showMapOverlay, hideMapOverlay };
         }
       }
 
-      // Build labels: < stop1, stop1–stop2, …, ≥ lastStop
-      showLegend(title);
-      if (pairs.length === 0) {
-        addItem(baseColor, 'Valor bajo');
-        return;
-      }
-      // First range: < first stop => baseColor
-      addItem(baseColor, `< ${formatNumber(pairs[0].stop)}`);
-      for (let i = 0; i < pairs.length; i++) {
-        const from = pairs[i].stop;
-        const to = (i + 1 < pairs.length) ? pairs[i + 1].stop : null;
-        const color = pairs[i].color;
-        const label = to == null
-          ? `≥ ${formatNumber(from)}`
-          : `${formatNumber(from)} – ${formatNumber(to)}`;
-        addItem(color, label);
-      }
-      return;
+            // PERSONALIZACIÓN: si es la capa de cambio porcentual poblacional, mostrar rangos fijos con %
+            if (layerId === 'cambio-poblacional-ageb') {
+                showLegend(title);
+                const customStops = [
+                    { color: baseColor, label: `-100 – -16 %` },
+                    { color: pairs[0]?.color, label: `-16 – -8.8 %` },
+                    { color: pairs[1]?.color, label: `-8.8 – -2 %` },
+                    { color: pairs[2]?.color, label: `-2 – 7.5 %` },
+                    { color: pairs[3]?.color, label: `7.5 – 30.5 %` },
+                    { color: pairs[4]?.color, label: `30.5 – 82.5 %` },
+                    { color: pairs[5]?.color, label: `82.5 – 100 %` },
+                    { color: pairs[6]?.color, label: `100 – 101.9 %` },
+                    { color: pairs[7]?.color || pairs[pairs.length-1]?.color, label: `≥ 101.9 %` }
+                ];
+                customStops.forEach(s => { if (s.color && s.label) addItem(s.color, s.label); });
+                return;
+            }
+            // Construcción genérica por defecto
+            showLegend(title);
+            if (pairs.length === 0) { addItem(baseColor, 'Valor bajo'); return; }
+            addItem(baseColor, `< ${formatNumber(pairs[0].stop)} %`);
+            for (let i = 0; i < pairs.length; i++) {
+                const from = pairs[i].stop;
+                const to = (i + 1 < pairs.length) ? pairs[i + 1].stop : null;
+                const color = pairs[i].color;
+                const label = to == null
+                    ? `≥ ${formatNumber(from)} %`
+                    : `${formatNumber(from)} – ${formatNumber(to)} %`;
+                addItem(color, label);
+            }
+            return;
     }
 
         // Expression: ['match', input, v1, c1, v2, c2, ..., defaultColor]
@@ -891,15 +933,15 @@ window.mapboxHelper = { updateMapForStep, showMapOverlay, hideMapOverlay };
   const layerTitles = {
       'crecimiento-urbano': 'Expansión urbana por periodo',
       'tasa-cambio-poblacional': 'Tasa de cambio poblacional (2010–2020)',
-      'cambio-poblacional-ageb': 'Tasa de cambio poblacional (2010–2020)',
+      'cambio-poblacional-ageb': 'Cambio porcentual de población (2010–2020)',
       'densidad-poblacional': 'Densidad poblacional (hab/ha)',
       'densidad-poblacional-distritos': 'Densidad poblacional (hab/ha)',
-      'indice-marginacion-distritos': 'Grado de marginación (GM 2020)'
+      'indice-marginacion-distritos': 'Grado de marginación (GM 2020)',
+      'dimensiones-caminar': 'Diversidad funcional caminable'
   };
 
   // Override
   window.mapboxHelper.showMapOverlay = function(config) {
-        console.log('🔍 DEBUG: showMapOverlay llamado con config:', config);
         
         // FORZAR LIMPIEZA COMPLETA DE TODAS LAS LEYENDAS AL INICIO
         try {
@@ -960,7 +1002,7 @@ window.mapboxHelper = { updateMapForStep, showMapOverlay, hideMapOverlay };
                 }
                 if (legendLayer && legendLayer.paint) {
                     const title = layerTitles[legendLayer.id] || 'Leyenda';
-                    buildLegendFromPaint(legendLayer.paint, { title });
+                    buildLegendFromPaint(legendLayer.paint, { title, layerId: legendLayer.id });
                 } else {
                     hideLegend();
                 }
@@ -972,7 +1014,6 @@ window.mapboxHelper = { updateMapForStep, showMapOverlay, hideMapOverlay };
   };
 
   window.mapboxHelper.hideMapOverlay = function() {
-    console.log('🔍 DEBUG: hideMapOverlay ejecutado - FORZANDO OCULTADO TOTAL');
     originalHide();
     
     // FORZAR OCULTADO TOTAL DE TODAS LAS LEYENDAS Y PANELES
@@ -980,13 +1021,11 @@ window.mapboxHelper = { updateMapForStep, showMapOverlay, hideMapOverlay };
       const legend = document.getElementById('map-legend');
       if (legend) {
         legend.style.display = 'none';
-        console.log('🔍 DEBUG: Leyenda forzadamente ocultada');
       }
       
       const panel = document.getElementById('map-lustro-control');
       if (panel) {
         panel.style.display = 'none';
-        console.log('🔍 DEBUG: Panel de lustros forzadamente ocultado');
       }
     } catch (e) {
       console.warn('Error ocultando leyendas:', e);
@@ -1070,13 +1109,10 @@ function ensureLustroPanel() {
 }
 
 function toggleLustroPanel(show) {
-        console.log('🔍 DEBUG: toggleLustroPanel llamado con show =', show);
         ensureLustroPanel();
         const panel = document.getElementById('map-lustro-control');
-        console.log('🔍 DEBUG: Panel encontrado:', !!panel);
         if (!panel) return;
         panel.style.display = show ? 'block' : 'none';
-        console.log('🔍 DEBUG: Panel display establecido a:', panel.style.display);
         if (show) {
             positionLustroPanel();
             window.addEventListener('resize', positionLustroPanel);
@@ -1192,38 +1228,3 @@ function applyLustroFilterWhenReady(attempts = 0) {
         setTimeout(() => applyLustroFilterWhenReady(attempts + 1), 150);
         try { mapboxMap.once && mapboxMap.once('idle', () => applyLustroFilter()); } catch {}
 }
-
-// Función de debug para testing manual
-window.debugMapa = function(stepId = 19) {
-    console.log('=== FUNCIÓN DEBUG MAPA ===');
-    console.log('Testing step:', stepId);
-    const mapContainer = document.getElementById('map');
-    console.log('Contenedor #map:', mapContainer);
-    console.log('mapboxMap:', mapboxMap);
-    console.log('mapStepsConfig:', mapStepsConfig);
-    
-    // Debug de elementos de leyenda
-    const legend = document.getElementById('map-legend');
-    console.log('Elemento leyenda:', legend);
-    const panel = document.getElementById('map-lustro-control');
-    console.log('Panel lustros:', panel);
-    
-    // Debug del step actual
-    const currentStep = document.querySelector('.step.is-active');
-    console.log('Step actual en DOM:', currentStep);
-    if (currentStep) {
-        console.log('Data-step del elemento actual:', currentStep.getAttribute('data-step'));
-    }
-    
-    if (mapContainer) {
-        console.log('Estilos actuales del contenedor:');
-        console.log('- display:', window.getComputedStyle(mapContainer).display);
-        console.log('- opacity:', window.getComputedStyle(mapContainer).opacity);
-        console.log('- visibility:', window.getComputedStyle(mapContainer).visibility);
-        console.log('- z-index:', window.getComputedStyle(mapContainer).zIndex);
-    }
-    if (window.mapboxHelper) {
-        console.log('Llamando updateMapForStep...');
-        window.mapboxHelper.updateMapForStep(stepId);
-    }
-};
