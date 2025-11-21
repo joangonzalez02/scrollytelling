@@ -107,24 +107,24 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Opciones disponibles
         const options = [
-            { value: 'benito', label: 'Benito Juárez' },
+            { value: 'benito', label: 'Cancún' },
             { value: 'qroo', label: 'Quintana Roo' },
             { value: 'mexico', label: 'México' },
             { value: 'mundo', label: 'Mundo' }
         ];
         
-        // Crear los botones de radio
+        // Crear radio buttons para cada opción
         options.forEach(option => {
             const label = document.createElement('label');
-            label.style.marginRight = '20px';
+            label.style.marginRight = '15px';
             label.style.cursor = 'pointer';
-            label.style.fontWeight = option.value === 'benito' ? '700' : '600';
             label.style.color = option.value === 'benito' ? '#FB8500' : '#023047';
-            label.style.transition = 'color 0.3s ease';
+            label.style.fontWeight = option.value === 'benito' ? '700' : '600';
+            label.style.transition = 'color 0.2s';
             
             const radio = document.createElement('input');
             radio.type = 'radio';
-            radio.name = 'population-data';
+            radio.name = 'dataType';
             radio.value = option.value;
             radio.checked = option.value === 'benito';
             radio.style.marginRight = '5px';
@@ -173,7 +173,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Configuración del gráfico - dimensiones base para el viewBox
         const baseWidth = 800;
         const baseHeight = 400;
-        const margin = { top: 40, right: 60, bottom: 80, left: 100 };
+        const margin = { top: 40, right: 60, bottom: 80, left: 120 };
         
         // Dimensiones internas del área de dibujo
         const width = baseWidth - margin.left - margin.right;
@@ -318,11 +318,12 @@ document.addEventListener('DOMContentLoaded', function() {
             
         svg.append('text')
             .attr('transform', 'rotate(-90)')
-            .attr('y', -margin.left + 15)
+            .attr('y', -margin.left + 20)
             .attr('x', -height / 2)
             .attr('dy', '1em')
             .style('text-anchor', 'middle')
             .attr('fill', '#023047')
+            .attr('font-size', '14px')
             .text('Población');
             
         // Función para formatear números mejorada
@@ -478,12 +479,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     return `${(getValue(d)/1000000000).toFixed(1)}`;
                 } else if (getValue(d) > 1000000) {
                     return `${(getValue(d)/1000000).toFixed(1)}M`;
+                } else if (dataType === 'benito') {
+                    // Para Benito Juárez, mostrar números completos sin notación K
+                    return new Intl.NumberFormat('es-MX').format(getValue(d));
                 } else if (getValue(d) > 1000) {
                     return `${(getValue(d)/1000).toFixed(0)}K`;
                 } else {
                     return getValue(d);
                 }
             })
+            .attr('font-size', '10px')
             .transition()
             .delay((d, i) => i * 150 + 700)
             .duration(700)
@@ -492,21 +497,25 @@ document.addEventListener('DOMContentLoaded', function() {
             
         // Si es Benito Juárez, agregar anotación destacando el crecimiento extraordinario
         if (dataType === 'benito' && width > 500) {
+            // Ya no usamos auto-wrap; controlamos manualmente las líneas
+            const wrapWidth = width > 600 ? 90 : 70;
             const annotations = [{
                 note: {
-                    title: "Crecimiento Extraordinario",
-                    label: "441.6% de incremento en los 70s",
-                    wrap: 150
+                    label: "Crecimiento Extraordinario 441.6% de incremento en los 70s",
+                    wrap: wrapWidth,
+                    padding: 2,
+                    align: "middle"
                 },
+                className: "annotation-responsive",
                 connector: {
                     end: "arrow",
-                    type: "curve",
-                    curvature: 0.5
+                    type: "line",
+                    endScale: 0.9
                 },
                 x: x(1980) + x.bandwidth() / 2,
                 y: y(37190) - 30,
-                dy: -30,
-                dx: -30
+                dy: -15,
+                dx: 0
             }];
             
             const makeAnnotations = d3.annotation()
@@ -521,6 +530,48 @@ document.addEventListener('DOMContentLoaded', function() {
                 .delay(1500)
                 .duration(800)
                 .attr('opacity', 1);
+            
+            // Aplicar estilos responsivos a la anotación
+            const annotationGroup = svg.select('.annotation-group');
+
+            // Tamaño de fuente e interlineado según ancho disponible
+            const labelFontSize = width > 900 ? '16px'
+                                : width > 700 ? '13px'
+                                : '11px';
+
+            // Paso vertical entre líneas en función del ancho (más compacto en pantallas medianas/pequeñas)
+            const dyStep = width > 900 ? '1.2em'
+                          : width > 700 ? '1.1em'
+                          : '1.0em';
+
+            annotationGroup.selectAll('.annotation-note-label')
+                .style('font-size', labelFontSize)
+                .style('line-height', '1.1')
+                .style('font-weight', '600')
+                .each(function() {
+                    const text = d3.select(this);
+                    const fullText = text.text();
+
+                    // Limpiar el texto actual
+                    text.text('');
+
+                    // Crear las líneas manualmente con tspan con interlineado responsivo
+                    const lines = [
+                        { text: 'Crecimiento',    bold: true,  x: 0, dy: '0em'   },
+                        { text: 'Extraordinario', bold: true,  x: 0, dy: dyStep },
+                        { text: '441.6% de',      bold: false, x: 0, dy: dyStep },
+                        { text: 'incremento',     bold: false, x: 0, dy: dyStep },
+                        { text: 'en los 70s',     bold: false, x: 0, dy: dyStep }
+                    ];
+
+                    lines.forEach((line) => {
+                        text.append('tspan')
+                            .attr('x', 0)
+                            .attr('dy', line.dy)
+                            .style('font-weight', line.bold ? '700' : '600')
+                            .text(line.text);
+                    });
+                });
         }
         
         chart = svg; // Guardar referencia al gráfico
