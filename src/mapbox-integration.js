@@ -163,11 +163,12 @@ const mapStepsConfig = {
                                 ['to-number', ['get', 'Eval_D_reutil_reparar_cnt']],
                                 ['to-number', ['get', 'Eval_D_trabajar_cnt']]
                             ],
-                            '#f1faee', // 0 - 4 muy baja diversidad
-                            5, '#a8dadc', // 5 - 9 baja
-                            10, '#457b9d', // 10 - 19 media
-                            20, '#1d3557', // 20 - 34 alta
-                            35, '#e63946' // 35+ muy alta
+                            '#f1faee',      // 0 (sin registros)
+                            1, '#d4e9e7',   // 1–300 muy baja
+                            301, '#a8dadc', // 301–700 baja
+                            701, '#6ca9c1', // 701–1250 media
+                            1250, '#1d3557',// 1251–1900 alta
+                            1901, '#e63946' // 1901+ muy alta
                         ],
                         'fill-opacity': 0.85,
                         'fill-outline-color': '#ffffff'
@@ -1002,7 +1003,46 @@ window.mapboxHelper = { updateMapForStep, showMapOverlay, hideMapOverlay };
                 }
                 if (legendLayer && legendLayer.paint) {
                     const title = layerTitles[legendLayer.id] || 'Leyenda';
-                    buildLegendFromPaint(legendLayer.paint, { title, layerId: legendLayer.id });
+                    // Leyenda personalizada para dimensiones de caminar (sumatoria 7 campos)
+                    if (legendLayer.id === 'dimensiones-caminar') {
+                        const legend = document.getElementById('map-legend');
+                        if (legend) {
+                            const titleEl = legend.querySelector('.legend-title');
+                            const itemsEl = legend.querySelector('.legend-items');
+                            if (itemsEl) itemsEl.innerHTML = '';
+                            if (titleEl) titleEl.textContent = title;
+                            legend.style.display = 'block';
+                            const add = (color,label) => {
+                                const row = document.createElement('div');
+                                row.className = 'legend-item';
+                                const sw = document.createElement('span');
+                                sw.className = 'legend-swatch';
+                                sw.style.background = color;
+                                const lab = document.createElement('span');
+                                lab.className = 'legend-label';
+                                lab.textContent = label;
+                                row.appendChild(sw); row.appendChild(lab);
+                                itemsEl.appendChild(row);
+                            };
+                            // Colores definidos en expresión step del paint
+                            const expr = legendLayer.paint['fill-color'];
+                            // Índices: 2 base, 4,6,8,10,12 colores de los cortes 1,301,701,1250,1901
+                            const color0 = expr[2];
+                            const color1 = expr[4];
+                            const color2 = expr[6];
+                            const color3 = expr[8];
+                            const color4 = expr[10];
+                            const color5 = expr[12];
+                            add(color0,'0 Sin registros');
+                            add(color1,'1–300 Muy baja');
+                            add(color2,'301–700 Baja');
+                            add(color3,'701–1250 Media');
+                            add(color4,'1251–1900 Alta');
+                            add(color5,'1901+ Muy alta');
+                        }
+                    } else {
+                        buildLegendFromPaint(legendLayer.paint, { title, layerId: legendLayer.id });
+                    }
                 } else {
                     hideLegend();
                 }

@@ -607,12 +607,12 @@ document.addEventListener('DOMContentLoaded', function () {
         if (highlight && dims.innerW > 420) {
             const annX = x(2006) + x.bandwidth() / 2;
             const annY = yLeft(highlight.vehicles); // punto sobre la barra
+            
             // Proteger contra valores NaN que rompen d3-annotation
             if (!isFinite(annX) || !isFinite(annY)) {
                 console.warn('Anotación 2006 omitida por coordenadas inválidas');
             } else {
-
-            // Línea vertical roja discontinua
+                // Línea vertical roja discontinua
             // (creamos y luego la elevamos con .raise() para que quede por encima de todos los elementos)
             g.append('line')
                 .attr('class', 'marker-2006-line')
@@ -679,7 +679,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 svg.selectAll('.marker-2006-line').raise();
                 svg.selectAll('.marker-2006-point').raise();
             }
-            }
+            } // fin del if (isFinite(annX) && isFinite(annY))
         }
 
         // Animaciones de entrada (solo primera vez)
@@ -765,7 +765,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!state.hasLoaded) { loadData(); return; }
             const r = state.refs;
             if (!r || !r.g) return;
-            const { g, bars, labels, path, points, dims, scales } = r;
+            const { g, bars, path, points, dims, scales } = r;
             // Re-animar barras
             const t = g.transition().duration(800).ease(d3.easeCubicOut);
             bars
@@ -774,11 +774,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 .transition(t)
                 .attr('y', d => scales.yLeft(d.vehicles))
                 .attr('height', d => dims.innerH - scales.yLeft(d.vehicles));
-            labels.style('opacity', 0)
-                .text(d => d3.format(',')(d.vehicles))
-                .attr('y', d => scales.yLeft(d.vehicles) - 8)
-                .transition().delay(600).duration(350)
-                .style('opacity', 1);
             // Redibujar línea
             const totalLen = path.node().getTotalLength();
             path
@@ -794,18 +789,16 @@ document.addEventListener('DOMContentLoaded', function () {
         exit: function() {
             const r = state.refs;
             if (!r || !r.g) return;
-            const { g, bars, labels, path, points, dims, scales } = r;
+            const { g, bars, path, points, dims, scales } = r;
             const t = g.transition().duration(500).ease(d3.easeCubicIn);
             bars.transition(t)
                 .attr('y', dims.innerH)
                 .attr('height', 0);
-            labels.transition(t).style('opacity', 0);
             const totalLen = path.node().getTotalLength();
             path.transition(t)
                 .attr('stroke-dasharray', `${totalLen} ${totalLen}`)
                 .attr('stroke-dashoffset', totalLen);
             points.transition(t).attr('r', 0);
-                // Tooltip no usado en esta gráfica
             // Marcar como no dibujado para reanimar en la siguiente entrada
             state.hasDrawn = false;
         }
