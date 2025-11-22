@@ -26,11 +26,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 populationData = csvData.map(d => {
                     return {
                         year: +d.Año,
+                        // Valores parseados
                         benitoJuarez: parseNumber(d['Población Benito Juárez']),
                         mexico: parseNumber(d['Poblacion México']),
                         mundo: parseNumber(d['Poblacion Mundo']),
                         qrooTotal: parseNumber(d['Población Todo de Quintana Roo']),
-                        qrooResto: parseNumber(d['Población Resto de Quintana Roo'])
+                        qrooResto: parseNumber(d['Población Resto de Quintana Roo']),
+                        // Valores crudos para mostrar en tooltip
+                        benitoJuarezRaw: d['Población Benito Juárez'],
+                        mexicoRaw: d['Poblacion México'],
+                        mundoRaw: d['Poblacion Mundo'],
+                        qrooTotalRaw: d['Población Todo de Quintana Roo'],
+                        qrooRestoRaw: d['Población Resto de Quintana Roo']
                     };
                 }).filter(d => d.year && !isNaN(d.year) && d.year <= 2020);
                 
@@ -233,6 +240,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 default: return d.benitoJuarez;
             }
         };
+
+        // Función para obtener el valor crudo (string) según el tipo (del CSV)
+        const getRawValue = (d) => {
+            switch(dataType) {
+                case 'benito': return d.benitoJuarezRaw || null;
+                case 'mexico': return d.mexicoRaw || null;
+                case 'mundo': return d.mundoRaw || null;
+                case 'qroo': return d.qrooTotalRaw || null;
+                default: return d.benitoJuarezRaw || null;
+            }
+        };
         
         // Función para obtener el crecimiento según el tipo
         const getGrowth = (d) => {
@@ -256,11 +274,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const maxValue = d3.max(data, d => getValue(d));
         
         if (dataType === 'mundo') {
-            // Para datos mundiales (miles de millones), usar escala más suave
-            yDomain = [0, maxValue * 1.05];
+            // Para datos mundiales: fijar escala de 0 a 9 (miles de millones)
+            yDomain = [0, 9e9];
         } else if (dataType === 'mexico') {
-            // Para datos de México (millones), usar escala moderada
-            yDomain = [0, maxValue * 1.08];
+            yDomain = [0, 140e6];
         } else {
             // Para datos locales (Benito Juárez, Q.Roo), usar escala más dramática
             yDomain = [0, maxValue * 1.15];
@@ -283,20 +300,55 @@ document.addEventListener('DOMContentLoaded', function() {
             .attr('dx', '-.8em')
             .attr('dy', '.15em');
             
-        svg.append('g')
-            .attr('class', 'axis y-axis')
-            .call(d3.axisLeft(y)
-                .tickFormat(d => {
-                    if (dataType === 'mundo' && d > 1000000000) {
-                        return d3.format('.1f')(d/1000000000);
-                    } else if (d > 1000000) {
-                        return d3.format('.1f')(d/1000000) + ' M';
-                    } else if (d > 1000) {
-                        return d3.format('.1f')(d/1000) + ' K';
-                    } else {
-                        return d3.format(',')(d);
-                    }
-                }));
+        if (dataType === 'mundo') {
+            // Escala fija: ticks enteros de 0 a 9 (miles de millones) con sufijo 'MM'
+            const tickValues = d3.range(0, 10).map(v => v * 1e9);
+            svg.append('g')
+                .attr('class', 'axis y-axis')
+                .call(d3.axisLeft(y)
+                    .tickValues(tickValues)
+                    .tickFormat(d => {
+                        if (d === 0) return '0';
+                        return d3.format('d')(d / 1e9) + ' MM';
+                    })
+                );
+        } else if (dataType === 'mexico') {
+            const rawTicks = d3.ticks(0, yDomain[1], 6);
+            // Redondear cada tick al millón más cercano para mantener unidad en 'M'
+            const tickValues = rawTicks.map(v => Math.round(v / 1e6) * 1e6);
+            // Eliminar duplicados y ordenar
+            const uniqueTickValues = Array.from(new Set(tickValues)).sort((a, b) => a - b);
+            svg.append('g')
+                .attr('class', 'axis y-axis')
+                .call(d3.axisLeft(y)
+                    .tickValues(uniqueTickValues)
+                    .tickFormat(d => {
+                        if (d === 0) return '0';
+                        return d3.format('d')(Math.round(d / 1e6)) + ' M';
+                    })
+                );
+        } else {
+                const rawMax = yDomain[1];
+                const approxTicks = d3.ticks(0, rawMax, 6).map(v => Math.round(v));
+                // Asegurar unicidad y orden
+                const tickSet = Array.from(new Set(approxTicks)).sort((a, b) => a - b);
+                svg.append('g')
+                    .attr('class', 'axis y-axis')
+                    .call(d3.axisLeft(y)
+                        .tickValues(tickSet)
+                        .tickFormat(d => {
+                            if (d === 0) return '0';
+                            // Miles -> mostrar como 'N K'
+                            if (d >= 1000000) {
+                                return d3.format('.1f')(d / 1000000) + 'M';
+                            } else if (d >= 1000) {
+                                return d3.format('d')(Math.round(d / 1000)) + 'K';
+                            } else {
+                                return d3.format(',')(Math.round(d));
+                            }
+                        })
+                    );
+        }
             
         // Título
         svg.append('text')
@@ -396,24 +448,30 @@ document.addEventListener('DOMContentLoaded', function() {
                     .attr('stroke-width', 2)
                     .style('fill', `url(#${gradientId})`); // Asegurarnos de aplicar el gradiente
                 
-                // Mostrar tooltip
+                // Mostrar tooltip: preferir el valor crudo del CSV; si no, usar formato calculado
+                const rawVal = getRawValue(d);
+                // Si hay valor crudo, normalizar: reemplazar puntos por comas
+                const rawNormalized = rawVal && String(rawVal).trim() !== '' ? String(rawVal).replace(/\./g, ',') : null;
+                const displayVal = rawNormalized || formatNumber(getValue(d));
                 let tooltipContent = `
                     <div><strong>Año ${d.year}</strong></div>
-                    <div>Población: <span style="color: #8ECAE6; font-weight:700">${formatNumber(getValue(d))}</span></div>
+                    <div>Población: <span style="color: #8ECAE6; font-weight:700">${displayVal}</span></div>
                 `;
                 
                 // Añadir datos de crecimiento solo si están disponibles
                 const growth = getGrowth(d);
-                
-                // Mostrar incremento solo cuando hay datos disponibles
+
+                // Mostrar incremento/decremento solo cuando hay datos disponibles
                 if (growth !== null && !isNaN(growth)) {
+                    // Determinar etiqueta según signo
+                    const labelWord = growth > 0 ? 'Incremento' : (growth < 0 ? 'Decremento' : 'Incremento');
                     // Mostrar signo + solo para valores positivos, para negativos ya incluye el signo -
                     const signPrefix = growth > 0 ? '+' : '';
                     let color = '#e5e7eb'; // neutro (gris claro) para 0%
-                    if (growth > 0) color = '#2ECC71'; // verde revertido
+                    if (growth > 0) color = '#2ECC71'; // verde
                     else if (growth < 0) color = '#E63946'; // rojo
                     tooltipContent += `
-                        <div>Incremento: <span style="color:${color}; font-weight:700">${signPrefix}${growth}%</span></div>
+                        <div>${labelWord}: <span style="color:${color}; font-weight:700">${signPrefix}${growth}%</span></div>
                     `;
                 }
                 // Eliminamos la condición que mostraba "Sin datos"
@@ -497,13 +555,15 @@ document.addEventListener('DOMContentLoaded', function() {
             
         // Si es Benito Juárez, agregar anotación destacando el crecimiento extraordinario
         if (dataType === 'benito' && width > 500) {
-            // Ya no usamos auto-wrap; controlamos manualmente las líneas
-            const wrapWidth = width > 600 ? 90 : 70;
+            // Usar wrapping automático de d3-annotation
+            const baseWrap = width > 600 ? 90 : 70;
+            // Aumentar ancho del párrafo en 10% respecto al baseWrap
+            const wrapWidth = Math.min(Math.round(baseWrap * 1.3), Math.floor(width * 0.25));
             const annotations = [{
                 note: {
                     label: "Crecimiento Extraordinario 441.6% de incremento en los 70s",
                     wrap: wrapWidth,
-                    padding: 2,
+                    padding: 4,
                     align: "middle"
                 },
                 className: "annotation-responsive",
@@ -517,11 +577,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 dy: -15,
                 dx: 0
             }];
-            
+
             const makeAnnotations = d3.annotation()
                 .type(d3.annotationLabel)
                 .annotations(annotations);
-                
+
             svg.append('g')
                 .attr('class', 'annotation-group')
                 .attr('opacity', 0)
@@ -530,48 +590,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 .delay(1500)
                 .duration(800)
                 .attr('opacity', 1);
-            
-            // Aplicar estilos responsivos a la anotación
+
+            // Aplicar estilos responsivos a la anotación: aumentar fuente sin desbordes
             const annotationGroup = svg.select('.annotation-group');
-
-            // Tamaño de fuente e interlineado según ancho disponible
-            const labelFontSize = width > 900 ? '16px'
-                                : width > 700 ? '13px'
-                                : '11px';
-
-            // Paso vertical entre líneas en función del ancho (más compacto en pantallas medianas/pequeñas)
-            const dyStep = width > 900 ? '1.2em'
-                          : width > 700 ? '1.1em'
-                          : '1.0em';
+            const baseFontSize = width > 900 ? 16 : width > 700 ? 13 : 11;
+            const labelFontSizePx = Math.round(baseFontSize * 1.5);
 
             annotationGroup.selectAll('.annotation-note-label')
-                .style('font-size', labelFontSize)
+                .style('font-size', labelFontSizePx + 'px')
                 .style('line-height', '1.1')
                 .style('font-weight', '600')
-                .each(function() {
-                    const text = d3.select(this);
-                    const fullText = text.text();
-
-                    // Limpiar el texto actual
-                    text.text('');
-
-                    // Crear las líneas manualmente con tspan con interlineado responsivo
-                    const lines = [
-                        { text: 'Crecimiento',    bold: true,  x: 0, dy: '0em'   },
-                        { text: 'Extraordinario', bold: true,  x: 0, dy: dyStep },
-                        { text: '441.6% de',      bold: false, x: 0, dy: dyStep },
-                        { text: 'incremento',     bold: false, x: 0, dy: dyStep },
-                        { text: 'en los 70s',     bold: false, x: 0, dy: dyStep }
-                    ];
-
-                    lines.forEach((line) => {
-                        text.append('tspan')
-                            .attr('x', 0)
-                            .attr('dy', line.dy)
-                            .style('font-weight', line.bold ? '700' : '600')
-                            .text(line.text);
-                    });
-                });
+                .style('word-break', 'break-word');
         }
         
         chart = svg; // Guardar referencia al gráfico
