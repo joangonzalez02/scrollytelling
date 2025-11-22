@@ -807,6 +807,23 @@
             text-decoration: none;
         }
 
+        .step5-credit {
+            position: static !important;
+            transform: none !important;
+            display: block !important;
+            margin: 12px auto 18px auto !important;
+            text-align: center !important;
+            background: rgba(0,0,0,0.55) !important;
+            color: #fff !important;
+            padding: 6px 10px !important;
+            border-radius: 6px !important;
+            font-size: 13px !important;
+            max-width: 94% !important;
+            box-sizing: border-box !important;
+            word-break: break-word !important;
+            z-index: 6 !important;
+        }
+
         /* Posición de la Fuente de diario.jpg*/
         .evidence-overlay .photo-credit {
             position: static !important;
@@ -1113,60 +1130,55 @@
             </div>
         </section>
 
-        <!-- Step 5: Imagen 6.jpg con animación popup flotante  -->
-        <section class="step" data-step="5" style="position: relative; min-height: 100vh; overflow:hidden;">
-            <div class="floating-image-wrapper" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; padding:4vh 4vw;">
-                <img src="assets/6.jpg" alt="Imagen histórica" class="floating-image" loading="lazy" decoding="async">
+        <!-- Step 5: Imagen 6.jpg como separador a pantalla completa con fade por scroll -->
+        <section class="step" data-step="5" style="position:relative; padding:0; margin:0; background:none !important; display:flex; flex-direction:column;">
+            <div class="floating-image-wrapper" style="position:relative; width:100%; height:100vh; overflow:hidden;">
+                <img src="assets/6.jpg" alt="Cancún histórico" class="floating-image" loading="lazy" decoding="async">
+            </div>
+            <div class="photo-credit step5-credit">
+                Fuente: <a href="https://www.reportur.com/agencias/2025/04/22/fotos-asi-lucia-cancun-hace-55-anos-antes-de-ser-destino-turistico/" target="_blank" rel="noopener" title="Fotos – Así lucía Cancún hace 55 años antes de ser destino turístico">Fotos – Así lucía Cancún hace 55 años</a>
             </div>
             <style>
-                /* Animaciones popup para step 5  */
-                @keyframes popupFromTopStep5 {
-                    0% { opacity:0; transform:scale(0.85) translateY(-40px); }
-                    100% { opacity:1; transform:scale(1) translateY(0); }
-                }
-                @keyframes popupFromBottomStep5 {
-                    0% { opacity:0; transform:scale(0.85) translateY(40px); }
-                    100% { opacity:1; transform:scale(1) translateY(0); }
-                }
+                /* Imagen llena siempre el viewport sin distorsión */
                 section[data-step="5"] .floating-image {
-                    width:80vw; /* 80% horizontal */
-                    height:80vh; /* 80% vertical */
+                    position:absolute;
+                    inset:0;
+                    width:100%;
+                    height:100%;
                     object-fit:cover;
-                    box-shadow:0 12px 38px rgba(0,0,0,0.55);
-                    opacity:0;
-                    transform:scale(0.85) translateY(0);
-                    will-change:transform,opacity;
-                    transition:box-shadow .3s ease;
+                    object-position:center center;
+                    display:block;
+                    opacity:0; /* fade controlado por scroll */
+                    transition:opacity 120ms linear;
+                    will-change:opacity;
                 }
-                section[data-step="5"] .floating-image:hover {
-                    box-shadow:0 16px 46px rgba(0,0,0,0.6);
+                section[data-step="5"] .step5-credit {
+                    background:rgba(0,0,0,0.55);
+                    color:#fff;
+                    font-size:clamp(12px,1.05vw,15px);
+                    line-height:1.3;
+                    padding:6px 12px;
+                    text-align:center;
+                    margin:8px auto 0 auto; /* centrado debajo de la imagen */
+                    width:auto; /* se ajusta al contenido */
+                    max-width:90%;
+                    display:inline-block;
+                    border-radius:6px;
+                    box-sizing:border-box;
                 }
-                /* Pantallas grandes (>=1400px) */
-                @media (min-width:1400px) {
-                    section[data-step="5"] .floating-image { width:80vw; height:80vh; }
+                section[data-step="5"] .step5-credit a { color:#fff; text-decoration:underline; }
+                @media (max-width: 600px) {
+                    section[data-step="5"] .step5-credit { font-size:12px; padding:8px 10px; }
                 }
-                /* Pantallas medianas (tablet) */
-                @media (max-width:1024px) {
-                    section[data-step="5"] .floating-image { width:80vw; height:80vh; }
+                /* Móviles muy angostos: mostrar imagen completa (sin recorte) */
+                @media (max-width:460px) {
+                    section[data-step="5"] .floating-image {
+                        object-fit:contain; /* evita recortes extremos */
+                        background:#000; /* barras negras si la relación no llena */
+                    }
+                    section[data-step="5"] .floating-image-wrapper { background:#000; }
                 }
-                /* Tablets / teléfonos grandes */
-                @media (max-width:768px) {
-                    section[data-step="5"] .floating-image { width:80vw; height:80vh; }
-                }
-                /* Teléfonos móviles */
-                @media (max-width:520px) {
-                    section[data-step="5"] .floating-image { width:100vw; height:100vh; }
-                }
-                /* Dispostivos muy pequeños */
-                @media (max-width:380px) {
-                    section[data-step="5"] .floating-image { width:100vw; height:100vh; }
-                }
-                section[data-step="5"].animate-down .floating-image { animation: popupFromTopStep5 0.7s cubic-bezier(.2,.8,.3,1) forwards; }
-                section[data-step="5"].animate-up .floating-image { animation: popupFromBottomStep5 0.7s cubic-bezier(.2,.8,.3,1) forwards; }
             </style>
-            <div class="photo-credit" style="position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); background: rgba(0, 0, 0, 0.5); color: #fff; padding: 6px 10px; border-radius: 6px; font-size: 12px; line-height: 1.3; z-index: 4;">
-                Fuente: <a href="https://www.reportur.com/agencias/2025/04/22/fotos-asi-lucia-cancun-hace-55-anos-antes-de-ser-destino-turistico/" target="_blank" rel="noopener" title="Fotos – Así lucía Cancún hace 55 años antes de ser destino turístico">https://www.reportur.com/agencias/2025/04/22/fotos-asi-lucia-cancun-hace-55-anos-antes-de-ser-destino-turistico/</a>
-            </div>
         </section>
 
         <!-- Step 6: Expansión urbana sin freno  -->
@@ -1678,6 +1690,50 @@
                 carousel.addEventListener('touchmove', function(e){ var t=e.touches[0]; teX=t.clientX; teY=t.clientY; });
                 carousel.addEventListener('touchend', function(){ var dx=teX-tsX, dy=teY-tsY; if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) { if (dx < 0) { idx = (idx + 1) % slides.length; } else { idx = (idx - 1 + slides.length) % slides.length; } update(); } tsX=tsY=teX=teY=0; });
             });
+        })();
+    </script>
+    <script>
+        // Fade controlado por scroll: entrada (fade in) y salida (fade out) para imagen del step 5
+        (function(){
+            const step = document.querySelector('section[data-step="5"]');
+            const img = step ? step.querySelector('.floating-image') : null;
+            if(!step || !img) return;
+
+            function updateOpacity(){
+                const rect = step.getBoundingClientRect();
+                const vh = window.innerHeight;
+                const stepHeight = rect.height;
+
+                // Si el step está completamente fuera de vista
+                if (rect.bottom <= 0 || rect.top >= vh) {
+                    img.style.opacity = 0;
+                    return;
+                }
+
+                // Progreso de entrada: de top justo entrando (rect.top ~ vh) a completamente dentro (rect.top <= 0)
+                const enterProgress = 1 - Math.min(1, Math.max(0, rect.top / vh)); // 0 -> 1
+
+                // Progreso de salida: cuando la parte inferior comienza a subir por encima del viewport
+                const exitStart = stepHeight - vh; // exceso de altura si lo hay
+                let exitProgress = 0;
+                if (stepHeight > vh) {
+                    // scrolled dentro del step
+                    const scrolledInside = Math.min(stepHeight, Math.max(0, -rect.top));
+                    exitProgress = Math.min(1, Math.max(0, (scrolledInside - (exitStart * 0.2)) / (exitStart * 0.8)));
+                } else {
+                    // Si el crédito añade altura extra mínima: usar parte inferior
+                    exitProgress = Math.min(1, Math.max(0, (vh - rect.bottom) / (vh * 0.4))); // comienza a 0 cuando bottom=vh
+                }
+
+                // Opacidad: primero aparece (enterProgress), luego se mantiene y finalmente se desvanece (exitProgress)
+                let opacity = enterProgress * (1 - exitProgress);
+                opacity = Math.min(1, Math.max(0, opacity));
+                img.style.opacity = opacity;
+            }
+
+            window.addEventListener('scroll', updateOpacity, { passive: true });
+            window.addEventListener('resize', updateOpacity);
+            updateOpacity();
         })();
     </script>
 </body>
