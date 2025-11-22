@@ -128,7 +128,9 @@ const mapStepsConfig = {
                         const pob = Number(properties.POB_TOTAL || properties.POBTOT || 0);
                         const grado = properties.GM_2020 || 'N/D';
                         const im = Number(properties.IM_2020 || 0);
-                        return `<h3>Área ${properties.fid ?? ''}</h3>
+                        // Determinar la clave identificadora
+                        const agKey = properties.CVE_AGEB || properties.CVEGEO || properties.CVE || properties.fid || properties.id || '';
+                        return `<h3>AGEB ${agKey}</h3>
                                 <p><strong>Grado de marginación:</strong> ${grado}</p>
                                 <p><strong>Índice de marginación (IM 2020):</strong> ${isFinite(im) ? im.toFixed(2) : 'N/D'}</p>
                                 <p><strong>Población 2020:</strong> ${isFinite(pob) ? pob.toLocaleString() : 'N/D'} habitantes</p>`;
@@ -182,7 +184,7 @@ const mapStepsConfig = {
                         const reutil = Number(p.Eval_D_reutil_reparar_cnt || 0);
                         const trabajar = Number(p.Eval_D_trabajar_cnt || 0);
                         const total = abastecer + aprender + circular + cuidados + disfrutar + reutil + trabajar;
-                        return `<h3>Dimensiones de Caminar</h3>
+                        return `<h3>Oportunidades de las dimensiones del desarrollo</h3>
                             <p><strong>Total agregado:</strong> ${total}</p>
                             <p><strong>Abastecerse:</strong> ${abastecer}</p>
                             <p><strong>Aprender:</strong> ${aprender}</p>
