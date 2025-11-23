@@ -114,21 +114,24 @@ document.addEventListener('DOMContentLoaded', function () {
         const baseWidth = 1000;
         const baseHeight = 400;
         
-        // Márgenes simétricos y responsivos
-        let leftRightMargin;
+        // Márgenes responsivos - asimétricos en móviles para etiquetas laterales
+        let leftMargin, rightMargin;
         if (containerWidth <= 480) {
-            leftRightMargin = 80;  // Móviles - márgenes más pequeños
+            leftMargin = 95;   
+            rightMargin = 140; 
         } else if (containerWidth <= 768) {
-            leftRightMargin = 100; // Tablets - márgenes intermedios
+            leftMargin = 105;  // Tablets - margen izquierdo
+            rightMargin = 135; // Tablets - margen derecho 
         } else {
-            leftRightMargin = 120; // Desktop - márgenes amplios
+            leftMargin = 120;  // Desktop - márgenes amplios
+            rightMargin = 120;
         }
         
         const margin = { 
             top: 40, 
-            right: leftRightMargin, 
+            right: rightMargin, 
             bottom: 80, 
-            left: leftRightMargin 
+            left: leftMargin 
         };
         
         // Dimensiones internas del área de dibujo
@@ -499,31 +502,38 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         // Etiquetas de ejes (responsivas basadas en dimensiones)
+        // Etiqueta 'Año' centrada debajo del eje X
         svg.append('text')
-            .attr('transform', 'rotate(-90)')
             .attr('x', dims.margin.left + dims.innerW / 2)
-            .attr('y', dims.margin.top + dims.innerH + dims.margin.bottom - 10)
+            .attr('y', dims.height - 20)
             .style('text-anchor', 'middle')
             .attr('fill', '#023047')
+            .style('font-size', `${font.axis}px`)
             .style('text-shadow', 'none')
             .text('Año');
 
+        // Ajustar posición de 'Parque vehicular' según el tamaño de pantalla
+        const leftAxisLabelOffset = dims.margin.left < 120 ? 10 : 18;
         svg.append('text')
             .attr('transform', 'rotate(-90)')
-            .attr('y', 20)
+            .attr('y', leftAxisLabelOffset)
             .attr('x', -(dims.margin.top + dims.innerH / 2))
-            .attr('dy', '1em')
+            .attr('dy', '0em')
             .style('text-anchor', 'middle')
+            .style('font-size', `${font.axis}px`)
             .attr('fill', '#023047')
             .style('text-shadow', 'none')
             .text('Parque vehicular');
 
+        // Ajustar posición de 'Viviendas' según el tamaño de pantalla
+        const rightAxisLabelOffset = dims.margin.left < 120 ? 60 : 75;
         svg.append('text')
             .attr('transform', 'rotate(-90)')
-            .attr('y', dims.margin.left + dims.innerW + 60)
+            .attr('y', dims.margin.left + dims.innerW + rightAxisLabelOffset)
             .attr('x', -(dims.margin.top + dims.innerH / 2))
-            .attr('dy', '1em')
+            .attr('dy', '0em')
             .style('text-anchor', 'middle')
+            .style('font-size', `${font.axis}px`)
             .attr('fill', '#023047')
             .style('text-shadow', 'none')
             .text('Viviendas');
@@ -627,11 +637,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 .style('pointer-events', 'none');
 
             // Calcular posición de la etiqueta para evitar que se salga del área del gráfico
-            const preferredOffsetX = 110;
-            const labelPadding = 160;
-            const placeRight = annX < (dims.innerW - labelPadding);
-            const labelX = placeRight ? Math.min(annX + preferredOffsetX, dims.innerW - 30) : Math.max(annX - preferredOffsetX, 30);
-            const labelOffsetY = -80;
+            // Siempre posicionar a la derecha de la línea roja
+            const minOffsetX = 10; // Mínima distancia desde la línea para evitar superposición
+            const preferredOffsetX = dims.margin.left < 120 ? 15 : 110;
+            const labelX = Math.min(annX + Math.max(minOffsetX, preferredOffsetX), dims.innerW - 30);
+            const labelOffsetY = dims.margin.left < 120 ? -40 : -80;
             const labelY = Math.max(20, Math.min(annY + labelOffsetY, dims.innerH - 30));
 
             const annotations = [{
