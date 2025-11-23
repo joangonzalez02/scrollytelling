@@ -526,7 +526,7 @@ document.addEventListener('DOMContentLoaded', function () {
             .text('Parque vehicular');
 
         // Ajustar posición de 'Viviendas' según el tamaño de pantalla
-        const rightAxisLabelOffset = dims.margin.left < 120 ? 60 : 75;
+        const rightAxisLabelOffset = dims.margin.left < 120 ? 90 : 75;
         svg.append('text')
             .attr('transform', 'rotate(-90)')
             .attr('y', dims.margin.left + dims.innerW + rightAxisLabelOffset)
@@ -641,7 +641,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const minOffsetX = 10; // Mínima distancia desde la línea para evitar superposición
             const preferredOffsetX = dims.margin.left < 120 ? 15 : 110;
             const labelX = Math.min(annX + Math.max(minOffsetX, preferredOffsetX), dims.innerW - 30);
-            const labelOffsetY = dims.margin.left < 120 ? -40 : -80;
+            const labelOffsetY = dims.margin.left < 120 ? -90 : -80;
             const labelY = Math.max(20, Math.min(annY + labelOffsetY, dims.innerH - 30));
 
             const annotations = [{
