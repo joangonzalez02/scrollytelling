@@ -76,6 +76,28 @@
     <script src="dist/mapbox-integration.min.js" defer></script>
     <script src="dist/main.min.js" defer></script>
     <style>
+        /* Importación de fuentes: Boldonse, Playfair Display, Special Elite, Wix Madefor Text */
+        @import url('https://fonts.googleapis.com/css2?family=Boldonse&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Special+Elite&family=Wix+Madefor+Text:ital,wght@0,400..800;1,400..800&display=swap');
+
+        .step[data-step="1"] h1 {
+            font-family: 'Special Elite', Georgia, 'Times New Roman', serif !important;
+            letter-spacing: 0.5px;
+            font-size: 1.5em;
+            line-height: 1.2;
+            font-weight: 700;
+        }
+
+        /* Aplicar Wix Madefor Text a todos los párrafos */
+        p, .step p, .content p {
+            font-family: 'Wix Madefor Text', 'Montserrat', 'Segoe UI', Tahoma, Geneva, Verdana, serif;
+        }
+
+        /* Subtítulos con Playfair Display */
+        .step h2, .step h3, .content h2, .content h3, .subtitle {
+            font-family: 'Playfair Display', Georgia, 'Times New Roman', serif !important;
+            font-weight: 600;
+            margin-bottom: 0.35em;
+        }
         * { box-sizing: border-box; }
 
         #map {
@@ -116,21 +138,22 @@
             position: absolute;
             left: 50%;
             transform: translateX(-50%);
-            bottom: -18px;
+            bottom: -20px;
             width: calc(100% - 40px);
             max-width: 1400px;
-            height: 28px;
+            height: 36px;
             pointer-events: none;
             background: radial-gradient(ellipse at center,
-                rgba(2,48,71,0.12) 0%,
-                rgba(2,48,71,0.06) 40%,
-                rgba(2,48,71,0.02) 70%,
+                rgba(2,48,71,0.20) 0%,
+                rgba(2,48,71,0.12) 35%,
+                rgba(2,48,71,0.06) 65%,
                 rgba(2,48,71,0) 100%);
             border-radius: 50%;
             opacity: 1;
             transition: opacity 240ms ease-in-out, transform 240ms ease-in-out;
             z-index: 1001;
-            filter: blur(6px);
+            filter: blur(4px);
+            box-shadow: 0 10px 30px rgba(2,48,71,0.08);
         }
 
         .step.is-active[data-step="1"]::after {
@@ -181,7 +204,7 @@
             z-index: 1000;
             opacity: 0;
             visibility: hidden;
-            transition: top 360ms cubic-bezier(.2,.9,.2,1), opacity 240ms ease-in-out, visibility 240ms ease-in-out;
+            transition: top 360ms cubic-bezier(.2,.9,.2,1);
             pointer-events: none;
         }
 
@@ -192,6 +215,7 @@
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             pointer-events: none;
+            transition: none;
         }
 
         /* Peek: asoma 120px desde la parte inferior */
@@ -319,10 +343,9 @@
                 height: 1px;
                 pointer-events: none;
                 z-index: 1001;
-                /* Sombra más suave y con el mismo tono que el pseudo-elemento */
-                box-shadow: 0 28px 80px rgba(2,48,71,0.12);
-                filter: blur(4px);
-                opacity: 0.95;
+                box-shadow: 0 28px 90px rgba(2,48,71,0.18);
+                filter: blur(3px);
+                opacity: 1;
             }
         
             /* Mostrar la sombra solo cuando el step 1 esté activo */
@@ -1304,12 +1327,20 @@
                                             fixed.style.display = 'none';
                                             if (credit) credit.style.pointerEvents = 'none';
                                         } else {
-                                            fixed.style.display = '';
-                                            fixed.style.opacity = String(reveal);
-                                            fixed.style.visibility = reveal > 0 ? 'visible' : 'hidden';
-                                            if (credit) {
-                                                credit.style.pointerEvents = reveal > 0.6 ? 'auto' : 'none';
-                                                credit.style.opacity = reveal > 0 ? '1' : '0.9';
+                                            const show = reveal > 0;
+                                            if (show) {
+                                                fixed.style.display = '';
+                                                fixed.style.opacity = '1';
+                                                fixed.style.visibility = 'visible';
+                                                if (credit) {
+                                                    credit.style.pointerEvents = 'auto';
+                                                    credit.style.opacity = '1';
+                                                }
+                                            } else {
+                                                fixed.style.opacity = '0';
+                                                fixed.style.visibility = 'hidden';
+                                                fixed.style.display = 'none';
+                                                if (credit) credit.style.pointerEvents = 'none';
                                             }
                                         }
                                         return;
