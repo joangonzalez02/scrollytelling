@@ -92,10 +92,152 @@
         section[data-step="1"] {
             background: none !important;
         }
-        
-        section[data-step="1"]::before,
+        section[data-step="1"] {
+            overflow: visible; /* permitir pseudo-elementos fuera del contenedor */
+        }
+
+        /* Asegurar que el step 1 esté por encima del fixed-behind mientras está en pantalla */
+        .step[data-step="1"] {
+            z-index: 1010;
+        }
+
+        /* Elevar step 1 solo cuando está activo */
+        .step.is-active[data-step="1"] {
+            z-index: 1010; /* por encima del mapa (mapa usa 1000) */
+        }
+
+        /* Contenido del step esté por encima de la sombra solo cuando está activo */
+        .step.is-active[data-step="1"] > div {
+            position: relative;
+            z-index: 1003;
+        }
         section[data-step="1"]::after {
-            display: none !important;
+            content: '';
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: -18px;
+            width: calc(100% - 40px);
+            max-width: 1400px;
+            height: 28px;
+            pointer-events: none;
+            background: radial-gradient(ellipse at center,
+                rgba(2,48,71,0.12) 0%,
+                rgba(2,48,71,0.06) 40%,
+                rgba(2,48,71,0.02) 70%,
+                rgba(2,48,71,0) 100%);
+            border-radius: 50%;
+            opacity: 1;
+            transition: opacity 240ms ease-in-out, transform 240ms ease-in-out;
+            z-index: 1001;
+            filter: blur(6px);
+        }
+
+        .step.is-active[data-step="1"]::after {
+            transform: translateX(-50%) translateY(2px);
+        }
+
+        /* Efecto 'telón' entre step 1 y step 2*/
+        section[data-step="2"] {
+            position: relative;
+            z-index: 1000;
+            margin: 0; /* asegura que no haya separación visual entre steps */
+            padding-top: 0; /* deja que el contenido suba hasta la parte superior de la pantalla */
+        }
+
+        /* Fondo 'pegado' al viewport: pseudo-elemento fijo que hace ver el step 2 como fondo */
+        section[data-step="2"]::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 100vh;
+            z-index: 1000;
+            background-color: #ffffff; /* match step 2 color to avoid white flash */
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 200ms ease-in-out;
+        }
+
+        /* Mostrar el pseudo-fondo sólo cuando step 2 esté activo */
+        .step.is-active[data-step="2"]::before {
+            opacity: 1;
+        }
+
+        /* Mostrar el pseudo-fondo también cuando la clase bg-visible esté presente*/
+        .step.bg-visible[data-step="2"]::before {
+            opacity: 1;
+        }
+
+        section[data-step="2"] .fixed-behind {
+            position: fixed;
+            /* colocamos en su posición final: permanece fijo en el viewport */
+            top: 15vh;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 320px;
+            max-width: 90%;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: top 360ms cubic-bezier(.2,.9,.2,1), opacity 240ms ease-in-out, visibility 240ms ease-in-out;
+            pointer-events: none;
+        }
+
+        section[data-step="2"] .fixed-behind img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            pointer-events: none;
+        }
+
+        /* Peek: asoma 120px desde la parte inferior */
+        .step.peek[data-step="2"] .fixed-behind {
+            top: calc(100vh - 120px);
+            opacity: 1;
+            visibility: visible;
+            pointer-events: none;
+        }
+
+        /* Fully visible: coloca en la posición final (coincide con padding-top) */
+        .step.bg-visible[data-step="2"] .fixed-behind {
+            top: 15vh;
+            opacity: 1;
+            visibility: visible;
+            pointer-events: none;
+        }
+
+        /* Crédito interactivo aparece por encima de la imagen fija */
+        section[data-step="2"] .fixed-behind .photo-credit {
+            position: fixed;
+            bottom: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1003;
+            pointer-events: none;
+        }
+
+        /* Mostrar la imagen fija y permitir interacción con el crédito cuando
+           el IntersectionObserver haya marcado el step 2 como visible */
+        .step.bg-visible[data-step="2"] .fixed-behind {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: none; /* imagen sigue sin capturar clicks */
+        }
+
+        .step.bg-visible[data-step="2"] .fixed-behind .photo-credit {
+            pointer-events: auto; /* permitir clicks en el enlace de la fuente */
+        }
+
+        /* Asegura que el contenido real del step 2 (excepto .fixed-behind)
+           esté por encima del pseudo-fondo */
+        section[data-step="2"] > div:not(.fixed-behind),
+        section[data-step="2"] > div:not(.fixed-behind) * {
+            position: relative;
+            z-index: 1002;
         }
         
         /* Configuración del mapa base*/
@@ -166,6 +308,27 @@
             pointer-events: none;
             z-index: 1;
         }
+
+        /* Sombra externa bajo el video (oculta por defecto) */
+            .video-external-shadow {
+                display: block;
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: -28px; /* ligeramente fuera del viewport para crear sombra bajo el borde */
+                height: 1px;
+                pointer-events: none;
+                z-index: 1001;
+                /* Sombra más suave y con el mismo tono que el pseudo-elemento */
+                box-shadow: 0 28px 80px rgba(2,48,71,0.12);
+                filter: blur(4px);
+                opacity: 0.95;
+            }
+        
+            /* Mostrar la sombra solo cuando el step 1 esté activo */
+            .step.is-active[data-step="1"] .video-external-shadow {
+                display: block;
+            }
         
         /* Crear zonas de scroll en los bordes */
         .map-scroll-zone {
@@ -1063,9 +1226,9 @@
     <!-- Contenedor principal para el scrollytelling -->
     <main id="scroller">
         <!-- Step 1: Portada / Hook -->
-        <section class="step" data-step="1" style="position: relative; overflow: hidden; background: none !important;">
-            <!-- Video de fondo con mejor implementación -->
-            <video autoplay muted loop playsinline preload="metadata" poster="assets/1.png" id="background-video" style="position: absolute; width: 100%; height: 100%; object-fit: cover; z-index: -2;">
+        <section class="step" data-step="1" style="position: relative; overflow: visible; background: none !important; min-height: 100vh;">
+            <!-- Video de fondo -->
+            <video autoplay muted loop playsinline preload="metadata" poster="assets/1.png" id="background-video" style="position: absolute; width: 100%; height: 100vh; object-fit: cover; z-index: -2;">
                 <source src="assets/1.mp4" type="video/mp4">
                 Tu navegador no soporta video HTML5.
             </video>
@@ -1073,6 +1236,7 @@
             
             <!-- Capa de color con transparencia mayor -->
             <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(2, 48, 71, 0.4); z-index: -1;"></div>
+            <div class="video-external-shadow" style="height: 1px; pointer-events: none;"></div>
             
             <!-- Contenido sin estilo de las tarjetas normales -->
             <div style="position: relative; z-index: 5; max-width: 800px; margin: 0 auto; padding: 40px 20px; text-align: center;">
@@ -1081,14 +1245,100 @@
             </div>
         </section>
 
-        <!-- Step 2: Imagen cuadernobancodemex.jpg -->
-        <section class="step" data-step="2" style="min-height: 100vh; background-color: #023047; display: flex; align-items: flex-start; justify-content: center; position: relative; z-index: 2; padding-top: 15vh;">
-            <div style="max-width: 320px; width: 90%; position: relative; z-index: 3;">
-                <img src="assets/cuadernobancodemex.jpg" alt="Cuaderno Banco de México" style="width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: block;">
+        <!-- Step 2: Imagen cuadernobancodemex.jpg (contenido visual fijado) -->
+        <section class="step" data-step="2" style="min-height: 100vh; background: transparent; display: flex; align-items: flex-start; justify-content: center; position: relative; padding-top: 15vh;">
+            <div class="fixed-behind">
+                <img src="assets/cuadernobancodemex.jpg" alt="Cuaderno Banco de México">
+                <div class="photo-credit">
+                    Fuente: <a href="https://cgc.qroo.gob.mx/cjg/wp-content/uploads/2019/11/Cap-09-OK-Mayo-7.pdf" target="_blank" rel="noopener" title="Capítulo 9 - cgc.qroo.gob.mx">cgc.qroo.gob.mx</a>
+                </div>
             </div>
-            <div class="photo-credit" style="position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); background: rgba(0, 0, 0, 0.5); color: #fff; padding: 6px 10px; border-radius: 6px; font-size: 12px; line-height: 1.3; z-index: 4;">
-                Fuente: <a href="https://cgc.qroo.gob.mx/cjg/wp-content/uploads/2019/11/Cap-09-OK-Mayo-7.pdf" target="_blank" rel="noopener" title="Capítulo 9 - cgc.qroo.gob.mx">cgc.qroo.gob.mx</a>
         </section>
+        <script>
+            (function(){
+                try {
+                    const step1 = document.querySelector('section[data-step="1"]');
+                    const step2 = document.querySelector('section[data-step="2"]');
+                    const fixed = step2 ? step2.querySelector('.fixed-behind') : null;
+                    const credit = step2 ? step2.querySelector('.photo-credit') : null;
+                    if (!step1 || !step2 || !fixed) return;
+
+                    // Generar thresholds finos para obtener cambios suaves
+                    const thresholds = [];
+                    for (let i=0;i<=100;i++) thresholds.push(i/100);
+
+                        const io = new IntersectionObserver((entries) => {
+                            entries.forEach(entry => {
+                                try {
+                                    // Si otro step está activo, ocultar el fixed-behind
+                                    const active = document.querySelector('.step.is-active');
+                                    const activeStep = active ? active.getAttribute('data-step') : null;
+                                    if (activeStep && activeStep !== '1' && activeStep !== '2') {
+                                        fixed.style.opacity = '0';
+                                        fixed.style.visibility = 'hidden';
+                                        if (credit) credit.style.pointerEvents = 'none';
+                                        return;
+                                    }
+
+                                    // entry.intersectionRatio es la fracción visible de step1 (1 = totalmente visible)
+                                    const visibleFrac = entry.intersectionRatio;
+                                    // Revelar step2 en fondo a medida que step1 deja de ser visible
+                                    const reveal = Math.min(1, Math.max(0, 1 - visibleFrac));
+
+                                    // Comprobar el step activo y actuar en consecuencia
+                                    const activeNow = document.querySelector('.step.is-active');
+                                    const activeStepNow = activeNow ? activeNow.getAttribute('data-step') : null;
+
+                                    if (activeStepNow === '2') {
+                                        fixed.style.display = '';
+                                        fixed.style.opacity = '1';
+                                        fixed.style.visibility = 'visible';
+                                        if (credit) {
+                                            credit.style.pointerEvents = 'auto';
+                                            credit.style.opacity = '1';
+                                        }
+                                        return;
+                                    }
+
+                                    // Si el step 1 está activo, usamos el reveal gradual controlado por la visibilidad de step1
+                                    if (activeStepNow === '1') {
+                                        const step2Rect = step2.getBoundingClientRect();
+                                        const step2InViewport = (step2Rect.top < window.innerHeight) && (step2Rect.bottom > 0);
+
+                                        if (!step2InViewport) {
+                                            fixed.style.opacity = '0';
+                                            fixed.style.visibility = 'hidden';
+                                            fixed.style.display = 'none';
+                                            if (credit) credit.style.pointerEvents = 'none';
+                                        } else {
+                                            fixed.style.display = '';
+                                            fixed.style.opacity = String(reveal);
+                                            fixed.style.visibility = reveal > 0 ? 'visible' : 'hidden';
+                                            if (credit) {
+                                                credit.style.pointerEvents = reveal > 0.6 ? 'auto' : 'none';
+                                                credit.style.opacity = reveal > 0 ? '1' : '0.9';
+                                            }
+                                        }
+                                        return;
+                                    }
+
+                                    // En cualquier otro caso (no step 1 ni 2 activos), ocultar totalmente
+                                    fixed.style.opacity = '0';
+                                    fixed.style.visibility = 'hidden';
+                                    fixed.style.display = 'none';
+                                    if (credit) credit.style.pointerEvents = 'none';
+                                } catch (err) {
+                                    console.warn('Error en IO callback:', err);
+                                }
+                            });
+                        }, { threshold: thresholds });
+
+                    io.observe(step1);
+                } catch (e) {
+                    console.warn('IntersectionObserver (reveal by step1) no disponible:', e);
+                }
+            })();
+        </script>
 
 
         <!-- Step 3: Digging in (Introducción al caso) -->

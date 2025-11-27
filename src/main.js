@@ -325,6 +325,24 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Mostrando gráfico de población para el paso 6');
         }
         
+        // Elementos fijos del `step 2`
+        const fixedBehindEls = document.querySelectorAll('section[data-step="2"] .fixed-behind');
+        if (stepIndex === 1) {
+            fixedBehindEls.forEach(el => {
+                el.style.display = '';
+                el.style.opacity = '';
+                el.style.visibility = '';
+                el.style.pointerEvents = 'none';
+            });
+        } else {
+            fixedBehindEls.forEach(el => {
+                el.style.opacity = '0';
+                el.style.visibility = 'hidden';
+                el.style.display = 'none';
+                el.style.pointerEvents = 'none';
+            });
+        }
+
         // Ajustar la visibilidad del mapa base según el paso
         const mapElem = document.getElementById('map');
         if (!mapElem) return;
