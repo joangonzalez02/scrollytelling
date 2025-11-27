@@ -361,12 +361,16 @@
             pointer-events: none;
         }
 
-        /* Crédito interactivo aparece por encima de la imagen fija */
+        /* Crédito de foto: colocar siempre debajo y centrado respecto a la imagen */
+        section[data-step="2"] .fixed-behind {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
         section[data-step="2"] .fixed-behind .photo-credit {
-            position: fixed;
-            bottom: 14px;
-            left: 50%;
-            transform: translateX(-50%);
+            position: static;
+            margin-top: 8px;
+            text-align: center;
             z-index: 1003;
             pointer-events: none;
         }
@@ -405,7 +409,8 @@
                 object-fit: contain; 
             }
             section[data-step="2"] .fixed-behind .photo-credit {
-                bottom: 18px;
+                margin-top: 18px;
+                text-align: center;
             }
         }
 
