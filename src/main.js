@@ -46,6 +46,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
                 response.element.classList.add('is-active');
                 response.element.classList.add('active');
+                // Animación de typing para el título del step 1
+                try {
+                    if (response.index === 0) {
+                        startTypingStep1(response.element);
+                    }
+                } catch (e) { console.warn('Error aplicando typing secuencial en step 1:', e); }
                 
                 // Animación específica para step 29
                 if (currentStep === 28) {
@@ -70,9 +76,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
 
-                // Debug: imprimir información del step actual
-                console.log('Step activo:', currentStep, 'elemento:', response.element.classList.toString());
-
                 // Animar charts al entrar a sus steps
                 if (currentStep === 26 && window.vehicleChart && typeof window.vehicleChart.enter === 'function') {
                     // Nuevo Step 25 (index 24): parque vehicular
@@ -80,9 +83,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             })
             .onStepExit(response => {
-                console.log('Saliendo del step:', response.index);
                 response.element.classList.remove('is-active');
                 response.element.classList.remove('active');
+                // Si salimos del step 1, cancelar timers y limpiar clases relacionadas al typing
+                try {
+                    if (response.index === 0) {
+                        clearTypingStep1(response.element);
+                    }
+                } catch (e) { console.warn('Error limpiando typing al salir de step 1:', e); }
 
                 // Reset de animaciones para step 29 al salir, para que pueda reanimarse al re-entrar
                 if (response.index === 28) {
@@ -112,7 +120,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Al salir de steps con leyenda (19, 25) forzar ocultado
                 if (response.index === 18 || response.index === 24) {
-                    console.log('Saliendo de step con leyenda (19/23)');
                     try {
                         const legend = document.getElementById('map-legend');
                         if (legend) legend.style.display = 'none';
@@ -146,7 +153,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Si no estamos entrando a otro step de evolución urbana, ocultar todo
                     if (currentStep < 6 || currentStep > 16) {
                         setTimeout(() => {
-                            console.log('Saliendo de steps de evolución urbana, ocultando imágenes');
                             const evolutionBg = document.getElementById('urban-evolution-background');
                             if (evolutionBg) {
                                 evolutionBg.style.display = 'none';
@@ -166,7 +172,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Verificar si el step que estamos abandonando tenía un mapa
                 const exitingElement = response.element;
                 if (exitingElement && exitingElement.getAttribute('data-map') === 'true') {
-                    console.log('Saliendo de un step con mapa, ocultando Mapbox');
                     hideMapVisuals(); // Función específica para ocultar elementos del mapa
                 }
 
@@ -179,7 +184,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Función para activar visualizaciones según el paso actual
     function activateStepVisuals(stepIndex) {
-        console.log(`Activando visuales para step ${stepIndex}`);
         
         // Obtener el elemento del paso actual
         const currentStepElement = document.querySelector(`section[data-step="${stepIndex+1}"]`);
@@ -192,7 +196,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const hasMap = currentStepElement.getAttribute('data-map') === 'true';
         
         if (hasMap) {
-            console.log(`=== ACTIVANDO MAPA PARA STEP ${stepIndex+1} ===`);
 
             // Solo permitir leyendas en steps 19 y 23; ocultar por defecto
             try {
@@ -205,16 +208,11 @@ document.addEventListener('DOMContentLoaded', function() {
             // Forzar la restauración del estado del mapa (importante para cuando se oculta con el botón naranja)
             const mapContainer = document.getElementById('map');
             if (mapContainer) {
-                console.log('🗺️ Forzando visibilidad del contenedor #map...');
                 mapContainer.style.display = 'block';
                 mapContainer.style.opacity = '1';
                 mapContainer.style.visibility = 'visible';
                 mapContainer.style.zIndex = '1000';
                 mapContainer.classList.add('active');
-                console.log('✅ Estilos aplicados a #map');
-                console.log('Display:', mapContainer.style.display);
-                console.log('Opacity:', mapContainer.style.opacity);
-                console.log('Visibility:', mapContainer.style.visibility);
             } else {
                 console.error('❌ No se encontró el contenedor #map');
             }
@@ -226,24 +224,18 @@ document.addEventListener('DOMContentLoaded', function() {
             // Extraer la capa y vista del mapa de los atributos data
             const mapLayer = currentStepElement.getAttribute('data-map-layer');
             const mapView = currentStepElement.getAttribute('data-map-view');
-            console.log('📊 Datos del step:');
-            console.log('- Map Layer:', mapLayer);
-            console.log('- Map View:', mapView);
             
             // Activar el mapa Mapbox con la configuración adecuada
             if (window.mapboxHelper && typeof window.mapboxHelper.updateMapForStep === 'function') {
-                console.log(`🚀 Llamando updateMapForStep(${stepIndex+1})...`);
                 window.mapboxHelper.updateMapForStep(stepIndex+1);
             } else {
                 console.error('❌ No se encontró window.mapboxHelper.updateMapForStep');
-                console.log('window.mapboxHelper:', window.mapboxHelper);
             }
             
             // Mostrar el botón de emergencia para cerrar el mapa
             const emergencyBtn = document.getElementById('emergency-close-btn');
             if (emergencyBtn) {
                 emergencyBtn.style.display = 'flex';
-                console.log('✅ Botón de emergencia mostrado');
             }
             
             // Sin mapas embebidos: no realizar acciones adicionales
@@ -316,15 +308,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
-        if (stepIndex === 26) { // Gráfico de parque vehicular (step 27, índice 26)
-            console.log('Activando gráfico de vehículos para el paso 26');
-            if (window.initVehicleChart) {
-                window.initVehicleChart();
-            }
-        } else if (stepIndex === 4) { // Step del gráfico de población (step 5, índice 4)
-            console.log('Mostrando gráfico de población para el paso 6');
-        }
-        
         // Elementos fijos del `step 2`
         const fixedBehindEls = document.querySelectorAll('section[data-step="2"] .fixed-behind');
         if (stepIndex === 1) {
@@ -353,9 +336,112 @@ document.addEventListener('DOMContentLoaded', function() {
         mapElem.style.display = hasMap ? 'block' : 'none';
     }
 
+    // Helpers para animación typing en step 1
+    function clearTypingStep1(element) {
+        if (!element) return;
+        try {
+            const timers = element._typingTimers || [];
+            timers.forEach(t => {
+                try { clearTimeout(t); } catch(e){}
+                try { clearInterval(t); } catch(e){}
+            });
+            element._typingTimers = [];
+            // Restaurar texto completo y quitar clases e inline styles de las líneas
+            const allLines = element.querySelectorAll('.line, .sline');
+            allLines.forEach(ln => {
+                if (ln.dataset && ln.dataset.fulltext) ln.textContent = ln.dataset.fulltext;
+                ln.classList.remove('reveal');
+                ln.classList.remove('typing');
+                ln.style.animation = '';
+            });
+        } catch (e) { console.warn('Error clearing typing timers:', e); }
+    }
+
+    // Calcula la velocidad de typing dinámicamente basada en el tamaño de pantalla actual
+    function calculateTypingSpeed() {
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        
+        // En pantallas pequeñas, escribir más rápido
+        if (width <= 375) return 35;      // Dispositivos muy pequeños
+        if (width <= 480) return 40;      // Móviles pequeños
+        if (width <= 768) return 45;      // Móviles grandes / tablets pequeños
+        if (width <= 1024) return 50;     // Tablets
+        if (width <= 1200) return 55;     // Escritorio pequeño
+        return 60;                         // Escritorio grande
+    }
+
+    // Inicia la animación typing en el elemento del step 1 (secuencial, cancelable)
+    function startTypingStep1(element) {
+        if (!element) return;
+        try {
+            // limpiar cualquier animación previa
+            clearTypingStep1(element);
+
+            const isMobile = window.matchMedia('(max-width: 767px)').matches;
+            const lines = isMobile
+                ? Array.from(element.querySelectorAll('.title-sm .sline'))
+                : Array.from(element.querySelectorAll('.title-lg .line'));
+
+            // Guardar texto original en data-fulltext y vaciar el contenido para escribir desde cero
+            lines.forEach(ln => {
+                const full = (ln.textContent || '').trim();
+                ln.dataset.fulltext = full;
+                ln.textContent = '';
+            });
+
+            // Si por alguna razón las líneas vienen vacías, restaurar inmediatamente
+            const hasAnyText = lines.some(ln => (ln.dataset && ln.dataset.fulltext && ln.dataset.fulltext.length));
+            if (!hasAnyText) {
+                console.warn('startTypingStep1: no se detectó texto en las líneas, restaurando por seguridad');
+                lines.forEach(ln => { if (ln.dataset && ln.dataset.fulltext) ln.textContent = ln.dataset.fulltext; });
+                return;
+            }
+
+            // Calcular velocidad dinámicamente
+            const perCharMs = calculateTypingSpeed();
+
+            element._typingTimers = [];
+
+            const typeLine = (ln, fullText, speed) => {
+                return new Promise(resolve => {
+                    ln.classList.add('typing');
+                    let i = 0;
+                    const intervalId = setInterval(() => {
+                        i += 1;
+                        ln.textContent = fullText.slice(0, i);
+                        if (i >= fullText.length) {
+                            clearInterval(intervalId);
+                            setTimeout(() => {
+                                ln.classList.remove('typing');
+                            }, 80);
+                            resolve();
+                        }
+                    }, speed);
+                    element._typingTimers.push(intervalId);
+                });
+            };
+
+            // ejecutar secuencialmente
+            (async () => {
+                for (let idx = 0; idx < lines.length; idx++) {
+                    const ln = lines[idx];
+                    const full = ln.dataset.fulltext || '';
+                    // Pequeño delay entre líneas
+                    if (idx > 0) await new Promise(r => {
+                        const t = setTimeout(r, 200);
+                        element._typingTimers.push(t);
+                    });
+                    await typeLine(ln, full, perCharMs);
+                }
+            })();
+        } catch (e) {
+            console.warn('Error en startTypingStep1:', e);
+        }
+    }
+
     // Función para ocultar visualizaciones del mapa
     function hideMapVisuals() {
-        console.log('Ejecutando hideMapVisuals - versión para Mapbox');
         
         // Eliminar la clase del body
         document.body.classList.remove('showing-map');
@@ -393,9 +479,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     window.getComputedStyle(container).display !== 'none' ||
                     window.getComputedStyle(container).opacity > 0 ||
                     window.getComputedStyle(container).visibility === 'visible'
-                )) {
-                    console.log('¡EMERGENCIA! Contenedor de mapa aún visible, aplicando medidas adicionales', container.id);
-                    
+                )) {                    
                     // Forzar ocultación
                     container.style.display = 'none';
                     container.style.opacity = '0';
@@ -407,9 +491,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Función para inicializar las imágenes de evolución urbana
-    function initUrbanEvolutionImages() {
-        console.log('Inicializando imágenes de evolución urbana');
-        
+    function initUrbanEvolutionImages() {        
         // Años disponibles para la evolución urbana
         const years = [1975, 1980, 1985, 1990, 1995, 2000, 2005, 2010, 2015, 2020, 2025];
         
@@ -449,7 +531,6 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('No se encontró el contenedor para imágenes de evolución urbana');
         }
         
-        console.log('Imágenes de evolución urbana inicializadas');
     }
     
     // Inicializar la serie de pérdida de cobertura forestal
@@ -589,7 +670,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Si no estamos en un step de evolución urbana, ocultar todo
         if (!Object.keys(stepYearMap).includes(String(stepIndex))) {
-            console.log('No estamos en un step de evolución urbana, ocultando imágenes');
             document.querySelectorAll('.urban-bg-image').forEach(img => {
                 img.classList.remove('active');
                 img.style.opacity = '0';
@@ -599,7 +679,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         const targetYear = stepYearMap[stepIndex];
-        console.log(`Activando evolución urbana para año ${targetYear}`);
         
         // Ocultar todas las imágenes primero
         document.querySelectorAll('.urban-bg-image').forEach(img => {
@@ -621,7 +700,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 targetImage.style.opacity = '1';
                 targetImage.style.visibility = 'visible';
                 targetImage.style.display = 'block'; // Asegurar que la imagen esté visible
-                console.log(`Imagen de ${targetYear} activada`);
             });
             // Pre-cargar la siguiente imagen para transición suave
             const nextMap = {1975:1980,1980:1985,1985:1990,1990:1995,1995:2000,2000:2005,2005:2010,2010:2015,2015:2020,2020:2025};
@@ -658,6 +736,20 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Iniciar todo sin depender del mapa de fondo
     initComponents();
+    // Si el step 1 ya está en el centro de la vista al cargar, arrancar typing inmediatamente
+    try {
+        const step1 = document.querySelector('section[data-step="1"]');
+        if (step1) {
+            const rect = step1.getBoundingClientRect();
+            const vh = window.innerHeight || document.documentElement.clientHeight;
+            const centerY = vh * 0.5;
+            if (rect.top <= centerY && rect.bottom >= centerY) {
+                // Asegurar que la clase is-active está presente para que el CSS del caret funcione
+                step1.classList.add('is-active');
+                startTypingStep1(step1);
+            }
+        }
+    } catch (e) { console.warn('Error comprobando step1 en carga inicial:', e); }
     
     // Manejar redimensionamiento de ventana
     window.addEventListener('resize', () => {
