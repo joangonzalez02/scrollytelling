@@ -491,16 +491,11 @@
         }
 
         .step.urban-year-image.is-active .year-caption { opacity: 1; }
-        .step.urban-year-image .year-caption { height: auto; }
-        .step.urban-year-image .year-caption .carousel-container { position: relative; width: 100%; max-width: 520px; height: clamp(200px, 50vh, 360px); overflow: hidden; }
-        .step.urban-year-image .year-caption .carousel-track { display: flex; height: 100%; transition: transform 380ms ease; will-change: transform; }
-        .step.urban-year-image .year-caption .carousel-slide { width: 100%; height: 100%; flex: 0 0 100%; }
-        .step.urban-year-image .year-caption .carousel-slide.text-slide { overflow-y: auto; }
-        .step.urban-year-image .year-caption .carousel-slide.image-slide { display: flex; align-items: center; justify-content: center; }
-        .step.urban-year-image .year-caption .carousel-slide.image-slide img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
-        .step.urban-year-image .year-caption .carousel-arrow { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.4); color: #fff; border: none; border-radius: 16px; width: 32px; height: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .step.urban-year-image .year-caption .carousel-arrow.prev { left: 8px; }
-        .step.urban-year-image .year-caption .carousel-arrow.next { right: 8px; }
+        .step.urban-year-image .year-caption { height: clamp(200px, 50vh, 360px); overflow-y: auto; }
+        .step.urban-year-image .year-caption .caption-body { display: flex; flex-direction: column; gap: 8px; max-width: 520px; }
+        .step.urban-year-image .year-caption .caption-text { }
+        .step.urban-year-image .year-caption .caption-image { display: flex; align-items: center; justify-content: center; }
+        .step.urban-year-image .year-caption .caption-image img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
 
         /* Brillo suave interior del vidrio */
         .step.urban-year-image .year-caption::before {
@@ -530,8 +525,7 @@
                 backdrop-filter: blur(6px) saturate(110%);
                 border: 1px solid rgba(255, 255, 255, 0.75);
             }
-            .step.urban-year-image .year-caption .carousel-container { width: 100%; }
-            .step.urban-year-image .year-caption .carousel-arrow { width: 28px; height: 28px; }
+            .step.urban-year-image .year-caption .caption-body { max-width: 100%; }
             .step.urban-year-image .year-caption p { 
                 font-size: 16px; 
                 line-height: 1.5; 
@@ -555,8 +549,7 @@
                 backdrop-filter: blur(5px) saturate(110%);
                 border: 1px solid rgba(255, 255, 255, 0.85);
             }
-            .step.urban-year-image .year-caption .carousel-container { width: 100%; }
-            .step.urban-year-image .year-caption .carousel-arrow { width: 26px; height: 26px; }
+            .step.urban-year-image .year-caption .caption-body { max-width: 100%; }
             .step.urban-year-image .year-caption p { 
                 font-size: 15px; 
                 line-height: 1.45; 
@@ -1456,20 +1449,16 @@
         <!-- Step 8 -->
         <section class="step urban-year-image lazy-bg" data-step="8" data-year="1980" style="position: relative; overflow: hidden; min-height: 100vh;">
             <div class="year-caption">
-                <div class="year-carousel carousel-container" id="step8-carousel">
-                    <div class="carousel-track">
-                        <div class="carousel-slide text-slide" data-slide="0">
-                            <p>Este crecimiento lento pero constante se explica por un contexto nacional complicado. Los años 80 son conocidos en México como la "Década Perdida".</p>
-                            <ul>
-                                <li><strong>Crisis de la Deuda (1982):</strong> México sufre una severa crisis económica que frena la inversión.</li>
-                            </ul>
-                        </div>
-                        <div class="carousel-slide image-slide" data-slide="1">
-                            <img src="assets/evento1.jpg" alt="Evento 1980" class="carousel-image">
-                        </div>
+                <div class="caption-body">
+                    <div class="caption-text">
+                        <p>Este crecimiento lento pero constante se explica por un contexto nacional complicado. Los años 80 son conocidos en México como la "Década Perdida".</p>
+                        <ul>
+                            <li><strong>Crisis de la Deuda (1982):</strong> México sufre una severa crisis económica que frena la inversión.</li>
+                        </ul>
                     </div>
-                    <button class="carousel-arrow prev" aria-label="Anterior">‹</button>
-                    <button class="carousel-arrow next" aria-label="Siguiente">›</button>
+                    <div class="caption-image">
+                        <img src="assets/evento1.jpg" alt="Evento 1980">
+                    </div>
                 </div>
             </div>
             <span class="year-label-mobile" style="position:absolute; top:8px; left:8px; background:rgba(0,0,0,0.6); color:#fff; padding:4px 8px; border-radius:4px; font-size:14px; display:none;">1980</span>
@@ -1491,22 +1480,18 @@
         <!-- Step 10: Carrusel texto/imagen (1990) -->
         <section class="step urban-year-image" data-step="10" data-year="1990" style="position: relative; overflow: hidden; min-height: 100vh;">
             <div class="year-caption">
-                <div class="year-carousel carousel-container" id="step10-carousel">
-                    <div class="carousel-track">
-                        <div class="carousel-slide text-slide" data-slide="0">
-                            <p><strong>1990: Fin de la primera década</strong></p>
-                            <p>La huella urbana llega a 6,244 hectáreas, con un crecimiento acumulado del 26.4% desde 1980.</p>
-                            <p>Los primeros 10 años fueron de consolidación y supervivencia en un entorno nacional muy adverso.</p>
-                            <ul>
-                                <li><strong>Firma del TLCAN (NAFTA) (1992-1994): </strong> Abrió a México a una inversión extranjera sin precedentes.</li>
-                            </ul>
-                        </div>
-                        <div class="carousel-slide image-slide" data-slide="1">
-                            <img src="assets/evento2.jpg" alt="Evento 1990" class="carousel-image">
-                        </div>
+                <div class="caption-body">
+                    <div class="caption-text">
+                        <p><strong>1990: Fin de la primera década</strong></p>
+                        <p>La huella urbana llega a 6,244 hectáreas, con un crecimiento acumulado del 26.4% desde 1980.</p>
+                        <p>Los primeros 10 años fueron de consolidación y supervivencia en un entorno nacional muy adverso.</p>
+                        <ul>
+                            <li><strong>Firma del TLCAN (NAFTA) (1992-1994): </strong> Abrió a México a una inversión extranjera sin precedentes.</li>
+                        </ul>
                     </div>
-                    <button class="carousel-arrow prev" aria-label="Anterior">‹</button>
-                    <button class="carousel-arrow next" aria-label="Siguiente">›</button>
+                    <div class="caption-image">
+                        <img src="assets/evento2.jpg" alt="Evento 1990">
+                    </div>
                 </div>
             </div>
         </section>
@@ -1529,22 +1514,18 @@
         <!-- Step 12: Imagen 2000.jpg  -->
         <section class="step urban-year-image" data-step="12" data-year="2000" style="position: relative; overflow: hidden; min-height: 100vh;">
             <div class="year-caption">
-                <div class="year-carousel carousel-container" id="step12-carousel">
-                    <div class="carousel-track">
-                        <div class="carousel-slide text-slide" data-slide="0">
-                            <p><strong>2000: Fin de la explosión inicial</strong></p>
-                            <p>La huella urbana llega a 9,848 hectáreas, casi el doble que en 1990.</p>
-                            <p>Este fue el "milagro" de Cancún, impulsado por la inversión extranjera y un tipo de cambio favorable.</p>
-                            <ul>
-                                <li><strong>Ataques del 9/11 (2001):</strong> Frenó en seco el turismo aéreo global.</li>
-                            </ul>
-                        </div>
-                        <div class="carousel-slide image-slide" data-slide="1">
-                            <img src="assets/evento3.jpg" alt="Evento 2000" class="carousel-image">
-                        </div>
+                <div class="caption-body">
+                    <div class="caption-text">
+                        <p><strong>2000: Fin de la explosión inicial</strong></p>
+                        <p>La huella urbana llega a 9,848 hectáreas, casi el doble que en 1990.</p>
+                        <p>Este fue el "milagro" de Cancún, impulsado por la inversión extranjera y un tipo de cambio favorable.</p>
+                        <ul>
+                            <li><strong>Ataques del 9/11 (2001):</strong> Frenó en seco el turismo aéreo global.</li>
+                        </ul>
                     </div>
-                    <button class="carousel-arrow prev" aria-label="Anterior">‹</button>
-                    <button class="carousel-arrow next" aria-label="Siguiente">›</button>
+                    <div class="caption-image">
+                        <img src="assets/evento3.jpg" alt="Evento 2000">
+                    </div>
                 </div>
             </div>
         </section>
@@ -1567,23 +1548,19 @@
         <!-- Step 14: Imagen 2010.jpg  -->
         <section class="step urban-year-image" data-step="14" data-year="2010" style="position: relative; overflow: hidden; min-height: 100vh;">
             <div class="year-caption">
-                <div class="year-carousel carousel-container" id="step14-carousel">
-                    <div class="carousel-track">
-                        <div class="carousel-slide text-slide" data-slide="0">
-                            <p><strong>2010: Superando la adversidad</strong></p>
-                            <p>La huella urbana llega a 12,516 hectáreas, con un crecimiento acumulado del 153.4% desde 1980.</p>
-                            <p>A pesar de todo, la ciudad siguió creciendo, demostrando su increíble capacidad de recuperación.</p>
-                            <ul>
-                                <li><strong>Tras sobrevivir a la década anterior, Cancún entra en una nueva fase de expansión masiva.
-                                    Recuperación Post-Crisis:</strong>  El capital de inversión regresa con fuerza.</li>
-                            </ul>
-                        </div>
-                        <div class="carousel-slide image-slide" data-slide="1">
-                            <img src="assets/evento4.jpg" alt="Evento 2010" class="carousel-image">
-                        </div>
+                <div class="caption-body">
+                    <div class="caption-text">
+                        <p><strong>2010: Superando la adversidad</strong></p>
+                        <p>La huella urbana llega a 12,516 hectáreas, con un crecimiento acumulado del 153.4% desde 1980.</p>
+                        <p>A pesar de todo, la ciudad siguió creciendo, demostrando su increíble capacidad de recuperación.</p>
+                        <ul>
+                            <li><strong>Tras sobrevivir a la década anterior, Cancún entra en una nueva fase de expansión masiva.
+                                Recuperación Post-Crisis:</strong>  El capital de inversión regresa con fuerza.</li>
+                        </ul>
                     </div>
-                    <button class="carousel-arrow prev" aria-label="Anterior">‹</button>
-                    <button class="carousel-arrow next" aria-label="Siguiente">›</button>
+                    <div class="caption-image">
+                        <img src="assets/evento4.jpg" alt="Evento 2010">
+                    </div>
                 </div>
             </div>
         </section>
@@ -1604,25 +1581,21 @@
         <!-- Step 16. Imagen 2020.jpg  -->
         <section class="step urban-year-image" data-step="16" data-year="2020" style="position: relative; overflow: hidden; min-height: 100vh;">
             <div class="year-caption">
-                <div class="year-carousel carousel-container" id="step16-carousel">
-                    <div class="carousel-track">
-                        <div class="carousel-slide text-slide" data-slide="0">
-                            <p><strong>2020: Metropolización consolidada</strong></p>
-                            <p>La huella urbana llega a 17,309 hectáreas, con un crecimiento acumulado del 250.5% desde 1980.</p>
-                            <p>Cancún se ha convertido en la metrópoli regional con aeropuerto internacional, servicios especializados y vivienda para la creciente fuerza laboral.</p>
-                            <ul>
-                                <li><strong>Pandemia de COVID-19 (2020-2021):</strong> Cancún se convirtió en un "oasis" global, atrayendo turismo y "nómadas digitales".</li>
-                            </ul>
-                            <ul>
-                                <li><strong>El Tren Maya (2019-Presente):</strong> Ha generado una nueva ola de especulación inmobiliaria.</li>
-                            </ul>
-                        </div>
-                        <div class="carousel-slide image-slide" data-slide="1">
-                            <img src="assets/evento5.jpg" alt="Evento 2020" class="carousel-image">
-                        </div>
+                <div class="caption-body">
+                    <div class="caption-text">
+                        <p><strong>2020: Metropolización consolidada</strong></p>
+                        <p>La huella urbana llega a 17,309 hectáreas, con un crecimiento acumulado del 250.5% desde 1980.</p>
+                        <p>Cancún se ha convertido en la metrópoli regional con aeropuerto internacional, servicios especializados y vivienda para la creciente fuerza laboral.</p>
+                        <ul>
+                            <li><strong>Pandemia de COVID-19 (2020-2021):</strong> Cancún se convirtió en un "oasis" global, atrayendo turismo y "nómadas digitales".</li>
+                        </ul>
+                        <ul>
+                            <li><strong>El Tren Maya (2019-Presente):</strong> Ha generado una nueva ola de especulación inmobiliaria.</li>
+                        </ul>
                     </div>
-                    <button class="carousel-arrow prev" aria-label="Anterior">‹</button>
-                    <button class="carousel-arrow next" aria-label="Siguiente">›</button>
+                    <div class="caption-image">
+                        <img src="assets/evento5.jpg" alt="Evento 2020">
+                    </div>
                 </div>
             </div>
         </section>
@@ -1967,29 +1940,7 @@
             }
         });
     </script>
-    <script>
-        (function(){
-            var carousels = document.querySelectorAll('.year-carousel.carousel-container');
-            if (!carousels.length) return;
-            carousels.forEach(function(carousel){
-                var track = carousel.querySelector('.carousel-track');
-                var slides = track ? track.querySelectorAll('.carousel-slide') : [];
-                if (!track || !slides.length) return;
-                var prev = carousel.querySelector('.carousel-arrow.prev');
-                var next = carousel.querySelector('.carousel-arrow.next');
-                var idx = 0;
-                function update(){ var w = carousel.clientWidth; track.style.transform = 'translateX(' + (-idx*w) + 'px)'; }
-                update();
-                window.addEventListener('resize', update);
-                if (prev) prev.addEventListener('click', function(e){ e.stopPropagation(); idx = (idx - 1 + slides.length) % slides.length; update(); });
-                if (next) next.addEventListener('click', function(e){ e.stopPropagation(); idx = (idx + 1) % slides.length; update(); });
-                var tsX = 0, tsY = 0, teX = 0, teY = 0;
-                carousel.addEventListener('touchstart', function(e){ var t=e.touches[0]; tsX=t.clientX; tsY=t.clientY; });
-                carousel.addEventListener('touchmove', function(e){ var t=e.touches[0]; teX=t.clientX; teY=t.clientY; });
-                carousel.addEventListener('touchend', function(){ var dx=teX-tsX, dy=teY-tsY; if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) { if (dx < 0) { idx = (idx + 1) % slides.length; } else { idx = (idx - 1 + slides.length) % slides.length; } update(); } tsX=tsY=teX=teY=0; });
-            });
-        })();
-    </script>
+    
     <script>
         // Fade controlado por scroll: entrada (fade in) y salida (fade out) para imagen del step 5
         (function(){
