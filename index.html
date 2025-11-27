@@ -87,6 +87,54 @@
             font-weight: 700;
         }
 
+        /* líneas del título para animación "typing" */
+        .step[data-step="1"] h1 .line {
+            display: block;
+            overflow: hidden;
+            white-space: nowrap;
+            width: 0ch;
+        }
+
+        /* mostrar caret sólo en la línea que se está escribiendo */
+        .step[data-step="1"].is-active h1 .line1 {
+            border-right: .12em solid currentColor;
+            /* typing + then hide caret */
+            animation: typing1 1.6s steps(24,end) forwards, caretHide .35s linear 1.6s forwards;
+        }
+
+        /* la segunda línea reserva el espacio del caret pero es transparente hasta su animación */
+        .step[data-step="1"] h1 .line2 {
+            border-right: .12em solid transparent;
+        }
+
+        .step[data-step="1"].is-active h1 .line2 {
+            /* escribe la segunda línea (delay para que empiece tras la primera), luego parpadea un par de veces y oculta el caret */
+            animation: typing2 1.8s steps(24,end) 1.7s forwards,
+                       blinkCaret .5s step-end 2 3.6s forwards,
+                       caretHide .2s linear 4.6s forwards;
+        }
+
+        @keyframes typing1 {
+            from { width: 0ch; }
+            to { width: 24ch; }
+        }
+
+        @keyframes typing2 {
+            0% { width: 0ch; border-right-color: currentColor; }
+            90% { border-right-color: currentColor; }
+            100% { width: 24ch; border-right-color: currentColor; }
+        }
+
+        @keyframes blinkCaret {
+            from, to { border-right-color: transparent; }
+            50% { border-right-color: currentColor; }
+        }
+
+        @keyframes caretHide {
+            from { border-right-color: currentColor; }
+            to { border-right-color: transparent; }
+        }
+
         /* Aplicar Wix Madefor Text a todos los párrafos */
         p, .step p, .content p {
             font-family: 'Wix Madefor Text', 'Montserrat', 'Segoe UI', Tahoma, Geneva, Verdana, serif;
@@ -1256,7 +1304,10 @@
             
             <!-- Contenido sin estilo de las tarjetas normales -->
             <div style="position: relative; z-index: 5; max-width: 800px; margin: 0 auto; padding: 40px 20px; text-align: center;">
-                <h1 style="font-size: 48px; font-weight: bold; margin-bottom: 30px; text-shadow: 3px 3px 6px rgba(0,0,0,0.7); color: white;">Cancún: Entre el Destino Global y la Ciudad Justa</h1>
+                <h1 style="font-size: 48px; font-weight: bold; margin-bottom: 30px; text-shadow: 3px 3px 6px rgba(0,0,0,0.7); color: white;">
+                    <span class="line line1">Cancún: Entre el Destino</span>
+                    <span class="line line2">Global y la Ciudad Justa</span>
+                </h1>
 
             </div>
         </section>
