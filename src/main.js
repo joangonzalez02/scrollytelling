@@ -10,11 +10,128 @@ document.addEventListener('DOMContentLoaded', function() {
         mapContainer.style.display = 'none';
     }
     
-    // Eliminado: no se crea un segundo mapa. Se usa únicamente el mapa principal definido en mapbox-integration.js
-
     // Variables para Scrollama
     const scroller = scrollama();
+    let subScroller = null; // para substeps discretos del step 4
+    const USE_DISCRETE_SUBSTEPS = true;
+    const POP_CHART_EARLY_PROGRESS = 0.38;  // retrasar aparición
+    const POP_CHART_HIDE_THRESHOLD = 0.24;  // ocultar antes al volver hacia arriba
+    const POP_CHART_HIDE_BOTTOM = 0.82;     // ocultar antes del final para no tapar Step 5
     let currentStep = 0;
+
+    // Helpers para fijar/desfijar el chart usando position:fixed
+    function showPopulationChart(sectionEl) {
+        if (!sectionEl) return;
+        const chartCont = sectionEl.querySelector && sectionEl.querySelector('.chart-container');
+        if (!chartCont) return;
+        if (!chartCont.classList.contains('visible')) {
+            chartCont.classList.add('visible');
+        }
+        try { pinChart(sectionEl); } catch {}
+    }
+
+    function hidePopulationChart(sectionEl) {
+        if (!sectionEl) return;
+        const chartCont = sectionEl.querySelector && sectionEl.querySelector('.chart-container');
+        if (!chartCont) return;
+        if (chartCont.classList.contains('visible')) {
+            chartCont.classList.remove('visible');
+        }
+        try { unpinChart(sectionEl); } catch {}
+    }
+
+    function pinChart(sectionEl) {
+        if (!sectionEl) return;
+        const chartCont = sectionEl.querySelector && sectionEl.querySelector('.chart-container');
+        if (!chartCont) return;
+        if (chartCont.dataset.pinned === 'true') return;
+
+        // Crear placeholder para evitar colapso del layout
+        const rect = chartCont.getBoundingClientRect();
+        const placeholder = document.createElement('div');
+        placeholder.className = 'chart-placeholder';
+        placeholder.style.width = rect.width + 'px';
+        // Hacemos el placeholder más alto que el chart para dar espacio de scroll
+        // y evitar que Scrollama marque salida al fijar el elemento.
+        const extra = Math.max(80, Math.round(window.innerHeight * 0.2)); // añadir 20% de viewport (mínimo 80px)
+        placeholder.style.height = (rect.height + extra) + 'px';
+        placeholder.style.display = getComputedStyle(chartCont).display || 'block';
+        chartCont.parentNode.insertBefore(placeholder, chartCont);
+
+        // Si el módulo del chart expone el selector, moverlo dentro del chart fijo
+        try {
+            if (window.populationChart && typeof window.populationChart.attachSelectorTo === 'function') {
+                const sel = window.populationChart.getSelectorElement && window.populationChart.getSelectorElement();
+                if (sel) {
+                    // mover al chartCont (fijo) para que quede visible y encima
+                    window.populationChart.attachSelectorTo(chartCont);
+                    // Posicionar el selector como absoluto dentro del chart fijo
+                    sel.style.position = 'absolute';
+                    sel.style.top = '8px';
+                    sel.style.left = '50%';
+                    sel.style.transform = 'translateX(-50%)';
+                    sel.style.zIndex = '10060';
+                    sel.style.pointerEvents = 'auto';
+                    sel.style.background = sel.style.background || 'transparent';
+                    sel.style.padding = sel.style.padding || '6px 0 12px 0';
+                    sel.style.width = sel.style.width || 'auto';
+                }
+            }
+        } catch (e) { console.warn('pinChart: could not move selector to chartCont', e); }
+
+        // Aplicar estilos fijos al chart: centrar verticalmente en el viewport
+        const viewportH = window.innerHeight || document.documentElement.clientHeight || 800;
+        const chartH = rect.height || 500;
+        const centeredTop = Math.round((viewportH - chartH) / 2);
+        const topPx = Math.max(Math.round(viewportH * 0.02), centeredTop);
+        const targetWidth = Math.min(rect.width, Math.round(window.innerWidth * 0.92));
+        chartCont.style.position = 'fixed';
+        chartCont.style.top = topPx + 'px';
+        chartCont.style.left = '50%';
+        chartCont.style.transform = 'translateX(-50%)';
+        chartCont.style.width = targetWidth + 'px';
+        chartCont.style.maxWidth = '92%';
+        chartCont.style.zIndex = '10050';
+        chartCont.style.transition = 'transform 200ms ease, box-shadow 200ms ease, width 120ms ease';
+        chartCont.style.boxShadow = '0 20px 40px rgba(2,48,71,0.12)';
+        chartCont.dataset.pinned = 'true';
+        // Mantener pointer-events en el chart para que el selector funcione correctamente
+        console.log('[pinChart] pinned chart, placeholder height:', placeholder.style.height);
+    }
+
+    function unpinChart(sectionEl) {
+        if (!sectionEl) return;
+        const chartCont = sectionEl.querySelector && sectionEl.querySelector('.chart-container');
+        if (!chartCont) return;
+        if (chartCont.dataset.pinned !== 'true') return;
+
+        // Antes de remover placeholder, devolver el selector a su lugar original
+        try {
+            if (window.populationChart && typeof window.populationChart.attachSelectorTo === 'function') {
+                window.populationChart.attachSelectorTo(null);
+            }
+        } catch (e) { console.warn('unpinChart: could not restore selector to original', e); }
+
+        // Remover placeholder
+        const placeholder = chartCont.parentNode && chartCont.parentNode.querySelector && chartCont.parentNode.querySelector('.chart-placeholder');
+        if (placeholder) {
+            placeholder.remove();
+            console.log('[unpinChart] removed placeholder');
+        }
+
+        // Limpiar estilos inline
+        chartCont.style.position = '';
+        chartCont.style.top = '';
+        chartCont.style.left = '';
+        chartCont.style.transform = '';
+        chartCont.style.width = '';
+        chartCont.style.zIndex = '';
+        chartCont.style.transition = '';
+        chartCont.style.boxShadow = '';
+        chartCont.style.pointerEvents = '';
+        delete chartCont.dataset.pinned;
+        console.log('[unpinChart] unpinned chart');
+    }
 
     // Configurar Scrollama
     function initScrollama() {
@@ -26,6 +143,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 debug: false
             })
             .onStepEnter(response => {
+                console.log('[scroller] onStepEnter', response.index, response.element && response.element.getAttribute && response.element.getAttribute('data-step'));
                 currentStep = response.index;
                 
                 // Seguridad: ocultar leyenda/panel salvo que luego un step de mapa permitido los muestre
@@ -81,8 +199,34 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Nuevo Step 25 (index 24): parque vehicular
                     window.vehicleChart.enter();
                 }
+
+                // Step 4: al entrar solo inicializar tipo; visibilidad se maneja por substeps
+                if (response.index === 3) {
+                    try {
+                        if (window.populationChart && typeof window.populationChart.setDataType === 'function') {
+                            window.populationChart.setDataType('benito');
+                        }
+                    } catch (e) { /* silent */ }
+                }
+
+                // Si entramos a cualquier otro paso, ocultar/desfijar la gráfica de Step 4 si quedó visible
+                if (response.index !== 3) {
+                    try {
+                        const step4 = document.querySelector('section[data-step="4"]');
+                        if (step4) {
+                            const chartCont = step4.querySelector('.chart-container');
+                            if (chartCont && chartCont.classList.contains('visible')) {
+                                chartCont.classList.remove('visible');
+                            }
+                            if (chartCont && chartCont.dataset.pinned === 'true') {
+                                unpinChart(step4);
+                            }
+                        }
+                    } catch {}
+                }
             })
             .onStepExit(response => {
+                console.log('[scroller] onStepExit', response.index, response.element && response.element.getAttribute && response.element.getAttribute('data-step'));
                 response.element.classList.remove('is-active');
                 response.element.classList.remove('active');
                 // Si salimos del step 1, cancelar timers y limpiar clases relacionadas al typing
@@ -179,7 +323,153 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (response.index === 26 && window.vehicleChart && typeof window.vehicleChart.exit === 'function') {
                     window.vehicleChart.exit();
                 }
+
+                // Si salimos del step de población (step 4 -> índice 3), unpin y limpiar
+                if (response.index === 3) {
+                    try {
+                        console.log('[scroller] exiting population step - unpinning');
+                        // Ocultar el chart
+                        const chartCont = response.element.querySelector('.chart-container');
+                        if (chartCont) {
+                            chartCont.classList.remove('visible');
+                        }
+                        // Restaurar selector a su padre original y eliminar contenedor fijo
+                        try {
+                            if (window.populationChart && typeof window.populationChart.attachSelectorTo === 'function') {
+                                window.populationChart.attachSelectorTo(null);
+                            }
+                            const floating = document.getElementById('floating-population-selector');
+                            if (floating) {
+                                floating.remove();
+                            }
+                        } catch (e) { console.warn('exit step: could not restore selector', e); }
+
+                        unpinChart(response.element);
+                    } catch (e) { /* silent */ }
+                }
             });
+
+        // Manejo de progreso dentro de steps (para Step 4 usamos substeps, no progreso)
+        scroller.onStepProgress(response => {
+            const p = response.progress;
+            // Con substeps activos, evitamos parpadeos por progreso
+            if (response.index === 3 && USE_DISCRETE_SUBSTEPS) {
+                return;
+            }
+            
+            if (response.index === 3 && !USE_DISCRETE_SUBSTEPS) {
+                
+                // Mostrar el chart solo cuando el progreso sea mayor a 0.3
+                const chartCont = response.element.querySelector('.chart-container');
+                if (p >= 0.3) {
+                    if (!chartCont.classList.contains('visible')) {
+                        chartCont.classList.add('visible');
+                        // Pin el chart
+                        pinChart(response.element);
+                        // Crear el floating selector
+                        try {
+                            const floatingId = 'floating-population-selector';
+                            let floating = document.getElementById(floatingId);
+                            if (!floating) {
+                                floating = document.createElement('div');
+                                floating.id = floatingId;
+                                document.body.appendChild(floating);
+                                // Estilos: fijo, centrado horizontalmente, justo arriba del chart
+                                const topPx = Math.round(window.innerHeight * 0.14) - 8;
+                                Object.assign(floating.style, {
+                                    position: 'fixed',
+                                    top: (topPx) + 'px',
+                                    left: '50%',
+                                    transform: 'translateX(-50%)',
+                                    zIndex: '10070',
+                                    pointerEvents: 'auto',
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    background: 'rgba(255,255,255,0.95)',
+                                    borderRadius: '8px',
+                                    padding: '8px 16px',
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                                    backdropFilter: 'blur(8px)',
+                                    transition: 'all 0.3s ease',
+                                    width: 'auto'
+                                });
+                            }
+
+                            if (window.populationChart && typeof window.populationChart.attachSelectorTo === 'function') {
+                                window.populationChart.attachSelectorTo(floating);
+                            }
+                        } catch (e) { console.warn('progress: could not create floating selector', e); }
+                    }
+                    
+                    // Cambiar el tipo basado en el progreso (ajustado para el rango 0.3-1.0)
+                    const adjustedP = (p - 0.3) / 0.7; // Normalizar a 0-1 en el rango visible
+                    let type = 'benito';
+                    if (adjustedP < 0.25) type = 'benito';
+                    else if (adjustedP < 0.5) type = 'qroo';
+                    else if (adjustedP < 0.75) type = 'mexico';
+                    else type = 'mundo';
+
+                    console.log('[onStepProgress] setting type to:', type);
+                    if (window.populationChart && typeof window.populationChart.setDataType === 'function') {
+                        window.populationChart.setDataType(type);
+                    } else {
+                        console.log('[onStepProgress] window.populationChart.setDataType not available');
+                    }
+                } else {
+                    // Si progreso < 0.3, ocultar el chart si está visible
+                    if (chartCont.classList.contains('visible')) {
+                        chartCont.classList.remove('visible');
+                        // Unpin y limpiar
+                        try {
+                            unpinChart(response.element);
+                            if (window.populationChart && typeof window.populationChart.attachSelectorTo === 'function') {
+                                window.populationChart.attachSelectorTo(null);
+                            }
+                            const floating = document.getElementById('floating-population-selector');
+                            if (floating) {
+                                floating.remove();
+                            }
+                        } catch (e) { /* silent */ }
+                    }
+                }
+            }
+        });
+
+        // Sub-scroller para substeps discretos de Step 4
+        if (USE_DISCRETE_SUBSTEPS) {
+            try {
+                subScroller = scrollama();
+                subScroller
+                    .setup({
+                        step: '.step[data-step="4"] .substep',
+                        offset: 0.4,
+                        debug: false
+                    })
+                    .onStepEnter(sres => {
+                        // Sólo cambiar el tipo. Visibilidad y pin se controlan en onStepProgress
+                        const type = sres.element && sres.element.getAttribute('data-chart');
+                        if (type && window.populationChart && typeof window.populationChart.setDataType === 'function') {
+                            window.populationChart.setDataType(type);
+                        }
+                        // Asegurar visibilidad del chart mientras haya un substep activo
+                        const step4 = document.querySelector('section[data-step="4"]');
+                        showPopulationChart(step4);
+                    })
+                    .onStepExit(sres => {
+                        // Ocultar al salir del primer substep hacia arriba o del último hacia abajo
+                        const subs = Array.from(document.querySelectorAll('.step[data-step="4"] .substep'));
+                        const idx = subs.indexOf(sres.element);
+                        const lastIdx = subs.length - 1;
+                        const step4 = document.querySelector('section[data-step="4"]');
+                        if ((idx === 0 && sres.direction === 'up') || (idx === lastIdx && sres.direction === 'down')) {
+                            hidePopulationChart(step4);
+                        }
+                    });
+            } catch (e) {
+                console.warn('No se pudo inicializar subScroller para substeps del Step 4:', e);
+            }
+        }
     }
 
     // Función para activar visualizaciones según el paso actual
@@ -754,5 +1044,20 @@ document.addEventListener('DOMContentLoaded', function() {
     // Manejar redimensionamiento de ventana
     window.addEventListener('resize', () => {
         scroller.resize();
+        if (subScroller) {
+            try { subScroller.resize(); } catch {}
+        }
+        // Recalcular posición vertical si el chart está pineado
+        try {
+            const step4 = document.querySelector('section[data-step="4"]');
+            if (step4) {
+                const chartCont = step4.querySelector('.chart-container');
+                if (chartCont && chartCont.dataset.pinned === 'true') {
+                    // Simular un unpin/pin rápido para recalcular top
+                    unpinChart(step4);
+                    pinChart(step4);
+                }
+            }
+        } catch {}
     });
 });

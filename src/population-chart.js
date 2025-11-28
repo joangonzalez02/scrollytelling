@@ -4,6 +4,10 @@ document.addEventListener('DOMContentLoaded', function() {
     let populationData = [];
     let currentDataType = 'benito'; // benito, mexico, mundo, qroo
     let chart = null;
+    // Tipo solicitado desde scroll antes de que carguen datos (si aplica)
+    let pendingType = null;
+    // Referencia al contenedor del selector (se crea dinámicamente)
+    let selectorDivEl = null;
     
     // Función para cargar datos
     function loadData() {
@@ -93,8 +97,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Crear selector de datos
                 createDataSelector();
                 
-                // Crear gráfico inicial
-                createChart('benito');
+                // Usar el tipo pendiente si fue solicitado por scroll antes
+                const initialType = pendingType || 'benito';
+                currentDataType = initialType;
+                // Alinear el estado visual del selector con el tipo inicial
+                if (selectorDivEl) {
+                    const radios = selectorDivEl.querySelectorAll('input[name="dataType"]');
+                    radios.forEach(r => r.checked = (r.value === initialType));
+                    const labels = selectorDivEl.querySelectorAll('label');
+                    labels.forEach(l => {
+                        const r = l.querySelector('input');
+                        l.style.color = r.checked ? '#FB8500' : '#023047';
+                        l.style.fontWeight = r.checked ? '700' : '600';
+                    });
+                }
+                // Crear gráfico inicial con el tipo correcto
+                createChart(initialType);
             })
             .catch(function(error) {
                 console.error("Error cargando los datos:", error);
@@ -111,6 +129,8 @@ document.addEventListener('DOMContentLoaded', function() {
         selectorDiv.className = 'data-selector';
         selectorDiv.style.marginBottom = '15px';
         selectorDiv.style.textAlign = 'center';
+        // Guardar referencia para uso desde scroll-driven changes
+        selectorDivEl = selectorDiv;
         
         // Opciones disponibles
         const options = [
@@ -124,10 +144,11 @@ document.addEventListener('DOMContentLoaded', function() {
         options.forEach(option => {
             const label = document.createElement('label');
             label.style.marginRight = '15px';
-            label.style.cursor = 'pointer';
+            label.style.cursor = 'default';
             label.style.color = option.value === 'benito' ? '#FB8500' : '#023047';
             label.style.fontWeight = option.value === 'benito' ? '700' : '600';
             label.style.transition = 'color 0.2s';
+            label.style.pointerEvents = 'none'; // Deshabilitar clics para control automático con scroll
             
             const radio = document.createElement('input');
             radio.type = 'radio';
@@ -135,29 +156,16 @@ document.addEventListener('DOMContentLoaded', function() {
             radio.value = option.value;
             radio.checked = option.value === 'benito';
             radio.style.marginRight = '5px';
-            radio.addEventListener('change', function() {
-                if (this.checked) {
-                    currentDataType = this.value;
-                    updateChart(currentDataType);
-                    
-                    // Actualizar estilos de labels
-                    const allLabels = selectorDiv.querySelectorAll('label');
-                    allLabels.forEach(l => {
-                        const r = l.querySelector('input');
-                        l.style.color = r.checked ? '#FB8500' : '#023047';
-                        l.style.fontWeight = r.checked ? '700' : '600';
-                    });
-                }
-            });
+            // Remover el event listener para 'change' para que no se pueda cambiar manualmente
             
-            // Eventos hover
-            label.addEventListener('mouseenter', function() {
-                if (!radio.checked) this.style.color = '#219EBC';
-            });
+            // Remover eventos hover ya que no es clickeable
+            // label.addEventListener('mouseenter', function() {
+            //     if (!radio.checked) this.style.color = '#219EBC';
+            // });
             
-            label.addEventListener('mouseleave', function() {
-                if (!radio.checked) this.style.color = '#023047';
-            });
+            // label.addEventListener('mouseleave', function() {
+            //     if (!radio.checked) this.style.color = '#023047';
+            // });
             
             label.appendChild(radio);
             label.appendChild(document.createTextNode(option.label));
@@ -166,6 +174,39 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Agregar el selector antes del gráfico
         container.prepend(selectorDiv);
+        // Guardar referencia al padre original para poder restaurarlo
+        selectorDiv._originalParent = container;
+    }
+
+    // Permite cambiar el tipo de datos desde código (por ejemplo, al hacer scroll)
+    function setDataTypeFromScroll(type) {
+        console.log('[populationChart] setDataTypeFromScroll called ->', type);
+        if (!type) return;
+        // Guardar como tipo pendiente por si aún no cargan los datos
+        pendingType = type;
+        // Si existe el selector, actualizar radios y estilos
+        if (selectorDivEl) {
+            const radios = selectorDivEl.querySelectorAll('input[name="dataType"]');
+            radios.forEach(r => r.checked = (r.value === type));
+
+            const allLabels = selectorDivEl.querySelectorAll('label');
+            allLabels.forEach(l => {
+                const r = l.querySelector('input');
+                l.style.color = r.checked ? '#FB8500' : '#023047';
+                l.style.fontWeight = r.checked ? '700' : '600';
+            });
+        }
+
+        // Evitar redibujar si ya está seleccionado
+        if (currentDataType === type) {
+            console.log('[populationChart] already on type', type);
+            return;
+        }
+        currentDataType = type;
+        // Solo intentar actualizar si ya tenemos datos cargados
+        if (populationData && populationData.length > 0) {
+            updateChart(currentDataType);
+        }
     }
     
     // Función para crear el gráfico
@@ -180,7 +221,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Configuración del gráfico - dimensiones base para el viewBox
         const baseWidth = 800;
         const baseHeight = 400;
-        const margin = { top: 40, right: 60, bottom: 80, left: 120 };
+        const margin = { top: 44, right: 60, bottom: 80, left: 120 };
         
         // Dimensiones internas del área de dibujo
         const width = baseWidth - margin.left - margin.right;
@@ -354,7 +395,7 @@ document.addEventListener('DOMContentLoaded', function() {
         svg.append('text')
             .attr('class', 'title')
             .attr('x', width / 2)
-            .attr('y', -20)
+            .attr('y', 6)
             .attr('text-anchor', 'middle')
             .attr('fill', '#023047')
             .attr('font-weight', 'bold')
@@ -657,4 +698,27 @@ document.addEventListener('DOMContentLoaded', function() {
             createChart(currentDataType);
         }
     });
+
+    // Exponer API mínima para controlar el chart desde otros módulos (ej. main.js)
+    window.populationChart = window.populationChart || {};
+    window.populationChart.setDataType = setDataTypeFromScroll;
+    window.populationChart.getCurrentType = () => currentDataType;
+    // Permite obtener el elemento DOM del selector y reubicarlo
+    window.populationChart.getSelectorElement = () => selectorDivEl;
+    window.populationChart.attachSelectorTo = (targetEl) => {
+        try {
+            if (!selectorDivEl) return;
+            // Si no se pasa targetEl, restaurar al padre original
+            if (!targetEl) {
+                const orig = selectorDivEl._originalParent;
+                if (orig) {
+                    orig.prepend(selectorDivEl);
+                }
+                return;
+            }
+            // Si el selector ya está en target, no hacer nada
+            if (selectorDivEl.parentNode === targetEl) return;
+            targetEl.appendChild(selectorDivEl);
+        } catch (e) { console.warn('attachSelectorTo error', e); }
+    };
 });

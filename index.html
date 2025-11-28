@@ -976,6 +976,54 @@
             position: relative;
             overflow: hidden;
         }
+
+        /* Sticky behavior for population chart: cuando el step 4 esté activo
+           mantenemos la caja del chart pegada en pantalla por un momento mientras
+           el usuario hace scroll y cambiamos las series vía scroll */
+        .step[data-step="4"] .chart-container {
+            display: none; /* Ocultar inicialmente */
+        }
+        .step[data-step="4"] .chart-container.visible {
+            display: block;
+        }
+        .step[data-step="4"] .chart-container.sticky {
+            position: sticky;
+            top: 14vh;
+            z-index: 1005;
+            margin-top: 0;
+            transition: transform 300ms ease, box-shadow 200ms ease;
+            will-change: transform;
+            align-self: flex-start;
+        }
+
+        .step.is-active[data-step="4"] .chart-container.sticky {
+            box-shadow: 0 20px 40px rgba(2,48,71,0.12);
+        }
+
+        /* Asegurar que el selector quede por encima del SVG cuando esté sticky */
+        .step[data-step="4"] .chart-container.sticky .data-selector {
+            z-index: 1006;
+            position: relative;
+        }
+        
+        /* Substeps discretos dentro del Step 4 */
+        .step[data-step="4"] .substeps {
+            position: relative;
+            width: 100%;
+        }
+        .step[data-step="4"] .substep {
+            min-height: 48vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 16px;
+        }
+        .step[data-step="4"] .substep h3 {
+            display: none; 
+            margin: 0;
+            font-weight: 700;
+            color: #023047;
+        }
         
         .chart-container .axis path,
         .chart-container .axis line {
@@ -1598,12 +1646,28 @@
         
 
         <!-- Step 4: Población en perspectiva  -->
-        <section class="step" data-step="4">
+        <section class="step" data-step="4" style="min-height: 200vh;">
             <div class="step-content">
                 <h2>Cinco Décadas de Crecimiento Extraordinario</h2>
                 <p>Detrás de las cifras de crecimiento explosivo está el componente humano: "La Década de los Pioneros". Los primeros equipos llegaron en enero de 1970 y tuvieron que abrir brecha a machete en la selva.</p>
                 <p>Vivían en campamentos improvisados, en un entorno agreste sin servicios básicos. Esta experiencia de desafío colectivo forjó la identidad de la ciudad, creando un mosaico de acentos, costumbres y esperanzas y estableciendo el ADN migrante, dinámico y multicultural que define a Cancún hasta hoy.</p>
                 
+                <!-- Substeps discretos para controlar la gráfica-->
+                <div class="substeps">
+                    <div class="substep" data-chart="benito">
+                        <h3>Cancún (Benito Juárez)</h3>
+                    </div>
+                    <div class="substep" data-chart="qroo">
+                        <h3>Quintana Roo</h3>
+                    </div>
+                    <div class="substep" data-chart="mexico">
+                        <h3>México</h3>
+                    </div>
+                    <div class="substep" data-chart="mundo">
+                        <h3>Mundo</h3>
+                    </div>
+                </div>
+
                 <div class="chart-container">
                     <div id="populationGrowthChart"></div>
                     <div class="tooltip"></div>
