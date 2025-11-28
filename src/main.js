@@ -183,14 +183,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
 
-                // Animación popup para step 5 
                 if (currentStep === 4) {
-                    const step6 = response.element;
-                    step6.classList.remove('animate-up', 'animate-down');
-                    if (response.direction === 'down') {
-                        step6.classList.add('animate-down');
-                    } else {
-                        step6.classList.add('animate-up');
+                    const step5 = response.element;
+                    try { step5.classList.remove('animate-up', 'animate-down'); } catch {}
+                    const img5 = step5.querySelector && step5.querySelector('.floating-image');
+                    if (img5) {
+                        // Asegurar que no hay transform residual al entrar
+                        img5.style.transform = '';
                     }
                 }
 
@@ -200,13 +199,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     window.vehicleChart.enter();
                 }
 
-                // Step 4: al entrar solo inicializar tipo; visibilidad se maneja por substeps
                 if (response.index === 3) {
-                    try {
-                        if (window.populationChart && typeof window.populationChart.setDataType === 'function') {
-                            window.populationChart.setDataType('benito');
-                        }
-                    } catch (e) { /* silent */ }
                 }
 
                 // Si entramos a cualquier otro paso, ocultar/desfijar la gráfica de Step 4 si quedó visible
@@ -251,14 +244,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
 
-                // Reset animación popup para step 5 al salir
+                // Step 5: limpiar cualquier estilo inline al salir
                 if (response.index === 4) {
-                    const step6 = response.element;
-                    step6.classList.remove('animate-up', 'animate-down');
-                    const img6 = step6.querySelector('.floating-image');
-                    if (img6) {
-                        img6.style.opacity = '0';
-                        img6.style.transform = 'scale(0.85) translateY(0)';
+                    const step5 = response.element;
+                    try { step5.classList.remove('animate-up', 'animate-down'); } catch {}
+                    const img5 = step5.querySelector && step5.querySelector('.floating-image');
+                    if (img5) {
+                        // Dejar que el fade por scroll gestione opacidad; no aplicar transform
+                        img5.style.opacity = '0';
+                        img5.style.transform = '';
                     }
                 }
                 
@@ -349,11 +343,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
 
-        // Manejo de progreso dentro de steps (para Step 4 usamos substeps, no progreso)
+        // Manejo de progreso dentro de steps (Step 4: usar umbrales para visibilidad)
         scroller.onStepProgress(response => {
             const p = response.progress;
-            // Con substeps activos, evitamos parpadeos por progreso
+            // Con substeps activos, controlamos visibilidad por umbrales
             if (response.index === 3 && USE_DISCRETE_SUBSTEPS) {
+                const step4 = response.element;
+                const chartCont = step4.querySelector && step4.querySelector('.chart-container');
+                if (!chartCont) return;
+
+                const activeSub = document.querySelector('.step[data-step="4"] .substep.is-active');
+                // Siempre ocultar cerca del final para no tapar el Step 5
+                if (p >= POP_CHART_HIDE_BOTTOM) {
+                    hidePopulationChart(step4);
+                } else if (activeSub) {
+                    // Si hay un substep activo, mantener visible independientemente del umbral inicial
+                    showPopulationChart(step4);
+                } else if (p < POP_CHART_EARLY_PROGRESS) {
+                    // Sin substep activo y muy arriba: oculto para no tapar texto
+                    hidePopulationChart(step4);
+                } else {
+                    showPopulationChart(step4);
+                }
                 return;
             }
             
@@ -443,16 +454,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 subScroller
                     .setup({
                         step: '.step[data-step="4"] .substep',
-                        offset: 0.4,
+                        // Offset más profundo para estabilizar la activación de substeps
+                        // y reducir saltos cuando el usuario hace scroll rápido
+                        offset: 0.55,
                         debug: false
                     })
                     .onStepEnter(sres => {
-                        // Sólo cambiar el tipo. Visibilidad y pin se controlan en onStepProgress
+                        // Marcar activo y cambiar tipo; mostrar la gráfica al entrar a cualquier substep
+                        sres.element.classList.add('is-active');
                         const type = sres.element && sres.element.getAttribute('data-chart');
                         if (type && window.populationChart && typeof window.populationChart.setDataType === 'function') {
                             window.populationChart.setDataType(type);
                         }
-                        // Asegurar visibilidad del chart mientras haya un substep activo
                         const step4 = document.querySelector('section[data-step="4"]');
                         showPopulationChart(step4);
                     })
@@ -462,6 +475,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         const idx = subs.indexOf(sres.element);
                         const lastIdx = subs.length - 1;
                         const step4 = document.querySelector('section[data-step="4"]');
+                        sres.element.classList.remove('is-active');
                         if ((idx === 0 && sres.direction === 'up') || (idx === lastIdx && sres.direction === 'down')) {
                             hidePopulationChart(step4);
                         }

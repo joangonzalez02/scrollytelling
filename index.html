@@ -1012,7 +1012,8 @@
             width: 100%;
         }
         .step[data-step="4"] .substep {
-            min-height: 48vh;
+            /* Aumentar altura para estabilizar triggers de Scrollama y evitar saltos */
+            min-height: 70vh;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1305,7 +1306,6 @@
                 object-fit: cover !important;
                 object-position: center center !important;
                 display: block !important;
-                opacity: 1 !important;
             }
             /* Mantener el credit del Step 5 pegado encima de la parte inferior de la imagen */
             section[data-step="5"] .photo-credit {
@@ -1684,6 +1684,26 @@
                 </div>
             </div>
             <style>
+                /* Step 5 siempre ocupa exactamente el viewport */
+                section[data-step="5"] {
+                    display: block !important;
+                    padding: 0 !important;
+                    position: relative !important;
+                    min-height: 100vh !important;
+                    isolation: isolate; /* evitar conflictos de stacking con otros steps */
+                    overflow: hidden;
+                }
+                section[data-step="5"] .floating-image-wrapper {
+                    height: 100vh !important;
+                }
+                @supports (height: 100svh) {
+                    section[data-step="5"] { min-height: 100svh !important; }
+                    section[data-step="5"] .floating-image-wrapper { height: 100svh !important; }
+                }
+                @supports (height: 100dvh) {
+                    section[data-step="5"] { min-height: 100dvh !important; }
+                    section[data-step="5"] .floating-image-wrapper { height: 100dvh !important; }
+                }
                 /* Imagen llena siempre el viewport sin distorsión */
                 section[data-step="5"] .floating-image {
                     position:absolute;
@@ -1723,20 +1743,11 @@
                 @media (max-width: 600px) {
                     section[data-step="5"] .floating-image-wrapper .step5-credit { font-size:12px !important; padding:6px 10px !important; bottom:8px !important; }
                 }
-                /* Móviles y tablets: forzar cobertura total (permitir recorte) hasta 768px */
+                /* Móviles y tablets: ajustes mínimos visuales */
                 @media (max-width: 768px) {
-                    section[data-step="5"] { min-height:100vh !important; }
-                    section[data-step="5"] .floating-image-wrapper { height:100vh !important; }
-                    /* Altura más robusta en navegadores móviles modernos */
-                    @supports (height: 100svh) {
-                        section[data-step="5"] .floating-image-wrapper { height:100svh !important; }
-                    }
-                    @supports (height: 100dvh) {
-                        section[data-step="5"] .floating-image-wrapper { height:100dvh !important; }
-                    }
-                    /* Anular flex heredado de .step (centrado) que puede provocar desplazamientos */
-                    section[data-step="5"] { display:block !important; align-items:initial !important; justify-content:initial !important; }
-                    section[data-step="5"] .floating-image { object-fit:cover !important; background:#000; }
+                    /* Anular centrado flex heredado que a veces empuja el contenido */
+                    section[data-step="5"] { align-items: initial !important; justify-content: initial !important; }
+                    section[data-step="5"] .floating-image { object-fit: cover !important; background:#000; }
                 }
             </style>
         </section>
