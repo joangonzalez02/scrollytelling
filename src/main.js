@@ -445,6 +445,37 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
             }
+
+            // ===== Progreso de escena para cámara Mapbox (scene progress) =====
+            // Vincula el progreso continuo del scroll a movimientos de cámara en pasos largos con mapa.
+            // Step 19 (index 18) y step 25 (index 24).
+            try {
+                // Solo si el mapa está visible en el DOM
+                const mapEl = document.getElementById('map');
+                const isMapVisible = mapEl && mapEl.style.display !== 'none' && mapEl.style.visibility !== 'hidden' && mapEl.style.opacity !== '0';
+                if (isMapVisible && window.mapboxHelper && typeof window.mapboxHelper.setCameraProgress === 'function') {
+                    // Step 19
+                    if (response.index === 18) {
+                        const prog = Math.max(0, Math.min(1, p));
+                        window.mapboxHelper.setCameraProgress('step-19', prog);
+                    }
+                    // Step 25
+                    if (response.index === 24) {
+                        const prog = Math.max(0, Math.min(1, p));
+                        window.mapboxHelper.setCameraProgress('step-25', prog);
+                    }
+                    // Step 31: dimensiones caminar (index 30)
+                    if (response.index === 30) {
+                        const prog = Math.max(0, Math.min(1, p));
+                        // Animar cámara con jumpTo por frame
+                        window.mapboxHelper.setCameraProgress('step-31', prog);
+                        // Actualizar opacidad por umbral si existe el campo 'total'
+                        if (typeof window.mapboxHelper.updateDimensionesOpacity === 'function') {
+                            window.mapboxHelper.updateDimensionesOpacity(prog);
+                        }
+                    }
+                }
+            } catch (e) { /* silent */ }
         });
 
         // Sub-scroller para substeps discretos de Step 4

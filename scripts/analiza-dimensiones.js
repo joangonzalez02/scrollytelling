@@ -97,7 +97,6 @@ try {
   console.log(`- Clase 4: ${Math.round(stats.q50)+1}–${Math.round(stats.q75)} media`);
   console.log(`- Clase 5: ${Math.round(stats.q75)+1}–${Math.round(stats.q95)} alta`);
   console.log(`- Clase 6: >${Math.round(stats.q95)} muy alta`);
-  console.log('\nAjustar manualmente para redondear valores “bonitos” antes de codificar.');
 } catch (e) {
   console.error('Error analizando:', e);
   process.exit(1);

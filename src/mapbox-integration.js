@@ -11,6 +11,17 @@ let currentBaseStyle = 'mapbox://styles/mapbox/light-v10';
 const MAPBOX_DEBUG = false;
 const dbg = (...args) => { if (MAPBOX_DEBUG) console.log('[MAPBOX]', ...args); };
 
+// Configuración específica para la escena de "Dimensiones de Caminar"
+// Incluye los límites del puntaje y la cámara de inicio/fin para animación con scroll
+const MAP_CONFIG = {
+    scoreMin: 0,
+    // Para Step 31 usamos el rango de la categoría superior (1901)
+    scoreMax: 1901,
+    cameraStart: { zoom: 14, center: [-86.85, 21.168] },
+    cameraStartOverride: { center: [-86.853500, 21.171500], zoom: 12.99 },
+    cameraEnd: { zoom: 10.5, center: [-86.85, 21.16] }
+};
+
 // Lustros disponibles y paleta monocromática basada en colores globales (azules)
 const LUSTROS = [1980, 1985, 1990, 1995, 2000, 2005, 2010, 2015, 2020, 2025];
 const LUSTRO_COLORS = {
@@ -710,6 +721,86 @@ function createScrollZones(mapContainer) {
     topZone.className = 'map-scroll-zone top';
     topZone.addEventListener('wheel', handleScrollZoneWheel, { passive: false });
     mapContainer.appendChild(topZone);
+                        // Si estamos en Step 31 y la capa existe, enfocar a "Muy alta" al entrar
+                        const isStep31 = targetStepId === 31;
+                        if (isStep31) {
+                            const layerId = 'dimensiones-caminar';
+                            const sourceId = layerId + '-src';
+                            const src = mapboxMap.getSource && mapboxMap.getSource(sourceId);
+                            const data = src && (src._data || src._options && src._options.data);
+                            if (data && Array.isArray(data.features) && data.features.length > 0) {
+                                // Calcular bbox de las features con suma >= 1901 (Muy alta)
+                                const sumProps = (p) => (
+                                    Number(p.Eval_D_abastecerse_cnt || 0) +
+                                    Number(p.Eval_aprender_cnt || 0) +
+                                    Number(p.Eval_D_circular_cnt || 0) +
+                                    Number(p.Eval_D_cuidados_cnt || 0) +
+                                    Number(p.Eval_D_disfrutar_cnt || 0) +
+                                    Number(p.Eval_D_reutil_reparar_cnt || 0) +
+                                    Number(p.Eval_D_trabajar_cnt || 0)
+                                );
+                                const target = 1901;
+                                let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+                                const expandBBox = (coords) => {
+                                    // coords puede ser arbitrariamente profundo; aplanar buscando puntos [lon,lat]
+                                    if (!coords) return;
+                                    if (typeof coords[0] === 'number' && typeof coords[1] === 'number') {
+                                        const lon = coords[0], lat = coords[1];
+                                        if (isFinite(lon) && isFinite(lat)) {
+                                            if (lon < minX) minX = lon;
+                                            if (lat < minY) minY = lat;
+                                            if (lon > maxX) maxX = lon;
+                                            if (lat > maxY) maxY = lat;
+                                        }
+                                    } else if (Array.isArray(coords)) {
+                                        coords.forEach(expandBBox);
+                                    }
+                                };
+
+                                data.features.forEach((f) => {
+                                    try {
+                                        const total = sumProps(f.properties || {});
+                                        if (total >= target && f.geometry && f.geometry.coordinates) {
+                                            expandBBox(f.geometry.coordinates);
+                                        }
+                                    } catch {}
+                                });
+
+                                const hasBBox = isFinite(minX) && isFinite(minY) && isFinite(maxX) && isFinite(maxY) && (maxX > minX) && (maxY > minY);
+                                if (MAP_CONFIG.cameraStartOverride && Array.isArray(MAP_CONFIG.cameraStartOverride.center)) {
+                                    // Usar override manual si está definido
+                                    try {
+                                        mapboxMap.jumpTo({ center: MAP_CONFIG.cameraStartOverride.center, zoom: MAP_CONFIG.cameraStartOverride.zoom || 14 });
+                                    } catch {}
+                                    sceneManager.setScene('step-31', { center: MAP_CONFIG.cameraStartOverride.center, zoom: MAP_CONFIG.cameraStartOverride.zoom || 14 }, { center: MAP_CONFIG.cameraEnd.center, zoom: MAP_CONFIG.cameraEnd.zoom });
+                                } else if (hasBBox) {
+                                    const bounds = [[minX, minY], [maxX, maxY]];
+                                    try {
+                                        mapboxMap.fitBounds(bounds, { padding: 60, duration: 800, essential: true });
+                                    } catch {}
+                                    // Configurar escena desde este encuadre hacia el final (zoom out general)
+                                    const centerFrom = [ (minX + maxX) / 2, (minY + maxY) / 2 ];
+                                    // Estimar zoom actual después del fit
+                                    let currentZoom = mapboxMap.getZoom ? mapboxMap.getZoom() : 12.5;
+                                    sceneManager.setScene('step-31', { center: centerFrom, zoom: currentZoom }, { center: MAP_CONFIG.cameraEnd.center, zoom: MAP_CONFIG.cameraEnd.zoom });
+
+                                    // Establecer opacidad inicial: solo "Muy alta" visible
+                                    const sumExpr = ['+',
+                                        ['to-number', ['get', 'Eval_D_abastecerse_cnt']],
+                                        ['to-number', ['get', 'Eval_aprender_cnt']],
+                                        ['to-number', ['get', 'Eval_D_circular_cnt']],
+                                        ['to-number', ['get', 'Eval_D_cuidados_cnt']],
+                                        ['to-number', ['get', 'Eval_D_disfrutar_cnt']],
+                                        ['to-number', ['get', 'Eval_D_reutil_reparar_cnt']],
+                                        ['to-number', ['get', 'Eval_D_trabajar_cnt']]
+                                    ];
+                                    try {
+                                        mapboxMap.setPaintProperty(layerId, 'fill-opacity', ['case', ['>=', ['coalesce', sumExpr, -9999], 1901], 0.85, 0.02]);
+                                    } catch {}
+                                }
+                            }
+                        }
     
     // Crear zona inferior
     const bottomZone = document.createElement('div');
@@ -732,21 +823,20 @@ function handleScrollZoneWheel(event) {
 function addKeyboardScrollSupport() {
     document.addEventListener('keydown', function(event) {
         const mapContainer = document.getElementById('map');
-        if (mapContainer && mapContainer.style.display !== 'none') {
-            // Permitir scroll con teclas de flecha y Page Up/Down
-            if (event.key === 'ArrowDown' || event.key === 'PageDown') {
-                event.preventDefault();
-                window.scrollBy(0, 100);
-            } else if (event.key === 'ArrowUp' || event.key === 'PageUp') {
-                event.preventDefault();
-                window.scrollBy(0, -100);
-            } else if (event.key === 'Home') {
-                event.preventDefault();
-                window.scrollTo(0, 0);
-            } else if (event.key === 'End') {
-                event.preventDefault();
-                window.scrollTo(0, document.body.scrollHeight);
-            }
+        const mapVisible = mapContainer && mapContainer.style.display !== 'none';
+        if (!mapVisible) return;
+        if (event.key === 'ArrowDown' || event.key === 'PageDown') {
+            event.preventDefault();
+            window.scrollBy(0, 100);
+        } else if (event.key === 'ArrowUp' || event.key === 'PageUp') {
+            event.preventDefault();
+            window.scrollBy(0, -100);
+        } else if (event.key === 'Home') {
+            event.preventDefault();
+            window.scrollTo(0, 0);
+        } else if (event.key === 'End') {
+            event.preventDefault();
+            window.scrollTo(0, document.body.scrollHeight);
         }
     });
 }
@@ -786,6 +876,98 @@ async function ensureMapboxReady() {
 
 // Exportar funciones para uso en otros archivos
 window.mapboxHelper = { updateMapForStep, showMapOverlay, hideMapOverlay };
+
+// ===== Escenas con progreso para animar la cámara =====
+// Permite interpolar la cámara de Mapbox en función de un progreso 0..1 dentro de una sección larga.
+const sceneManager = (function() {
+    // Utilidad de interpolación lineal
+    function lerp(a, b, t) { return a + (b - a) * t; }
+    function lerpCoord(a, b, t) { return [ lerp(a[0], b[0], t), lerp(a[1], b[1], t) ]; }
+    function clamp01(x) { return Math.max(0, Math.min(1, x)); }
+
+    const scenes = {
+        // Escena para step 25 (marginación)
+        // Progreso 0: vista general; progreso 1: zoom a un barrio de interés
+        'step-25': {
+            from: { center: [-86.90, 21.20], zoom: 10.5, pitch: 10, bearing: 0 },
+            to:   { center: [-86.83, 21.15], zoom: 12.8, pitch: 28, bearing: -10 },
+            durationMs: 0 // se anima por frames según progreso; no usamos flyTo con duration
+        },
+        // Escena para step 19 (cambio porcentual)
+        'step-19': {
+            from: { center: [-86.89, 21.18], zoom: 10.8, pitch: 0, bearing: 0 },
+            to:   { center: [-86.85, 21.16], zoom: 12.2, pitch: 12, bearing: 5 },
+            durationMs: 0
+        },
+        // Escena para step 31 (dimensiones caminar)
+        'step-31': {
+            from: { center: MAP_CONFIG.cameraStart.center, zoom: MAP_CONFIG.cameraStart.zoom, pitch: 0, bearing: 0 },
+            to:   { center: MAP_CONFIG.cameraEnd.center,   zoom: MAP_CONFIG.cameraEnd.zoom,   pitch: 0, bearing: 0 },
+            durationMs: 0
+        }
+    };
+
+    // Aplica la cámara en función del progreso [0..1]
+    function applyCameraProgress(sceneId, progress) {
+        if (!mapboxMap) return;
+        const scene = scenes[sceneId];
+        if (!scene) return;
+        const t = clamp01(progress);
+        const c = lerpCoord(scene.from.center, scene.to.center, t);
+        const z = lerp(scene.from.zoom, scene.to.zoom, t);
+        const p = lerp(scene.from.pitch, scene.to.pitch, t);
+        const b = lerp(scene.from.bearing, scene.to.bearing, t);
+        try {
+            mapboxMap.jumpTo({ center: c, zoom: z, pitch: p, bearing: b });
+        } catch (e) {
+            dbg('jumpTo failed', e);
+        }
+    }
+
+    // API pública
+    return {
+        applyCameraProgress,
+        has: (id) => Boolean(scenes[id]),
+        // Permite ajustar dinámicamente la escena (from/to) tras cargar datos
+        setScene: (id, from, to) => {
+            if (scenes[id]) {
+                if (from) scenes[id].from = { ...scenes[id].from, ...from };
+                if (to) scenes[id].to = { ...scenes[id].to, ...to };
+            }
+        }
+    };
+})();
+
+// Exponer función para uso desde Scrollama (p.ej., calcular progreso de una sección larga)
+window.mapboxHelper.setCameraProgress = function(sceneId, progress) {
+    sceneManager.applyCameraProgress(sceneId, progress);
+};
+
+// Helper: actualizar opacidad de la capa de dimensiones en función del progreso (umbral descendente)
+window.mapboxHelper.updateDimensionesOpacity = function(progress) {
+    try {
+        if (!mapboxMap) return;
+        const layerId = 'dimensiones-caminar';
+        if (!mapboxMap.getLayer || !mapboxMap.getLayer(layerId)) return;
+        const p = Math.max(0, Math.min(1, Number(progress) || 0));
+        // Umbral desciende desde 1901 (Muy alta) hasta 0, para ir incluyendo categorías
+        const threshold = MAP_CONFIG.scoreMax - p * (MAP_CONFIG.scoreMax - MAP_CONFIG.scoreMin);
+        // Usa la misma suma de campos que define el color como "total" dinámico
+        const sumExpr = ['+',
+            ['to-number', ['get', 'Eval_D_abastecerse_cnt']],
+            ['to-number', ['get', 'Eval_aprender_cnt']],
+            ['to-number', ['get', 'Eval_D_circular_cnt']],
+            ['to-number', ['get', 'Eval_D_cuidados_cnt']],
+            ['to-number', ['get', 'Eval_D_disfrutar_cnt']],
+            ['to-number', ['get', 'Eval_D_reutil_reparar_cnt']],
+            ['to-number', ['get', 'Eval_D_trabajar_cnt']]
+        ];
+        const expr = ['case', ['>=', ['coalesce', sumExpr, -9999], threshold], 0.8, 0.05];
+        mapboxMap.setPaintProperty(layerId, 'fill-opacity', expr);
+    } catch (e) {
+        dbg('updateDimensionesOpacity error', e);
+    }
+};
 
 // ===== Leyenda dinámica para capas GeoJSON =====
 (function() {
