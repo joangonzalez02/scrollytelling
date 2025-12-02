@@ -53,8 +53,8 @@ const mapStepsConfig = {
     stepConfigs: {
         // Step 19: Cambio porcentual poblacional (2010–2020) por AGEB
         "19": {
-            center: [-86.8515, 21.1619],
-            zoom: 11,
+            center: MAP_CONFIG.cameraEnd.center,
+            zoom: MAP_CONFIG.cameraEnd.zoom,
             pitch: 0,
             bearing: 0,
             style: 'mapbox://styles/mapbox/light-v10',
@@ -109,8 +109,8 @@ const mapStepsConfig = {
         },
         // Step 25: Grado de marginación (GM_2020)
         "25": {
-            center: [-86.8515, 21.1619],
-            zoom: 11,
+            center: MAP_CONFIG.cameraEnd.center,
+            zoom: MAP_CONFIG.cameraEnd.zoom,
             pitch: 30,
             bearing: 0,
             style: 'mapbox://styles/mapbox/light-v10',
@@ -889,14 +889,14 @@ const sceneManager = (function() {
         // Escena para step 25 (marginación)
         // Progreso 0: vista general; progreso 1: zoom a un barrio de interés
         'step-25': {
-            from: { center: [-86.90, 21.20], zoom: 10.5, pitch: 10, bearing: 0 },
-            to:   { center: [-86.83, 21.15], zoom: 12.8, pitch: 28, bearing: -10 },
+            from: { center: MAP_CONFIG.cameraEnd.center, zoom: MAP_CONFIG.cameraEnd.zoom, pitch: 10, bearing: 0 },
+            to:   { center: MAP_CONFIG.cameraStartOverride.center, zoom: MAP_CONFIG.cameraStartOverride.zoom || 14, pitch: 28, bearing: -10 },
             durationMs: 0 // se anima por frames según progreso; no usamos flyTo con duration
         },
         // Escena para step 19 (cambio porcentual)
         'step-19': {
-            from: { center: [-86.89, 21.18], zoom: 10.8, pitch: 0, bearing: 0 },
-            to:   { center: [-86.85, 21.16], zoom: 12.2, pitch: 12, bearing: 5 },
+            from: { center: MAP_CONFIG.cameraEnd.center, zoom: MAP_CONFIG.cameraEnd.zoom, pitch: 0, bearing: 0 },
+            to:   { center: MAP_CONFIG.cameraStartOverride.center, zoom: MAP_CONFIG.cameraStartOverride.zoom || 14, pitch: 12, bearing: 5 },
             durationMs: 0
         },
         // Escena para step 31 (dimensiones caminar)
