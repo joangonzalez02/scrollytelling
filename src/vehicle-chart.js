@@ -699,12 +699,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 .attr('y', d => yLeft(d.vehicles))
                 .attr('height', d => dims.innerH - yLeft(d.vehicles));
             // Línea dibujada con trazo animado
-            const totalLen = path.node().getTotalLength();
-            path
-                .attr('stroke-dasharray', `${totalLen} ${totalLen}`)
-                .attr('stroke-dashoffset', totalLen)
-                .transition().delay(350).duration(900).ease(d3.easeCubicOut)
-                .attr('stroke-dashoffset', 0);
+            const dAttr = path.attr('d');
+            if (dAttr) {
+                const totalLen = path.node().getTotalLength();
+                path
+                    .attr('stroke-dasharray', `${totalLen} ${totalLen}`)
+                    .attr('stroke-dashoffset', totalLen)
+                    .transition().delay(350).duration(900).ease(d3.easeCubicOut)
+                    .attr('stroke-dashoffset', 0);
+            }
 
             // Puntos emergen
             points.transition().delay(900).duration(400)
@@ -785,12 +788,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 .attr('y', d => scales.yLeft(d.vehicles))
                 .attr('height', d => dims.innerH - scales.yLeft(d.vehicles));
             // Redibujar línea
-            const totalLen = path.node().getTotalLength();
-            path
-                .attr('stroke-dasharray', `${totalLen} ${totalLen}`)
-                .attr('stroke-dashoffset', totalLen)
-                .transition().delay(250).duration(900).ease(d3.easeCubicOut)
-                .attr('stroke-dashoffset', 0);
+            const dAttr = path.attr('d');
+            if (dAttr) {
+                const totalLen = path.node().getTotalLength();
+                path
+                    .attr('stroke-dasharray', `${totalLen} ${totalLen}`)
+                    .attr('stroke-dashoffset', totalLen)
+                    .transition().delay(250).duration(900).ease(d3.easeCubicOut)
+                    .attr('stroke-dashoffset', 0);
+            }
             points
                 .attr('r', 0)
                 .transition().delay(950).duration(350)
@@ -804,10 +810,13 @@ document.addEventListener('DOMContentLoaded', function () {
             bars.transition(t)
                 .attr('y', dims.innerH)
                 .attr('height', 0);
-            const totalLen = path.node().getTotalLength();
-            path.transition(t)
-                .attr('stroke-dasharray', `${totalLen} ${totalLen}`)
-                .attr('stroke-dashoffset', totalLen);
+            const dAttr = path.attr('d');
+            if (dAttr) {
+                const totalLen = path.node().getTotalLength();
+                path.transition(t)
+                    .attr('stroke-dasharray', `${totalLen} ${totalLen}`)
+                    .attr('stroke-dashoffset', totalLen);
+            }
             points.transition(t).attr('r', 0);
             // Marcar como no dibujado para reanimar en la siguiente entrada
             state.hasDrawn = false;

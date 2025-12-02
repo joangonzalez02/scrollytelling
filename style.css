@@ -267,6 +267,14 @@ body {
             position: relative;
             background-color: #FFFFFF !important;
         }
+        /* Forest loss steps must be transparent so background imagery shows */
+        .step.forest-year-image {
+            background-color: transparent !important;
+        }
+        /* Remove any inherited padding creating white block on small screens */
+        @media (max-width: 768px) {
+            .step.forest-year-image { padding: 0 !important; }
+        }
         
         .step-with-background {
             position: relative;
@@ -397,6 +405,14 @@ body {
     margin: 2rem auto;
     overflow: visible;
     position: relative;
+}
+
+/* Ensure forest floating caption is not forced to full-width card */
+.forest-floating-text {
+    background-clip: padding-box;
+}
+@media (max-width:768px){
+    .forest-floating-text { width: fit-content !important; }
 }
 
 /* Make the vehicle chart step match the same visual size as the "Cinco Décadas" chart */
@@ -558,4 +574,121 @@ body {
     margin-left: -5px;
     border: 5px solid transparent;
     border-top-color: rgba(2, 48, 71, 0.95);
+}
+
+/* ==================== ANIMACIONES DE PÁRRAFOS FLOTANTES - PÉRDIDA FORESTAL ==================== */
+
+/* Contenedor del texto flotante */
+.forest-floating-text {
+    position: absolute !important;
+    top: 50% !important;
+    left: -100% !important;
+    transform: translateY(-50%) !important;
+    max-width: 45% !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    padding: 40px !important;
+    border-radius: 12px !important;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25) !important;
+    z-index: 50 !important;
+    transition: left 0s linear !important;
+    will-change: left !important;
+    backdrop-filter: blur(10px) !important;
+}
+
+.forest-floating-text.visible {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+.forest-floating-text.hidden {
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+.forest-title {
+    margin: 0 0 12px 0 !important;
+    font-size: 1.8rem !important;
+    font-weight: 700 !important;
+    color: #023047 !important;
+    font-family: 'Montserrat', sans-serif !important;
+    line-height: 1.2 !important;
+}
+
+.forest-subtitle {
+    margin: 0 !important;
+    font-size: 1rem !important;
+    color: #555 !important;
+    font-family: 'Montserrat', sans-serif !important;
+    line-height: 1.5 !important;
+    font-weight: 400 !important;
+}
+
+/* Sección de scroll con controles de imagen */
+.forest-scroll-section {
+    position: relative !important;
+    background: #f5f5f5 !important;
+}
+
+.forest-scroll-section .forest-bg-frame {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    opacity: 0 !important;
+    transition: opacity 0s linear !important;
+    z-index: 10 !important;
+}
+
+.forest-scroll-section .forest-bg-frame.active {
+    opacity: 1 !important;
+}
+
+/* Responsive para móviles */
+@media (max-width: 768px) {
+    .forest-floating-text {
+        max-width: 90% !important;
+        left: -110% !important;
+        padding: 25px !important;
+        top: 50% !important;
+        bottom: auto !important; /* Evitar que top+bottom estire la caja */
+        background: transparent !important;
+        backdrop-filter: none !important;
+        box-shadow: none !important;
+        border: none !important;
+        padding: 12px 14px !important;
+        z-index: 5 !important; 
+    }
+
+    .forest-title {
+        font-size: 1.5rem !important;
+    }
+
+    .forest-subtitle {
+        font-size: 0.95rem !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .forest-floating-text {
+        max-width: 95% !important;
+        left: -110% !important;
+        padding: 20px !important;
+        top: 48% !important;
+        bottom: auto !important; /* Limpieza adicional para pantallas muy pequeñas */
+        background: transparent !important;
+        backdrop-filter: none !important;
+        box-shadow: none !important;
+        border: none !important;
+        padding: 10px 12px !important;
+        z-index: 5 !important;
+    }
+
+    .forest-title {
+        font-size: 1.3rem !important;
+    }
+
+    .forest-subtitle {
+        font-size: 0.9rem !important;
+    }
 }

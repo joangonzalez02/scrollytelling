@@ -27,6 +27,9 @@
         <meta name="twitter:description" content="Mapas y datos para entender el crecimiento urbano de Cancún. Explora la historia y los retos de la ciudad con visualizaciones interactivas.">
         <meta name="twitter:image" content="https://joangonzalez02.github.io/SCROLLAMA/assets/1.png">
 
+        <!-- Favicon -->
+        <link rel="icon" type="image/png" href="assets/1.png">
+
         <!-- JSON-LD (Schema.org) para WebPage -->
         <script type="application/ld+json">
         {
@@ -741,7 +744,6 @@
         /* Responsivo: ajustar captions en pantallas pequeñas */
         @media (max-width: 768px) {
             .step.urban-year-image .year-caption {
-                right: 12px;
                 bottom: 12px;
                 max-width: calc(100% - 24px);
                 padding: 12px 14px;
@@ -750,6 +752,19 @@
                 backdrop-filter: blur(6px) saturate(110%);
                 border: 1px solid rgba(255, 255, 255, 0.75);
             }
+            /* Móviles */
+            .forest-floating-text { 
+                left: 14px; 
+                top: 14px; 
+                bottom: auto; 
+                max-width: 95vw; 
+                padding: 14px 16px; 
+                border-radius: 12px; 
+                z-index: 2000; 
+            }
+            /* Asegurar visibilidad en móviles: si JS tarda en clasificar, forzar display */
+            .forest-floating-text.hidden { display: none !important; }
+            .forest-floating-text.visible { display: block !important; }
             .step.urban-year-image .year-caption .caption-body { max-width: 100%; }
             .step.urban-year-image .year-caption p { 
                 font-size: 16px; 
@@ -784,10 +799,90 @@
             }
         }
 
+          /* ==================== PÁRRAFOS FLOTANTES - Pérdida de cobertura forestal ==================== */
+          /* Nota: Los captions directos (h2 hijo directo de .step-content) conservan el estilo original. 
+              Para steps 21–23 usamos un contenedor .forest-floating-text que se mueve horizontalmente. */
+                .forest-floating-text.hidden { opacity:0; visibility:hidden; }
+                .forest-floating-text.visible { opacity:1; visibility:visible; }
+
+
         /* Animaciones clave para variar la entrada por año */
         @keyframes fadeUpSoft {
             from { opacity: 0; transform: translateY(16px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Contenedor de texto flotante para steps 21–23 (scrubbing horizontal, anclado abajo-izquierda) */
+        .forest-floating-text {
+            position: fixed; /* anclado al viewport */
+            left: 24px; /* esquina inferior izquierda */
+            bottom: 24px;
+            transform: translateX(0); /* sólo movimiento horizontal */
+            display: inline-flex; /* ajustar al contenido */
+            flex-direction: column;
+            width: fit-content;
+            height: fit-content;
+            max-width: min(560px, 92vw);
+            background: rgba(255,255,255,0.92);
+            padding: 18px 20px;
+            border-radius: 14px;
+            box-shadow: 0 14px 34px rgba(2,48,71,0.16), 0 8px 18px rgba(2,48,71,0.10);
+            border: 1px solid rgba(255,255,255,0.78);
+            z-index: 50;
+            transition: none; /* 1:1 con el scroll */
+            will-change: transform;
+            backdrop-filter: blur(12px) saturate(115%);
+            box-sizing: border-box;
+        }
+        .forest-floating-text .forest-title {
+            margin: 0 0 6px 0;
+            line-height: 1.15;
+            font-weight: 700;
+            font-size: clamp(1.45rem, 2.2vw, 2.05rem);
+            letter-spacing: -0.5px;
+        }
+        .forest-floating-text p {
+            margin: 0 0 8px 0;
+            font-size: clamp(0.95rem, 1.1vw, 1.08rem);
+            line-height: 1.42;
+        }
+        .forest-floating-text p:last-child { margin-bottom: 0; }
+        @media (min-width: 1200px) {
+            .forest-floating-text .forest-title { white-space: nowrap; }
+        }
+        @media (max-width: 1199px) {
+            .forest-floating-text { left: 20px; bottom: 20px; max-width: min(460px, 92vw); padding: 16px 18px; }
+        }
+        @media (max-width: 991px) {
+            .forest-floating-text { max-width: min(480px, 94vw); }
+            .forest-floating-text .forest-title { font-size: clamp(1.35rem, 3.4vw, 1.8rem); }
+        }
+        @media (max-width: 767px) {
+            /* En móviles se usará desplazamiento vertical, anclado por top */
+            .forest-floating-text {
+                left: 14px;
+                top: 14px;
+                bottom: auto;
+                display: inline-flex;
+                flex-direction: column;
+                width: fit-content;
+                max-width: 92vw;
+                max-height: calc(100vh - 48px);
+                overflow: auto; /* limitar altura si el texto es largo */
+                padding: 14px 16px;
+                border-radius: 12px;
+                z-index: 2000;
+            }
+            .forest-floating-text .forest-title { font-size: clamp(1.25rem, 4.5vw, 1.6rem); white-space: normal; }
+        }
+        @media (max-width: 540px) {
+            .forest-floating-text { left: 12px; bottom: 12px; padding: 13px 15px; }
+            .forest-floating-text .forest-title { font-size: clamp(1.15rem, 5.4vw, 1.45rem); }
+            .forest-floating-text p { font-size: 0.9rem; }
+        }
+        @media (max-width: 420px) {
+            .forest-floating-text { left: 10px; bottom: 10px; padding: 12px 14px; }
+            .forest-floating-text .forest-title { font-size: clamp(1.05rem, 5.8vw, 1.35rem); }
         }
 
         @keyframes slideInRightSoft {
@@ -919,6 +1014,27 @@
             text-shadow: none;
         }
         
+        /* Hacer transparentes los steps con fondos dinámicos para ver las imágenes detrás */
+        section.step.urban-year-image,
+        section.step.forest-year-image {
+            background-color: transparent !important;
+        }
+
+        section.step.forest-year-image > .step-content {
+            background: transparent !important;
+            box-shadow: none !important;
+            border: 0 !important;
+            padding: 0 !important;
+        }
+        /* Reaplicar estilo de cápsula sólo al caption flotante */
+        section.step.forest-year-image > .forest-floating-text {
+            background: rgba(255,255,255,0.92) !important;
+            border: 1px solid rgba(255, 255, 255, 0.78) !important;
+            box-shadow: 0 14px 34px rgba(2,48,71,0.16), 0 8px 18px rgba(2,48,71,0.10) !important;
+            padding: 18px 20px !important;
+            border-radius: 14px !important;
+        }
+
         .step-content h1 {
             font-size: 48px;
             font-weight: bold;
@@ -1140,28 +1256,24 @@
         .forest-year-image {
             background: transparent !important;
         }
-        .forest-year-image .step-content h2 {
+        .forest-year-image .step-content > h2 {
             font-family: 'Montserrat', 'Segoe UI', Tahoma, Arial, sans-serif;
             color: #095a4f !important;
-            text-shadow: 0 2px 8px rgb(255, 255, 255);
             font-size: 28px;
             font-weight: 700;
-            line-height: 1.2;
-            text-align: center;
-            margin-bottom: 10px;
+            line-height: 1.15;
+            margin: 0 0 6px 0;
         }
-        .forest-year-image .step-content p {
+        .forest-year-image .step-content > p {
             color: #095a4f !important;
             font-size: 18px;
             line-height: 1.5;
-            text-align: center;
+            margin: 0;
             max-width: 900px;
-            margin: 0 auto;
         }
-
-        @media (max-width: 768px) {
-            .forest-year-image .step-content h2 { font-size: 22px; }
-            .forest-year-image .step-content p { font-size: 16px; }
+        @media (max-width: 767px) {
+            .forest-year-image .step-content > h2 { font-size: 22px; }
+            .forest-year-image .step-content > p { font-size: 16px; }
         }
 
         /* Estilos específicos para las imágenes de evolución urbana */
@@ -1327,6 +1439,32 @@
                 box-sizing: border-box !important;
                 backdrop-filter: blur(4px) saturate(140%) !important;
                 -webkit-backdrop-filter: blur(4px) saturate(140%) !important;
+            }
+            /* === Ajustes forest steps 21-23 solo móvil (<768px) === */
+            section.step.forest-year-image {
+                background: transparent !important;
+            }
+            section.step.forest-year-image > .step-content {
+                background: transparent !important;
+                box-shadow: none !important;
+                border: 0 !important;
+                padding: 0 !important;
+                min-height: auto !important;
+                height: auto !important;
+            }
+            section.step.forest-year-image > .forest-floating-text {
+                background: rgba(255,255,255,0.92) !important;
+                width: fit-content !important;
+                max-width: 92vw !important;
+                height: auto !important;
+                min-height: auto !important;
+                box-shadow: 0 14px 34px rgba(2,48,71,0.16), 0 8px 18px rgba(2,48,71,0.10) !important;
+                border: 1px solid rgba(255,255,255,0.78) !important;
+                padding: 14px 16px !important;
+            }
+            /* Prevenir expansión accidental a toda la altura */
+            section.step.forest-year-image > .forest-floating-text h2 {
+                margin-bottom: 0 !important;
             }
         }
         
@@ -1781,7 +1919,6 @@
                     </div>
                 </div>
             </div>
-            <span class="year-label-mobile" style="position:absolute; top:8px; left:8px; background:rgba(0,0,0,0.6); color:#fff; padding:4px 8px; border-radius:4px; font-size:14px; display:none;">1980</span>
         </section>
 
         <!-- Step 9: Imagen 1985.jpg  -->
@@ -1959,21 +2096,21 @@
         </section>
         
         <!-- Steps 21–23: Serie de pérdida de cobertura forestal (2000, 2010, 2020) -->
-        <section class="step forest-year-image" data-step="21" data-forest-year="2000" style="position: relative; overflow: hidden; min-height: 100vh;">
-            <div class="step-content">
-                <h2>Pérdida de cobertura forestal – 2000</h2>
+        <section class="step forest-year-image forest-scroll-section" data-step="21" data-forest-year="2000" style="position: relative; overflow: hidden; min-height: 100vh; background: transparent !important; padding: 0 !important;">
+            <div class="forest-floating-text">
+                <h2 class="forest-title">Pérdida de cobertura forestal – 2000</h2>
             </div>
         </section>
 
-        <section class="step forest-year-image" data-step="22" data-forest-year="2010" style="position: relative; overflow: hidden; min-height: 100vh;">
-            <div class="step-content">
-                <h2>Pérdida de cobertura forestal – 2010</h2>
+        <section class="step forest-year-image forest-scroll-section" data-step="22" data-forest-year="2010" style="position: relative; overflow: hidden; min-height: 100vh; background: transparent !important; padding: 0 !important;">
+            <div class="forest-floating-text">
+                <h2 class="forest-title">Pérdida de cobertura forestal – 2010</h2>
             </div>
         </section>
 
-        <section class="step forest-year-image" data-step="23" data-forest-year="2020" style="position: relative; overflow: hidden; min-height: 100vh;">
-            <div class="step-content">
-                <h2>Pérdida de cobertura forestal – 2020</h2>
+        <section class="step forest-year-image forest-scroll-section" data-step="23" data-forest-year="2020" style="position: relative; overflow: hidden; min-height: 100vh; background: transparent !important; padding: 0 !important;">
+            <div class="forest-floating-text">
+                <h2 class="forest-title">Pérdida de cobertura forestal – 2020</h2>
             </div>
         </section>
 

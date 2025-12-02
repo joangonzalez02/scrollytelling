@@ -145,6 +145,16 @@ document.addEventListener('DOMContentLoaded', function() {
             .onStepEnter(response => {
                 console.log('[scroller] onStepEnter', response.index, response.element && response.element.getAttribute && response.element.getAttribute('data-step'));
                 currentStep = response.index;
+                if (currentStep < 20 || currentStep > 22) {
+                    try {
+                        document.querySelectorAll('.forest-floating-text').forEach(el => {
+                            el.classList.remove('visible');
+                            el.classList.add('hidden');
+                            el.style.display = 'none';
+                            el.style.transform = '';
+                        });
+                    } catch {}
+                }
                 
                 // Seguridad: ocultar leyenda/panel salvo que luego un step de mapa permitido los muestre
                 try {
@@ -197,6 +207,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (currentStep === 26 && window.vehicleChart && typeof window.vehicleChart.enter === 'function') {
                     // Nuevo Step 25 (index 24): parque vehicular
                     window.vehicleChart.enter();
+                }
+
+                // Manejar steps de pérdida de cobertura forestal (21-23 -> índices 20-22)
+                if (response.index >= 20 && response.index <= 22) {
+                    const year = response.element.getAttribute('data-forest-year');
+                    if (year) {
+                        handleForestLossStep(response.index);
+                        // Mostrar párrafo flotante al entrar
+                        const floatingText = response.element.querySelector('.forest-floating-text');
+                        if (floatingText) {
+                            floatingText.classList.remove('hidden');
+                            floatingText.classList.add('visible');
+                            floatingText.style.display = 'block';
+                        }
+                    }
                 }
 
                 if (response.index === 3) {
@@ -266,8 +291,19 @@ document.addEventListener('DOMContentLoaded', function() {
                     } catch {}
                 }
                 
-                // Al salir de steps de pérdida forestal (21-23 -> índices 20-22), ocultar fondo si corresponde
+                // Al salir de steps de pérdida forestal (21-23 -> índices 20-22), ocultar fondo y párrafo flotante
                 if (response.index >= 20 && response.index <= 22) {
+                    // Ocultar párrafo flotante
+                    try {
+                        const floatingText = response.element.querySelector('.forest-floating-text');
+                        if (floatingText) {
+                            floatingText.classList.add('hidden');
+                            floatingText.classList.remove('visible');
+                            floatingText.style.display = 'none';
+                            floatingText.style.transform = 'translateX(0px)';
+                        }
+                    } catch {}
+                    
                     if (currentStep < 20 || currentStep > 22) {
                         setTimeout(() => {
                             const forestBg = document.getElementById('forest-loss-background');
@@ -444,6 +480,175 @@ document.addEventListener('DOMContentLoaded', function() {
                         } catch (e) { /* silent */ }
                     }
                 }
+            }
+
+            // ===== Animación de párrafos flotantes + cross-fade de imágenes (steps 21-23) =====
+            try {
+                // Steps 21, 22, 23 (índices 20, 21, 22)
+                if (response.index >= 20 && response.index <= 22) {
+                    try {
+                        document.querySelectorAll('.forest-floating-text').forEach(el => {
+                            if (el !== (response.element && response.element.querySelector('.forest-floating-text'))) {
+                                el.classList.remove('visible');
+                                el.classList.add('hidden');
+                                el.style.display = 'none';
+                                el.style.transform = 'translateX(0px)';
+                            }
+                        });
+                    } catch {}
+
+                    const floatingText = response.element.querySelector('.forest-floating-text');
+                    if (floatingText) {
+                        // Mostrar el párrafo
+                        floatingText.classList.add('visible');
+                        floatingText.classList.remove('hidden');
+                        floatingText.style.display = 'block';
+                        // Asegurar que no se estire toda la pantalla: nunca tener top y bottom simultáneos
+                        const isSmallMobile = window.matchMedia('(max-width: 767px)').matches;
+                        if (isSmallMobile) {
+                            // En móvil usamos top y limpiamos bottom
+                            floatingText.style.top = '14px';
+                            floatingText.style.bottom = '';
+                        } else {
+                            // En desktop mantenemos bottom y limpiamos top
+                            floatingText.style.bottom = '24px';
+                            floatingText.style.top = '';
+                        }
+                        
+                        // Movimiento horizontal limitado ESTRICTAMENTE al ancho de la imagen activa
+                        const yearAttr = response.element.getAttribute('data-forest-year');
+                        const year = yearAttr ? parseInt(yearAttr, 10) : null;
+                        const curFrame = year ? document.getElementById(`forest-frame-${year}`) : null;
+                        const img = curFrame ? curFrame.querySelector('.forest-main-image') : null;
+
+                        const baseLeft = parseFloat(window.getComputedStyle(floatingText).left || '24') || 24;
+                        const textRect = floatingText.getBoundingClientRect();
+                        const imgRect = img ? img.getBoundingClientRect() : null;
+                        const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+                        const isMobileWide = window.matchMedia('(max-width: 1199px)').matches;
+                        const imgFullyVisible = imgRect && (imgRect.left >= 0 && imgRect.right <= vw);
+                        const prog = (imgFullyVisible || isMobileWide) ? Math.max(0, Math.min(1, p)) : 0;
+
+                        // En móviles pequeños NO desplazamos el bloque para que no tape imágenes (modo estático)
+                        const GUTTER = 32; // px margen de seguridad desde bordes de la imagen
+                        let x = 0, rangeAxis = 0, axisStart = 0;
+                        if (!isSmallMobile) {
+                            // Movimiento horizontal SOLO dentro del ancho de la imagen (desktop / tablets grandes)
+                            let startX = 0, endX = 0;
+                            if (imgRect && imgRect.width > 0) {
+                                // Límite izquierdo: borde izquierdo de la imagen + margen
+                                startX = Math.round(imgRect.left - baseLeft + GUTTER);
+                                // Límite derecho: borde derecho de la imagen - ancho del texto - margen
+                                endX = Math.round(imgRect.right - baseLeft - textRect.width - GUTTER);
+                                // Asegura que no excede los límites de la imagen
+                                startX = Math.max(0, startX);
+                                endX = Math.max(startX, endX);
+                            } else {
+                                // Fallback si no hay imagen: sin movimiento
+                                startX = 0;
+                                endX = 0;
+                            }
+                            const range = Math.max(0, endX - startX);
+                            x = Math.round(startX + (range * prog));
+                            rangeAxis = range;
+                            axisStart = startX;
+                            // CRÍTICO: Solo translateX, sin translateY para mantener posición vertical fija
+                            floatingText.style.transform = `translateX(${x}px)`;
+                        } else {
+                            // Modo estático: sin desplazamiento; limpiar transform
+                            floatingText.style.transform = 'none';
+                        }
+
+                        // Cross-fade sincronizado usando el progreso relativo al ancho de imagen
+                        const nextMap = { 2000: 2010, 2010: 2020 };
+                        const nextYear = year && nextMap[year] ? nextMap[year] : null;
+                        const nextFrame = nextYear ? document.getElementById(`forest-frame-${nextYear}`) : null;
+
+                        // Asegurar que ambas capas estén visibles durante el scrub
+                        if (curFrame) {
+                            curFrame.style.display = 'block';
+                            curFrame.style.visibility = 'visible';
+                            const axisPos = isSmallMobile ? 0 : x;
+                            const q = rangeAxis > 0 ? Math.max(0, Math.min(1, (axisPos - axisStart) / rangeAxis)) : 0;
+                            const isFirst = year === 2000;
+                            const isLast = year === 2020;
+                            // Umbrales para iniciar la mezcla
+                            const FIRST_YEAR_BLEND_THRESHOLD = 0.60; 
+                            const SECOND_YEAR_BLEND_THRESHOLD = 0.60;
+                            let effectiveQ = q;
+                            
+                            if (isFirst) {
+                                // CLAMP: Mantener la imagen del 2000 con opacidad 1 hasta que se supere el umbral
+                                const span = 1 - FIRST_YEAR_BLEND_THRESHOLD;
+                                const allowProgress = isSmallMobile ? p >= FIRST_YEAR_BLEND_THRESHOLD : (imgFullyVisible && p >= FIRST_YEAR_BLEND_THRESHOLD);
+                                if (!allowProgress) {
+                                    effectiveQ = 0; // Mantener en 100% opacidad
+                                } else {
+                                    const localP = Math.max(0, Math.min(1, (p - FIRST_YEAR_BLEND_THRESHOLD) / span));
+                                    effectiveQ = localP;
+                                }
+                                // Asegura que nunca baje de cierta opacidad mínima si estamos en el primer step
+                                curFrame.style.opacity = String(nextFrame ? Math.max(0.2, 1 - effectiveQ) : 1);
+                            } else if (isLast) {
+                                // CLAMP: La última imagen (2020) debe mantenerse visible al final
+                                curFrame.style.opacity = '1';
+                            } else {
+                                // Step intermedio (2010)
+                                const span = 1 - SECOND_YEAR_BLEND_THRESHOLD;
+                                const allowProgress = isSmallMobile ? p >= SECOND_YEAR_BLEND_THRESHOLD : (imgFullyVisible && p >= SECOND_YEAR_BLEND_THRESHOLD);
+                                if (!allowProgress) {
+                                    effectiveQ = 0;
+                                } else {
+                                    const localP = Math.max(0, Math.min(1, (p - SECOND_YEAR_BLEND_THRESHOLD) / span));
+                                    effectiveQ = localP;
+                                }
+                                curFrame.style.opacity = String(nextFrame ? 1 - effectiveQ : 1);
+                            }
+                        }
+                        if (nextFrame) {
+                            // Pre-cargar recursos si hiciera falta
+                            const nimg = nextFrame.querySelector('.forest-main-image');
+                            if (nimg && !nimg.getAttribute('src')) {
+                                const nsrc = nimg.getAttribute('data-src');
+                                if (nsrc) nimg.setAttribute('src', nsrc);
+                            }
+                            const nblur = nextFrame.querySelector('.forest-blur-layer');
+                            if (nblur && !nblur.style.backgroundImage) {
+                                const nbg = nblur.getAttribute('data-bg');
+                                if (nbg) nblur.style.backgroundImage = `url('${nbg}')`;
+                            }
+                            nextFrame.style.display = 'block';
+                            nextFrame.style.visibility = 'visible';
+                            const axisPos = isSmallMobile ? 0 : x;
+                            const q = rangeAxis > 0 ? Math.max(0, Math.min(1, (axisPos - axisStart) / rangeAxis)) : 0;
+                            let effectiveQ = q;
+                            if (year === 2000) {
+                                const FIRST_YEAR_BLEND_THRESHOLD = 0.60;
+                                const span = 1 - FIRST_YEAR_BLEND_THRESHOLD;
+                                const allowProgress = isSmallMobile ? p >= FIRST_YEAR_BLEND_THRESHOLD : (imgFullyVisible && p >= FIRST_YEAR_BLEND_THRESHOLD);
+                                if (!allowProgress) {
+                                    effectiveQ = 0;
+                                } else {
+                                    const localP = Math.max(0, Math.min(1, (p - FIRST_YEAR_BLEND_THRESHOLD) / span));
+                                    effectiveQ = localP;
+                                }
+                            } else if (year === 2010) {
+                                const SECOND_YEAR_BLEND_THRESHOLD = 0.60;
+                                const span = 1 - SECOND_YEAR_BLEND_THRESHOLD;
+                                const allowProgress = isSmallMobile ? p >= SECOND_YEAR_BLEND_THRESHOLD : (imgFullyVisible && p >= SECOND_YEAR_BLEND_THRESHOLD);
+                                if (!allowProgress) {
+                                    effectiveQ = 0;
+                                } else {
+                                    const localP = Math.max(0, Math.min(1, (p - SECOND_YEAR_BLEND_THRESHOLD) / span));
+                                    effectiveQ = localP;
+                                }
+                            }
+                            nextFrame.style.opacity = String(effectiveQ);
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn('[onStepProgress] forest loss animation error:', e);
             }
 
             // ===== Progreso de escena para cámara Mapbox (scene progress) =====
@@ -641,6 +846,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                 }
             }
+            // ===== Progreso para captions de pérdida forestal (slides horizontales/verticales) =====
         }
         
         // Elementos fijos del `step 2`
@@ -888,7 +1094,8 @@ document.addEventListener('DOMContentLoaded', function() {
             frame.style.visibility = 'hidden';
             frame.style.display = 'none';
             frame.style.zIndex = '1';
-            frame.style.transition = 'opacity 0.8s ease-in-out, visibility 0.8s ease-in-out';
+            // Sin transición para scrubbing 1:1
+            frame.style.transition = 'opacity 0s linear, visibility 0s linear';
 
             const blur = document.createElement('div');
             blur.className = 'forest-blur-layer';
@@ -929,8 +1136,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const year = map[stepIndex];
         if (!year) return;
 
-
-        const activeFrames = Array.from(document.querySelectorAll('.forest-bg-frame.active'));
+        const allFrames = Array.from(document.querySelectorAll('.forest-bg-frame'));
 
         const frame = document.getElementById(`forest-frame-${year}`);
         if (frame) {
@@ -950,7 +1156,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 frame.classList.add('active');
                 frame.style.display = 'block';
                 frame.style.visibility = 'visible';
-                frame.style.opacity = '1';
+                // La opacidad final la controla onStepProgress; aquí sólo aseguramos visibilidad
+                frame.style.opacity = frame.style.opacity || '1';
             });
 
             // Preload siguiente
@@ -969,19 +1176,25 @@ document.addEventListener('DOMContentLoaded', function() {
                         const nbg = nblur.getAttribute('data-bg');
                         if (nbg) nblur.style.backgroundImage = `url('${nbg}')`;
                     }
+                    // Asegurar que el siguiente esté visible (con opacidad controlada por progress)
+                    nf.style.display = 'block';
+                    nf.style.visibility = 'visible';
+                    if (!nf.classList.contains('active')) nf.classList.add('active');
+                    // Inicialmente en 0; irá aumentando con el scroll
+                    if (!nf.style.opacity) nf.style.opacity = '0';
                 }
             }
-
-            // Desvanecer los anteriores y ocultarlos después de la transición
-            activeFrames.forEach(prev => {
-                if (prev === frame) return;
-                prev.style.zIndex = '1';
-                prev.style.opacity = '0';
-                prev.style.visibility = 'hidden';
-                setTimeout(() => {
+            // Ocultar cualquier otro frame que no sea el actual o el siguiente
+            allFrames.forEach(prev => {
+                const isCurrent = prev === frame;
+                const isNext = next && prev.id === `forest-frame-${next}`;
+                if (!isCurrent && !isNext) {
+                    prev.style.zIndex = '1';
+                    prev.style.opacity = '0';
+                    prev.style.visibility = 'hidden';
                     prev.classList.remove('active');
                     prev.style.display = 'none';
-                }, 700);
+                }
             });
         }
     }
