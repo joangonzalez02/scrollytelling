@@ -71,15 +71,15 @@ const mapStepsConfig = {
                         'fill-color': [
                             'step',
                             ['coalesce', ['to-number', ['get', 'p100_dife_pob']], 0],
-                            '#f7fcf5',      // -100% a -16%
-                            -16, '#e5f5e0', // -16% a -8.8%
-                            -8.8, '#c7e9c0',// -8.8% a -2%
-                            -2, '#a1d99b',  // -2% a 7.5%
-                            7.5, '#74c476', // 7.5% a 30.5%
-                            30.5, '#41ab5d',// 30.5% a 82.5%
-                            82.5, '#238b45',// 82.5% a 100%
-                            100, '#006d2c', // 100% a 101.9%
-                            101.9, '#00441b'// 101.9% a 73200%
+                            '#f7fcf5',      // Clase 1: Pérdida muy intensa
+                            -75, '#e5f5e0', // Clase 2: Pérdida fuerte
+                            -50, '#c7e9c0', // Clase 3: Pérdida moderada
+                            -25, '#a1d99b', // Clase 4: Pérdida ligera / estancamiento
+                            0,   '#74c476', // Clase 5: Crecimiento ligero
+                            25,  '#41ab5d', // Clase 6: Crecimiento moderado
+                            50,  '#238b45', // Clase 7: Crecimiento fuerte
+                            75,  '#006d2c', // Clase 8: Crecimiento muy fuerte
+                            100, '#00441b'  // Clase 9: Crecimiento extraordinario / expansión acelerada
                         ],
                         'fill-opacity': 0.85,
                         'fill-outline-color': '#ffffff'
@@ -1043,15 +1043,15 @@ window.mapboxHelper.updateDimensionesOpacity = function(progress) {
             if (layerId === 'cambio-poblacional-ageb') {
                 showLegend(title);
                 const customStops = [
-                    { color: baseColor, label: `-100 – -16 %` },
-                    { color: pairs[0]?.color, label: `-16 – -8.8 %` },
-                    { color: pairs[1]?.color, label: `-8.8 – -2 %` },
-                    { color: pairs[2]?.color, label: `-2 – 7.5 %` },
-                    { color: pairs[3]?.color, label: `7.5 – 30.5 %` },
-                    { color: pairs[4]?.color, label: `30.5 – 82.5 %` },
-                    { color: pairs[5]?.color, label: `82.5 – 100 %` },
-                    { color: pairs[6]?.color, label: `100 – 101.9 %` },
-                    { color: pairs[7]?.color || pairs[pairs.length-1]?.color, label: `≥ 101.9 %` }
+                    { color: baseColor,                 label: '−1000 – −75% · Pérdida muy intensa de población' },
+                    { color: pairs[0]?.color,           label: '−75 – −50% · Pérdida fuerte' },
+                    { color: pairs[1]?.color,           label: '−50 – −25% · Pérdida moderada' },
+                    { color: pairs[2]?.color,           label: '−25 – 0% · Pérdida ligera / estancamiento' },
+                    { color: pairs[3]?.color,           label: '0 – 25% · Crecimiento ligero' },
+                    { color: pairs[4]?.color,           label: '25 – 50% · Crecimiento moderado' },
+                    { color: pairs[5]?.color,           label: '50 – 75% · Crecimiento fuerte' },
+                    { color: pairs[6]?.color,           label: '75 – 100% · Crecimiento muy fuerte' },
+                    { color: pairs[7]?.color || pairs[pairs.length-1]?.color, label: '≥ 100% · Crecimiento extraordinario / expansión acelerada' }
                 ];
                 customStops.forEach(s => { if (s.color && s.label) addItem(s.color, s.label); });
                 return;
