@@ -295,22 +295,23 @@
             background: none !important;
         }
         section[data-step="1"] {
-            overflow: visible; /* permitir pseudo-elementos fuera del contenedor */
+            overflow: hidden;
         }
         
         /* Reglas responsivas para el video de fondo (step 1) */
         #background-video {
-            position: absolute;
-            inset: 0; /* top:0; right:0; bottom:0; left:0; */
+            position: absolute; /* dentro del section */
+            top: 0;
+            left: 0;
             width: 100%;
-            height: 100%; /* ajustar al contenedor */
-            min-width: 100%;
-            min-height: 100%;
+            height: 100%;
             object-fit: cover; /* cubrir el contenedor manteniendo proporción */
             object-position: center center;
-            z-index: -2;
+            z-index: 0; /* detrás del overlay (1) y por debajo del contenido (5) */
             display: block;
             pointer-events: none;
+            max-width: 100%;
+            max-height: 100%;
         }
 
         /* Ajustes finos por breakpoint para evitar recortes indeseados */
@@ -2008,7 +2009,7 @@
     <!-- Contenedor principal para el scrollytelling -->
     <main id="scroller">
         <!-- Step 1: Portada / Hook -->
-        <section class="step" data-step="1" style="position: relative; overflow: visible; background: none !important; min-height: 100vh;">
+        <section class="step" data-step="1" style="position: relative; overflow: hidden; background: none !important; min-height: 100vh;">
             <!-- Video de fondo -->
             <video autoplay muted loop playsinline preload="metadata" poster="assets/1.png" id="background-video">
                 <source src="assets/1.mp4" type="video/mp4">
@@ -2016,7 +2017,7 @@
             </video>
             
             <!-- Capa de color con transparencia mayor -->
-            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(2, 48, 71, 0.4); z-index: -1;"></div>
+            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(2, 48, 71, 0.4); z-index: 1;"></div>
             <div class="video-external-shadow" style="height: 1px; pointer-events: none;"></div>
             
             <!-- Contenido sin estilo de las tarjetas normales -->
