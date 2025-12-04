@@ -1443,14 +1443,37 @@
             opacity: 0.95;
         }
 
-        /* Ajustes responsivos para el texto del footer */
+        /* Ajustes responsivos para el footer en dispositivos pequeños:
+           aumenta altura y padding*/
         @media (max-width: 900px) {
-            .footer-line--org { font-size: 0.98rem; }
-            .footer-line--copy { font-size: 0.92rem; }
+            :root { --footer-height: 72px; }
+            .footer-line--org { font-size: 1rem; }
+            .footer-line--copy { font-size: 0.95rem; }
+            .footer {
+                height: var(--footer-height);
+                font-size: 0.9em;
+                padding: 10px 14px;
+            }
+            .footer img { max-height: 40px; margin: 6px; }
+            .footer p { line-height: 1.35; padding: 0 6px; }
+            main#scroller { padding-bottom: calc(var(--footer-height) + 16px); }
         }
+
         @media (max-width: 600px) {
-            .footer-line--org { font-size: 0.95rem; }
-            .footer-line--copy { font-size: 0.88rem; }
+            :root { --footer-height: 72px; }
+            .footer {
+                height: var(--footer-height);
+                font-size: 0.9em;
+                padding: 10px 12px;
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+                align-items: center;
+                justify-content: center;
+            }
+            .footer img { max-height: 38px; margin: 4px 0; }
+            .footer p { line-height: 1.35; }
+            main#scroller { padding-bottom: calc(var(--footer-height) + 12px); }
         }
 
         /* Reservar espacio en el scroller para el footer fijo */
@@ -1503,6 +1526,45 @@
             .footer { font-size: 0.82em; padding: 6px 10px; }
             .footer img { max-height: 32px; }
             main#scroller { padding-bottom: calc(var(--footer-height) + 8px); }
+        }
+
+        /* Ajuste para pantallas muy pequeñas: aumenta la altura del footer */
+        @media (max-width: 360px) {
+            :root { --footer-height: 60px; }
+            .footer {
+                height: var(--footer-height);
+                font-size: 0.82em;
+                padding: 8px 10px;
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+                align-items: center;
+                justify-content: center;
+            }
+            .footer img { max-height: 30px; }
+            main#scroller { padding-bottom: calc(var(--footer-height) + 10px); }
+        }
+
+        /* Garantizar que el footer no se desborde, utilizando min-height y permitir crecimiento si es necesario. */
+        .footer {
+            min-height: var(--footer-height);
+            height: auto; /* permitir que el footer crezca si el texto necesita más espacio */
+            overflow: visible;
+        }
+        .footer p { white-space: normal; overflow-wrap: anywhere; word-break: break-word; }
+
+        /* Aumenta la reserva de espacio del footer en pantallas pequeñas para evitar desbordes */
+        @media (max-width: 900px) {
+            :root { --footer-height: 88px; }
+            main#scroller { padding-bottom: calc(var(--footer-height) + 20px); }
+        }
+        @media (max-width: 600px) {
+            :root { --footer-height: 96px; }
+            main#scroller { padding-bottom: calc(var(--footer-height) + 20px); }
+        }
+        @media (max-width: 420px) {
+            :root { --footer-height: 100px; }
+            main#scroller { padding-bottom: calc(var(--footer-height) + 18px); }
         }
 
         /* Crédito de foto en steps con imagen de fondo */
