@@ -18,9 +18,48 @@ document.addEventListener('DOMContentLoaded', function() {
                 el.style.visibility = 'hidden';
                 el.style.pointerEvents = 'none';
             });
+            // Oculta los párrafos flotantes usados en los steps 21-23
+            document.querySelectorAll('.forest-floating-text').forEach(el => {
+                try {
+                    el.classList.remove('visible');
+                    el.classList.add('hidden');
+                    el.style.display = 'none';
+                    el.style.opacity = '0';
+                    el.style.visibility = 'hidden';
+                    el.style.transform = 'translateX(0px)';
+                } catch (e) { /* silent */ }
+            });
         } catch (e) { /* silent */ }
     }
     hideAllStepContentsInitially();
+    // Helpers para transiciones con fade que respetan el CSS
+    function fadeInElement(el, targetOpacity = 1, display = 'block') {
+        if (!el) return;
+        try {
+            el.style.display = display;
+            el.style.visibility = 'visible';
+            // Forzar reflow antes de cambiar la opacidad para que la transición funcione
+            void el.offsetWidth;
+            requestAnimationFrame(() => {
+                el.style.opacity = String(targetOpacity);
+            });
+        } catch (e) { /* silent */ }
+    }
+
+    function fadeOutElement(el, hideDelay = 520) {
+        if (!el) return;
+        try {
+            // iniciar fade out
+            el.style.opacity = '0';
+            // después del delay ocultar completamente para evitar que capture eventos
+            setTimeout(() => {
+                try {
+                    el.style.display = 'none';
+                    el.style.visibility = 'hidden';
+                } catch (e) { /* silent */ }
+            }, hideDelay);
+        } catch (e) { /* silent */ }
+    }
     
     // Variables para Scrollama
     const scroller = scrollama();
@@ -296,9 +335,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         // Mostrar párrafo flotante al entrar
                         const floatingText = response.element.querySelector('.forest-floating-text');
                         if (floatingText) {
-                            floatingText.classList.remove('hidden');
-                            floatingText.classList.add('visible');
-                            floatingText.style.display = 'block';
+                            try {
+                                floatingText.classList.remove('hidden');
+                                floatingText.classList.add('visible');
+                                fadeInElement(floatingText, 1, 'inline-flex');
+                            } catch (e) { /* silent */ }
                         }
                     }
                 }
@@ -434,26 +475,27 @@ document.addEventListener('DOMContentLoaded', function() {
                     try {
                         const floatingText = response.element.querySelector('.forest-floating-text');
                         if (floatingText) {
-                            floatingText.classList.add('hidden');
-                            floatingText.classList.remove('visible');
-                            floatingText.style.display = 'none';
-                            floatingText.style.transform = 'translateX(0px)';
+                            try {
+                                floatingText.classList.add('hidden');
+                                floatingText.classList.remove('visible');
+                                floatingText.style.transform = 'translateX(0px)';
+                                fadeOutElement(floatingText, 420);
+                            } catch (e) { /* silent */ }
                         }
                     } catch {}
                     
                     if (currentStep < 20 || currentStep > 22) {
+                        // Hacer fade out del contenedor y marcos forestales
                         setTimeout(() => {
                             const forestBg = document.getElementById('forest-loss-background');
                             if (forestBg) {
-                                forestBg.style.display = 'none';
-                                forestBg.style.visibility = 'hidden';
-                                forestBg.style.opacity = '0';
+                                fadeOutElement(forestBg, 520);
                             }
                             document.querySelectorAll('.forest-bg-frame').forEach(frame => {
-                                frame.classList.remove('active');
-                                frame.style.opacity = '0';
-                                frame.style.visibility = 'hidden';
-                                frame.style.display = 'none';
+                                try {
+                                    frame.classList.remove('active');
+                                    fadeOutElement(frame, 520);
+                                } catch (e) {}
                             });
                         }, 200);
                     }
@@ -782,8 +824,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
                         // Asegurar que ambas capas estén visibles durante el scrub
                         if (curFrame) {
-                            curFrame.style.display = 'block';
-                            curFrame.style.visibility = 'visible';
                             const axisPos = isSmallMobile ? 0 : x;
                             const q = rangeAxis > 0 ? Math.max(0, Math.min(1, (axisPos - axisStart) / rangeAxis)) : 0;
                             const isFirst = year === 2000;
@@ -792,24 +832,21 @@ document.addEventListener('DOMContentLoaded', function() {
                             const FIRST_YEAR_BLEND_THRESHOLD = 0.60; 
                             const SECOND_YEAR_BLEND_THRESHOLD = 0.60;
                             let effectiveQ = q;
-                            
                             if (isFirst) {
-                                // CLAMP: Mantener la imagen del 2000 con opacidad 1 hasta que se supere el umbral
                                 const span = 1 - FIRST_YEAR_BLEND_THRESHOLD;
                                 const allowProgress = isSmallMobile ? p >= FIRST_YEAR_BLEND_THRESHOLD : (imgFullyVisible && p >= FIRST_YEAR_BLEND_THRESHOLD);
                                 if (!allowProgress) {
-                                    effectiveQ = 0; // Mantener en 100% opacidad
+                                    effectiveQ = 0;
                                 } else {
                                     const localP = Math.max(0, Math.min(1, (p - FIRST_YEAR_BLEND_THRESHOLD) / span));
                                     effectiveQ = localP;
                                 }
-                                // Asegura que nunca baje de cierta opacidad mínima si estamos en el primer step
-                                curFrame.style.opacity = String(nextFrame ? Math.max(0.2, 1 - effectiveQ) : 1);
+                                // Mantener opacidad mínima en el primer frame hasta iniciar mezcla
+                                const op = nextFrame ? Math.max(0.2, 1 - effectiveQ) : 1;
+                                fadeInElement(curFrame, op, 'block');
                             } else if (isLast) {
-                                // CLAMP: La última imagen (2020) debe mantenerse visible al final
-                                curFrame.style.opacity = '1';
+                                fadeInElement(curFrame, 1, 'block');
                             } else {
-                                // Step intermedio (2010)
                                 const span = 1 - SECOND_YEAR_BLEND_THRESHOLD;
                                 const allowProgress = isSmallMobile ? p >= SECOND_YEAR_BLEND_THRESHOLD : (imgFullyVisible && p >= SECOND_YEAR_BLEND_THRESHOLD);
                                 if (!allowProgress) {
@@ -818,7 +855,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                     const localP = Math.max(0, Math.min(1, (p - SECOND_YEAR_BLEND_THRESHOLD) / span));
                                     effectiveQ = localP;
                                 }
-                                curFrame.style.opacity = String(nextFrame ? 1 - effectiveQ : 1);
+                                const op = nextFrame ? 1 - effectiveQ : 1;
+                                fadeInElement(curFrame, op, 'block');
                             }
                         }
                         if (nextFrame) {
@@ -833,8 +871,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                 const nbg = nblur.getAttribute('data-bg');
                                 if (nbg) nblur.style.backgroundImage = `url('${nbg}')`;
                             }
-                            nextFrame.style.display = 'block';
-                            nextFrame.style.visibility = 'visible';
+                            // Mostrar con fade para que la opacidad transicione correctamente
+                            fadeInElement(nextFrame, 0, 'block');
                             const axisPos = isSmallMobile ? 0 : x;
                             const q = rangeAxis > 0 ? Math.max(0, Math.min(1, (axisPos - axisStart) / rangeAxis)) : 0;
                             let effectiveQ = q;
@@ -859,7 +897,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                     effectiveQ = localP;
                                 }
                             }
-                            nextFrame.style.opacity = String(effectiveQ);
+                            // Ajustar opacidad objetivo en el siguiente frame respetando la transición
+                            fadeInElement(nextFrame, effectiveQ, 'block');
                         }
                     }
                 }
@@ -1096,6 +1135,19 @@ document.addEventListener('DOMContentLoaded', function() {
                     forestBg.style.opacity = '1';
                 }
                 handleForestLossStep(stepIndex);
+                // Asegurar que el párrafo flotante del step activo esté visible
+                try {
+                    const stepEl = currentStepElement;
+                    const floatingText = stepEl && stepEl.querySelector && stepEl.querySelector('.forest-floating-text');
+                    if (floatingText) {
+                        floatingText.classList.add('visible');
+                        floatingText.classList.remove('hidden');
+                        // Forzar display inline-flex
+                        floatingText.style.display = 'inline-flex';
+                        floatingText.style.opacity = '1';
+                        floatingText.style.visibility = 'visible';
+                    }
+                } catch (e) { /* silent */ }
             } else {
                 const forestBg = document.getElementById('forest-loss-background');
                 if (forestBg) {
@@ -1108,6 +1160,17 @@ document.addEventListener('DOMContentLoaded', function() {
                         frame.style.visibility = 'hidden';
                         frame.style.display = 'none';
                     });
+                    // Asegurar que no queden párrafos flotantes visibles
+                    try {
+                        document.querySelectorAll('.forest-floating-text').forEach(ft => {
+                            ft.classList.remove('visible');
+                            ft.classList.add('hidden');
+                            ft.style.display = 'none';
+                            ft.style.opacity = '0';
+                            ft.style.visibility = 'hidden';
+                            ft.style.transform = 'translateX(0px)';
+                        });
+                    } catch (e) { /* silent */ }
                 }
             }
             // ===== Progreso para captions de pérdida forestal (slides horizontales/verticales) =====
@@ -1372,8 +1435,8 @@ document.addEventListener('DOMContentLoaded', function() {
             frame.style.visibility = 'hidden';
             frame.style.display = 'none';
             frame.style.zIndex = '1';
-            // Sin transición para scrubbing 1:1
-            frame.style.transition = 'opacity 0s linear, visibility 0s linear';
+            // Permitir transición suave (no forzar 0s inline que anule la CSS)
+            frame.style.transition = 'opacity 0.6s ease, visibility 0.6s ease';
 
             const blur = document.createElement('div');
             blur.className = 'forest-blur-layer';
@@ -1409,6 +1472,54 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Precarga de recursos para la serie forestal (imagenes + blur backgrounds)
+    function preloadForestImages(timeout = 5000) {
+        return new Promise((resolve) => {
+            try {
+                const frames = Array.from(document.querySelectorAll('.forest-bg-frame'));
+                if (!frames.length) return resolve([]);
+                const loaders = [];
+                frames.forEach(frame => {
+                    const img = frame.querySelector && frame.querySelector('.forest-main-image');
+                    const blur = frame.querySelector && frame.querySelector('.forest-blur-layer');
+                    if (img) {
+                        const src = img.getAttribute('data-src');
+                        if (src) {
+                            loaders.push(new Promise(res => {
+                                const ii = new Image();
+                                let done = false;
+                                ii.onload = () => {
+                                    try { if (!img.getAttribute('src')) img.setAttribute('src', src); } catch(e){}
+                                    done = true; res({ok:true, src});
+                                };
+                                ii.onerror = () => { done = true; res({ok:false, src}); };
+                                ii.src = src;
+                                setTimeout(() => { if (!done) res({ok:false, src}); }, timeout);
+                            }));
+                        }
+                    }
+                    if (blur) {
+                        const bg = blur.getAttribute('data-bg');
+                        if (bg) {
+                            loaders.push(new Promise(res => {
+                                const ib = new Image();
+                                let done = false;
+                                ib.onload = () => {
+                                    try { if (!blur.style.backgroundImage) blur.style.backgroundImage = `url('${bg}')`; } catch(e){}
+                                    done = true; res({ok:true, bg});
+                                };
+                                ib.onerror = () => { done = true; res({ok:false, bg}); };
+                                ib.src = bg;
+                                setTimeout(() => { if (!done) res({ok:false, bg}); }, timeout);
+                            }));
+                        }
+                    }
+                });
+                Promise.all(loaders).then(results => resolve(results)).catch(() => resolve([]));
+            } catch (e) { resolve([]); }
+        });
+    }
+
     function handleForestLossStep(stepIndex) {
         const map = {20: 2000, 21: 2010, 22: 2020};
         const year = map[stepIndex];
@@ -1432,10 +1543,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             requestAnimationFrame(() => {
                 frame.classList.add('active');
-                frame.style.display = 'block';
-                frame.style.visibility = 'visible';
-                // La opacidad final la controla onStepProgress; aquí sólo aseguramos visibilidad
-                frame.style.opacity = frame.style.opacity || '1';
+                // Mostrar con fade para que la transición de opacidad funcione
+                fadeInElement(frame, 1, 'block');
             });
 
             // Preload siguiente
@@ -1455,11 +1564,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (nbg) nblur.style.backgroundImage = `url('${nbg}')`;
                     }
                     // Asegurar que el siguiente esté visible (con opacidad controlada por progress)
-                    nf.style.display = 'block';
-                    nf.style.visibility = 'visible';
                     if (!nf.classList.contains('active')) nf.classList.add('active');
-                    // Inicialmente en 0; irá aumentando con el scroll
-                    if (!nf.style.opacity) nf.style.opacity = '0';
+                    // Iniciar con opacidad 0 y mostrar (fade handled by progress later)
+                    nf.style.opacity = nf.style.opacity || '0';
+                    fadeInElement(nf, 0, 'block');
                 }
             }
             // Ocultar cualquier otro frame que no sea el actual o el siguiente
@@ -1467,11 +1575,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 const isCurrent = prev === frame;
                 const isNext = next && prev.id === `forest-frame-${next}`;
                 if (!isCurrent && !isNext) {
-                    prev.style.zIndex = '1';
-                    prev.style.opacity = '0';
-                    prev.style.visibility = 'hidden';
-                    prev.classList.remove('active');
-                    prev.style.display = 'none';
+                    try {
+                        prev.style.zIndex = '1';
+                        prev.classList.remove('active');
+                        fadeOutElement(prev, 420);
+                    } catch (e) {}
                 }
             });
         }
@@ -1550,6 +1658,13 @@ document.addEventListener('DOMContentLoaded', function() {
         // Inicializar componentes sin depender del mapa de fondo
         initUrbanEvolutionImages();
         initForestLossImages();
+        // Iniciar precarga de imágenes forestales en segundo plano
+        try {
+            preloadForestImages(6000).then(results => {
+                console.log('[preloadForestImages] results:', results);
+            });
+        } catch (e) { console.warn('preloadForestImages failed', e); }
+
         initScrollama();
         
         // Configurar evento para cuando Mapbox esté listo (desde mapbox-integration.js)

@@ -105,6 +105,9 @@
         }
         .title-sm { display: none; }
 
+        /* Asegura comportamiento por defecto: mostrar título grande y ocultar el pequeño */
+        .title-lg { display: block; }
+
         /* Caret blinking durante typing */
         .step[data-step="1"] h1 .line.typing::after,
         .step[data-step="1"] h1 .sline.typing::after {
@@ -225,6 +228,9 @@
         @media (max-width: 767px) {
             .title-sm { display: block; }
 
+            /* Oculta la versión de escritorio para evitar duplicado en móviles */
+            .title-lg { display: none !important; }
+
             /* Cada línea en su propia fila */
             .title-sm .sline {
                 display: block;
@@ -248,6 +254,8 @@
             .title-sm .sline {
                 line-height: 1.2;
             }
+            /* Asegura que el caret no siga animando en elementos ocultos */
+            .title-lg .line.typing::after { animation: none !important; content: ''; }
         }
 
         /* Dispositivos muy pequeños */
@@ -289,7 +297,31 @@
         section[data-step="1"] {
             overflow: visible; /* permitir pseudo-elementos fuera del contenedor */
         }
+        
+        /* Reglas responsivas para el video de fondo (step 1) */
+        #background-video {
+            position: absolute;
+            inset: 0; /* top:0; right:0; bottom:0; left:0; */
+            width: 100%;
+            height: 100%; /* ajustar al contenedor */
+            min-width: 100%;
+            min-height: 100%;
+            object-fit: cover; /* cubrir el contenedor manteniendo proporción */
+            object-position: center center;
+            z-index: -2;
+            display: block;
+            pointer-events: none;
+        }
 
+        /* Ajustes finos por breakpoint para evitar recortes indeseados */
+        @media (max-width: 767px) {
+            /* En móviles, priorizar la parte superior del video para que el título no quede fuera */
+            #background-video { object-position: center top; }
+        }
+        @media (min-width: 1200px) {
+            /* En pantallas muy anchas, centrar y asegurar que no aparezca barra negra */
+            #background-video { object-position: center center; }
+        }
         /* Asegurar que el step 1 esté por encima del fixed-behind mientras está en pantalla */
         .step[data-step="1"] {
             z-index: 1010;
@@ -847,8 +879,8 @@
           /* ==================== PÁRRAFOS FLOTANTES - Pérdida de cobertura forestal ==================== */
           /* Nota: Los captions directos (h2 hijo directo de .step-content) conservan el estilo original. 
               Para steps 21–23 usamos un contenedor .forest-floating-text que se mueve horizontalmente. */
-                .forest-floating-text.hidden { opacity:0; visibility:hidden; }
-                .forest-floating-text.visible { opacity:1; visibility:visible; }
+                .forest-floating-text.hidden { display: none !important; opacity:0; visibility:hidden; }
+                .forest-floating-text.visible { display: inline-flex !important; opacity:1; visibility:visible; }
 
 
         /* Animaciones clave para variar la entrada por año */
@@ -859,24 +891,26 @@
 
         /* Contenedor de texto flotante para steps 21–23 (scrubbing horizontal, anclado abajo-izquierda) */
         .forest-floating-text {
+            /* Oculto por defecto: se mostrará solo cuando se añada la clase .visible */
             position: fixed; /* anclado al viewport */
             left: 24px; /* esquina inferior izquierda */
             bottom: 24px;
             transform: translateX(0); /* sólo movimiento horizontal */
-            display: inline-flex; /* ajustar al contenido */
+            display: none; /* oculto por defecto */
             flex-direction: column;
             width: fit-content;
             height: fit-content;
             max-width: min(560px, 92vw);
-            background: rgba(255,255,255,0.92);
+            background: rgba(255,255,255,0.50);
             padding: 18px 20px;
             border-radius: 14px;
-            box-shadow: 0 14px 34px rgba(2,48,71,0.16), 0 8px 18px rgba(2,48,71,0.10);
-            border: 1px solid rgba(255,255,255,0.78);
+            box-shadow: 0 10px 28px rgba(2,48,71,0.12), 0 6px 14px rgba(2,48,71,0.06);
+            border: 1px solid rgba(255,255,255,0.6);
             z-index: 50;
             transition: none; /* 1:1 con el scroll */
             will-change: transform;
-            backdrop-filter: blur(12px) saturate(115%);
+            -webkit-backdrop-filter: blur(8px) saturate(120%);
+            backdrop-filter: blur(8px) saturate(120%);
             box-sizing: border-box;
         }
         .forest-floating-text .forest-title {
@@ -1367,6 +1401,8 @@
             text-align: center;
             height: var(--footer-height);
             display: flex;
+            flex-direction: column;
+            gap: 6px;
             align-items: center;
             justify-content: center;
             font-size: 0.9em;
@@ -1376,11 +1412,44 @@
             bottom: 0;
             z-index: 12000;
             box-shadow: 0 -6px 18px rgba(0,0,0,0.12);
+            padding: 6px 12px; /* espacio interior pequeño para móviles */
         }
 
         .footer img {
             max-height: 48px;
             margin: 6px;
+        }
+
+        /* Asegurar que los párrafos del footer se muestren como dos líneas centradas */
+        .footer p {
+            margin: 0;
+            padding: 0;
+            line-height: 1.15;
+            text-align: center;
+            width: 100%;
+            max-width: 1100px;
+            box-sizing: border-box;
+        }
+
+        /* Tipografía para las dos líneas del footer */
+        .footer-line--org {
+            font-weight: 700;
+            font-size: 1rem;
+            letter-spacing: 0.1px;
+        }
+        .footer-line--copy {
+            font-size: 0.95rem;
+            opacity: 0.95;
+        }
+
+        /* Ajustes responsivos para el texto del footer */
+        @media (max-width: 900px) {
+            .footer-line--org { font-size: 0.98rem; }
+            .footer-line--copy { font-size: 0.92rem; }
+        }
+        @media (max-width: 600px) {
+            .footer-line--org { font-size: 0.95rem; }
+            .footer-line--copy { font-size: 0.88rem; }
         }
 
         /* Reservar espacio en el scroller para el footer fijo */
@@ -1401,6 +1470,38 @@
             visibility: visible;
             transform: translateY(0);
             pointer-events: auto;
+        }
+
+        /* Responsive footer: ajustar altura, tamaño y disposición en pantallas pequeñas */
+        @media (max-width: 900px) {
+            :root { --footer-height: 64px; }
+            .footer { height: var(--footer-height); font-size: 0.92em; padding: 8px 14px; }
+            .footer img { max-height: 40px; margin: 4px; }
+            main#scroller { padding-bottom: calc(var(--footer-height) + 12px); }
+        }
+
+        @media (max-width: 600px) {
+            :root { --footer-height: 56px; }
+            .footer {
+                height: var(--footer-height);
+                font-size: 0.88em;
+                padding: 8px 12px;
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+                align-items: center;
+                justify-content: center;
+            }
+            .footer img { max-height: 36px; margin: 4px 0; }
+            .footer a, .footer p { color: #fff; text-align: center; margin: 0; }
+            main#scroller { padding-bottom: calc(var(--footer-height) + 10px); }
+        }
+
+        @media (max-width: 420px) {
+            :root { --footer-height: 52px; }
+            .footer { font-size: 0.82em; padding: 6px 10px; }
+            .footer img { max-height: 32px; }
+            main#scroller { padding-bottom: calc(var(--footer-height) + 8px); }
         }
 
         /* Crédito de foto en steps con imagen de fondo */
@@ -1609,6 +1710,30 @@
                 height: auto;
                 max-height: none;
             }
+            /* Evita que el texto del Step 3 se desborde en pantallas pequeñas */
+            section[data-step="3"] .step-content {
+                padding: 12px 16px !important;
+                max-width: 92vw !important;
+                box-sizing: border-box !important;
+                font-size: 16px !important;
+                line-height: 1.5 !important;
+                overflow-wrap: break-word !important;
+                word-break: break-word !important;
+                hyphens: auto !important;
+            }
+            section[data-step="3"] .step-content p {
+                font-size: 15.5px !important;
+                margin-bottom: 0.9rem !important;
+            }
+            section[data-step="3"] .evidence-overlay {
+                padding: 12px !important;
+            }
+            section[data-step="3"] .evidence-overlay .evidence-img {
+                max-width: 100% !important;
+                max-height: 45vh !important;
+                width: auto !important;
+                height: auto !important;
+            }
         }
 
         /* =====  Step 3 fijado en pantalla y transición de salida ===== */
@@ -1751,6 +1876,28 @@
             transition-delay: 0s;
         }
     </style>
+    <style>
+        /* Override final: asegura fondo translúcido y texto claro en steps 21-23 */
+        section.step.forest-year-image > .forest-floating-text,
+        section.step.forest-year-image .forest-floating-text {
+            background: rgba(255,255,255,0.18) !important;
+            -webkit-backdrop-filter: blur(10px) saturate(120%) !important;
+            backdrop-filter: blur(10px) saturate(120%) !important;
+            border: 1px solid rgba(255,255,255,0.12) !important;
+            box-shadow: 0 12px 30px rgba(2,48,71,0.10) !important;
+            color: #e5fcf9 !important;
+        }
+        section.step.forest-year-image > .forest-floating-text h2,
+        section.step.forest-year-image .forest-floating-text .forest-title {
+            color: #e5fcf9 !important;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.65) !important;
+        }
+        section.step.forest-year-image > .forest-floating-text p,
+        section.step.forest-year-image .forest-floating-text p,
+        section.step.forest-year-image .forest-floating-text .forest-subtitle {
+            color: #e5fcf9 !important;
+        }
+    </style>
 </head>
 <body>
     <!-- Mapa base de Mapbox -->
@@ -1863,7 +2010,7 @@
         <!-- Step 1: Portada / Hook -->
         <section class="step" data-step="1" style="position: relative; overflow: visible; background: none !important; min-height: 100vh;">
             <!-- Video de fondo -->
-            <video autoplay muted loop playsinline preload="metadata" poster="assets/1.png" id="background-video" style="position: absolute; width: 100%; height: 100vh; object-fit: cover; z-index: -2;">
+            <video autoplay muted loop playsinline preload="metadata" poster="assets/1.png" id="background-video">
                 <source src="assets/1.mp4" type="video/mp4">
                 Tu navegador no soporta video HTML5.
             </video>
@@ -2018,7 +2165,7 @@
             <div class="step-content">
                 <h2>Cinco Décadas de Crecimiento Extraordinario</h2>
                 <p>Detrás de las cifras de crecimiento explosivo está el componente humano: "La Década de los Pioneros". Los primeros equipos llegaron en enero de 1970 y tuvieron que abrir brecha a machete en la selva.</p>
-                <p>Vivían en campamentos improvisados, en un entorno agreste sin servicios básicos. Esta experiencia de desafío colectivo forjó la identidad de la ciudad, creando un mosaico de acentos, costumbres y esperanzas y estableciendo el ADN migrante, dinámico y multicultural que define a Cancún hasta hoy.</p>
+                <p>Vivían en campamentos improvisados, en un entorno agreste sin servicios básicos. Esta experiencia de desafío colectivo forjó la identidad de la ciudad, creando un mosaico de acentos, costumbres y esperanzas, estableciendo el ADN migrante, dinámico y multicultural que define a Cancún hasta hoy.</p>
                 
                 <!-- Substeps discretos para controlar la gráfica-->
                 <div class="substeps">
@@ -2526,9 +2673,9 @@
         </section>
 
         <!-- Footer con logo IMPLAN -->
-        <div class="footer">
-            <p>IMPLAN Cancún | Instituto de Planeación del Desarrollo Urbano</p><br>
-            <p>© 2025 - Todos los derechos reservados</p>
+        <div class="footer" role="contentinfo" aria-label="Footer">
+            <p class="footer-line footer-line--org">IMPLAN Cancún | Instituto de Planeación del Desarrollo Urbano</p>
+            <p class="footer-line footer-line--copy">&copy; 2025 — Todos los derechos reservados</p>
         </div>
     </main>
 
