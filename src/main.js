@@ -9,6 +9,18 @@ document.addEventListener('DOMContentLoaded', function() {
         mapContainer.style.visibility = 'hidden';
         mapContainer.style.display = 'none';
     }
+
+    // Oculta los contenedores de texto de los steps al cargar la página
+    function hideAllStepContentsInitially() {
+        try {
+            document.querySelectorAll('.step .step-content').forEach(el => {
+                el.style.opacity = '0';
+                el.style.visibility = 'hidden';
+                el.style.pointerEvents = 'none';
+            });
+        } catch (e) { /* silent */ }
+    }
+    hideAllStepContentsInitially();
     
     // Variables para Scrollama
     const scroller = scrollama();
@@ -174,6 +186,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
                 response.element.classList.add('is-active');
                 response.element.classList.add('active');
+                // Asegurar que el contenido del step activo sea visible
+                try {
+                    const sc = response.element.querySelector && response.element.querySelector('.step-content');
+                    if (sc) {
+                        sc.style.opacity = '1';
+                        sc.style.visibility = 'visible';
+                        sc.style.pointerEvents = 'auto';
+                    }
+                } catch (e) { /* silent */ }
                 // Footer: la visibilidad se controla por scroll/progress
                 // Animación de typing para el título del step 1
                 try {
@@ -306,6 +327,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log('[scroller] onStepExit', response.index, response.element && response.element.getAttribute && response.element.getAttribute('data-step'));
                 response.element.classList.remove('is-active');
                 response.element.classList.remove('active');
+                // Ocultar el contenido del step que se está saliendo
+                try {
+                    const scOut = response.element.querySelector && response.element.querySelector('.step-content');
+                    if (scOut) {
+                        scOut.style.opacity = '0';
+                        scOut.style.visibility = 'hidden';
+                        scOut.style.pointerEvents = 'none';
+                    }
+                } catch (e) { /* silent */ }
                 // Asegura que el footer se oculte al salir del step 32
                 try {
                     const stepNum = response.element && response.element.getAttribute && response.element.getAttribute('data-step');
@@ -994,11 +1024,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('❌ No se encontró window.mapboxHelper.updateMapForStep');
             }
             
-            // Mostrar el botón de emergencia para cerrar el mapa
-            const emergencyBtn = document.getElementById('emergency-close-btn');
-            if (emergencyBtn) {
-                emergencyBtn.style.display = 'flex';
-            }
+            // Mostrar el botón de emergencia para cerrar el mapa solo en pantallas pequeñas.
+            // En pantallas grandes lo ocultamos.
+            try {
+                const emergencyBtn = document.getElementById('emergency-close-btn');
+                if (emergencyBtn) {
+                    const stepNum = stepIndex + 1;
+                    const isMapStep = [19, 25, 31].includes(stepNum);
+                    const isDesktop = window.matchMedia && window.matchMedia('(min-width: 992px)').matches;
+                    if (isMapStep && isDesktop) {
+                        // Ocultar en desktop para esos pasos
+                        emergencyBtn.style.display = 'none';
+                    } else {
+                        // Mostrar en móvil / tablets o en otros casos
+                        emergencyBtn.style.display = 'flex';
+                    }
+                }
+            } catch (e) { /* silent */ }
             
             // Sin mapas embebidos: no realizar acciones adicionales
         } else {

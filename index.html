@@ -1798,15 +1798,20 @@
         }
         
         // Mostrar botón X solo cuando el mapa esté visible y estemos en un paso con mapa
+        // Ocultar en pantallas grandes para los steps 19, 25 y 31
         setInterval(function() {
             const mapContainer = document.getElementById('map');
             let mapVisible = false;
             let currentStepHasMap = false;
+            let currentStepNum = null;
             
             // Verificar si el paso actual tiene un mapa
             const currentStepElement = document.querySelector('.step.is-active');
-            if (currentStepElement && currentStepElement.getAttribute('data-map') === 'true') {
-                currentStepHasMap = true;
+            if (currentStepElement) {
+                currentStepNum = Number(currentStepElement.getAttribute('data-step')) || null;
+                if (currentStepElement.getAttribute('data-map') === 'true') {
+                    currentStepHasMap = true;
+                }
             }
             
             if (mapContainer) {
@@ -1818,9 +1823,19 @@
             // Mostrar botón X solo si el mapa está visible Y estamos en un paso con mapa
             const emergencyButton = document.getElementById('emergency-close-btn');
             if (emergencyButton) {
-                emergencyButton.style.display = (mapVisible && currentStepHasMap) ? 'flex' : 'none';
+                const isDesktop = window.matchMedia && window.matchMedia('(min-width: 992px)').matches;
+                const hideOnDesktopSteps = [19, 25, 31];
+                if (mapVisible && currentStepHasMap) {
+                    if (isDesktop && currentStepNum && hideOnDesktopSteps.includes(currentStepNum)) {
+                        emergencyButton.style.display = 'none';
+                    } else {
+                        emergencyButton.style.display = 'flex';
+                    }
+                } else {
+                    emergencyButton.style.display = 'none';
+                }
             }
-        }, 1000);
+        }, 500);
         
         // Función de emergencia global para cerrar el mapa con Escape
         document.addEventListener('keydown', function(e) {
