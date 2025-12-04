@@ -1359,17 +1359,48 @@
 
         
         /* Footer */
+        /* Footer: fijado al bottom */
+        :root { --footer-height: 72px; }
         .footer {
             background-color: #023047;
             color: white;
             text-align: center;
-            padding: 20px;
+            height: var(--footer-height);
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-size: 0.9em;
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 12000;
+            box-shadow: 0 -6px 18px rgba(0,0,0,0.12);
         }
-        
+
         .footer img {
-            max-height: 60px;
-            margin: 10px;
+            max-height: 48px;
+            margin: 6px;
+        }
+
+        /* Reservar espacio en el scroller para el footer fijo */
+        main#scroller {
+            padding-bottom: calc(var(--footer-height) + 12px); /* margen extra por seguridad */
+        }
+
+        /* Mostrar footer solo cuando tenga la clase .visible-footer (controlado por JS) */
+        .footer {
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(8px);
+            transition: opacity 220ms ease, transform 220ms ease, visibility 220ms;
+            pointer-events: none;
+        }
+        .footer.visible-footer {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+            pointer-events: auto;
         }
 
         /* Crédito de foto en steps con imagen de fondo */
@@ -1700,6 +1731,24 @@
                 z-index: 9999 !important;
                 position: relative !important;
             }
+        }
+        /* Evitar flash de los subtítulos (h2) en los steps de pérdida forestal*/
+        .step.forest-year-image h2,
+        section.step.forest-year-image h2 {
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-6px);
+            transition: opacity 180ms ease, transform 180ms ease, visibility 0s linear 180ms;
+        }
+        .step.forest-year-image.is-active h2,
+        .step.forest-year-image.active h2,
+        .step.is-active.forest-year-image h2,
+        section.step.forest-year-image.is-active h2,
+        section.step.forest-year-image.active h2 {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+            transition-delay: 0s;
         }
     </style>
 </head>
@@ -2464,7 +2513,7 @@
 
         <!-- Footer con logo IMPLAN -->
         <div class="footer">
-            <p>IMPLAN Cancún | Instituto de Planeación del Desarrollo Urbano</p>
+            <p>IMPLAN Cancún | Instituto de Planeación del Desarrollo Urbano</p><br>
             <p>© 2025 - Todos los derechos reservados</p>
         </div>
     </main>

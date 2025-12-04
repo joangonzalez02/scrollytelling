@@ -174,6 +174,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
                 response.element.classList.add('is-active');
                 response.element.classList.add('active');
+                // Footer: la visibilidad se controla por scroll/progress
                 // Animación de typing para el título del step 1
                 try {
                     if (response.index === 0) {
@@ -305,6 +306,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log('[scroller] onStepExit', response.index, response.element && response.element.getAttribute && response.element.getAttribute('data-step'));
                 response.element.classList.remove('is-active');
                 response.element.classList.remove('active');
+                // Asegura que el footer se oculte al salir del step 32
+                try {
+                    const stepNum = response.element && response.element.getAttribute && response.element.getAttribute('data-step');
+                    const footer = document.querySelector('.footer');
+                    if (footer && String(stepNum) === '32') {
+                        footer.classList.remove('visible-footer');
+                    }
+                } catch (e) { /* silent */ }
                 // Si salimos del step 1, cancelar timers y limpiar clases relacionadas al typing
                 try {
                     if (response.index === 0) {
@@ -480,6 +489,26 @@ document.addEventListener('DOMContentLoaded', function() {
         // Manejo de progreso dentro de steps (Step 4: usar umbrales para visibilidad)
         scroller.onStepProgress(response => {
             const p = response.progress;
+            // Control de visibilidad del footer: solo aparecerá cuando estemos
+            // dentro del step 32 y el usuario haya llegado al fondo del step.
+            try {
+                const stepNum = response.element && response.element.getAttribute && response.element.getAttribute('data-step');
+                const footer = document.querySelector('.footer');
+                if (footer) {
+                    if (String(stepNum) === '32') {
+                        const rect = response.element.getBoundingClientRect();
+                        // Si el fondo del step está dentro (o justo encima) del viewport
+                        const atBottomOfStep = rect.bottom <= (window.innerHeight + 2);
+                        if (atBottomOfStep) {
+                            footer.classList.add('visible-footer');
+                        } else {
+                            footer.classList.remove('visible-footer');
+                        }
+                    } else {
+                        footer.classList.remove('visible-footer');
+                    }
+                }
+            } catch (e) { /* silent */ }
             // ===== Animación Focus & Zoom para imagen del Diario (Step 3, index 2)
             // Implementa un retraso inicial (0% - 15%) sin movimiento, luego anima
             // en el rango 15% - 85% y revierte suavemente al final. Solo para pantallas
@@ -840,6 +869,41 @@ document.addEventListener('DOMContentLoaded', function() {
             } catch (e) { /* silent */ }
         });
 
+        // Muestra el footer solo cuando el usuario haya llegado
+        // al fondo del step 32. No se muestra al entrar.
+        const syncFooterVisibility = () => {
+            try {
+                const footer = document.querySelector('.footer');
+                if (!footer) return;
+                const stepEl = document.querySelector('.step.is-active[data-step="32"]');
+                if (!stepEl) {
+                    footer.classList.remove('visible-footer');
+                    return;
+                }
+                const rect = stepEl.getBoundingClientRect();
+                const atBottomOfStep = rect.bottom <= (window.innerHeight + 2);
+                if (atBottomOfStep) {
+                    footer.classList.add('visible-footer');
+                } else {
+                    footer.classList.remove('visible-footer');
+                }
+            } catch (e) { /* silent */ }
+        };
+
+        let _footerThrottle = null;
+        const footerScrollHandler = () => {
+            if (_footerThrottle) return;
+            _footerThrottle = setTimeout(() => {
+                _footerThrottle = null;
+                syncFooterVisibility();
+            }, 120);
+        };
+
+        window.addEventListener('scroll', footerScrollHandler, { passive: true });
+        window.addEventListener('resize', syncFooterVisibility);
+        // Inicializar visibilidad por si la página carga ya en el final del step
+        setTimeout(syncFooterVisibility, 60);
+
         // Sub-scroller para substeps discretos de Step 4
         if (USE_DISCRETE_SUBSTEPS) {
             try {
@@ -855,6 +919,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     .onStepEnter(sres => {
                         // Marcar activo y cambiar tipo; mostrar la gráfica al entrar a cualquier substep
                         sres.element.classList.add('is-active');
+                
                         const type = sres.element && sres.element.getAttribute('data-chart');
                         if (type && window.populationChart && typeof window.populationChart.setDataType === 'function') {
                             window.populationChart.setDataType(type);

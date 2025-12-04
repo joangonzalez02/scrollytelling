@@ -591,6 +591,8 @@ body {
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25) !important;
     z-index: 50 !important;
     transition: left 0s linear !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
     will-change: left !important;
     backdrop-filter: blur(10px) !important;
 }
@@ -691,4 +693,34 @@ body {
     .forest-subtitle {
         font-size: 0.9rem !important;
     }
+}
+
+/* 1) Oculta overlays/fijos cuando su step ya no está activo */
+.step:not(.is-active) .light.centered,
+.step:not(.is-active) .evidence-overlay,
+.step.is-out .light.centered,
+.step.is-out .evidence-overlay {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    transform: translateY(-8px) !important;
+    transition: opacity 0.35s ease, transform 0.35s ease, visibility 0.35s;
+}
+
+/* 2) Aumenta el espacio interior para que el siguiente step no se superponga
+   con elementos posicionados fijos del anterior. Se mantiene pequeño para no romper diseño. */
+.step {
+    padding-top: 3rem; /* mayor separación superior */
+    padding-bottom: 3rem; /* asegurar espacio inferior al salir */
+}
+
+.step .step-content {
+    transition: opacity 0.45s ease, transform 0.45s ease, margin 0.45s ease;
+    margin-top: 0.5rem; /* pequeño buffer para evitar encimado */
+}
+
+/* 3) Cuando el step sale, empuja su contenido ligeramente para dar sensación de orden */
+.step.is-out .step-content {
+    transform: translateY(-18px);
+    opacity: 0;
 }

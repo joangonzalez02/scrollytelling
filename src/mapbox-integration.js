@@ -501,13 +501,40 @@ function showMapOverlay(config) {
     
     // Preparar manejador para reinsertar las capas al terminar de cargar el estilo
     const onStyleLoad = async () => {
-        // Eliminar capas existentes si las hay
-    const layersToRemove = ['densidad-poblacional','densidad-poblacional-distritos','indice-marginacion-distritos','tasa-cambio-poblacional','cambio-poblacional-ageb','supermanzanas-iniciales','crecimiento-urbano','dimensiones-caminar'];
-        layersToRemove.forEach(layerId => { if (mapboxMap.getLayer(layerId)) { mapboxMap.removeLayer(layerId); } });
-        
-        // Eliminar fuentes existentes si las hay
-    const sourcesToRemove = ['densidad-poblacional-src','densidad-poblacional-distritos-src','indice-marginacion-distritos-src','tasa-cambio-poblacional-src','cambio-poblacional-ageb-src','supermanzanas-iniciales-src','crecimiento-urbano-src','dimensiones-caminar-src'];
-        sourcesToRemove.forEach(sourceId => { if (mapboxMap.getSource(sourceId)) { mapboxMap.removeSource(sourceId); } });
+        // Construir dinámicamente la lista de layer IDs y source IDs definidos en la configuración
+        const allConfiguredLayerIds = [];
+        try {
+            for (const sc of Object.values(mapStepsConfig.stepConfigs || {})) {
+                if (sc && Array.isArray(sc.layers)) {
+                    for (const l of sc.layers) {
+                        if (l && l.id) allConfiguredLayerIds.push(l.id);
+                    }
+                }
+            }
+        } catch (e) { dbg('error building configuredLayerIds', e); }
+
+        // Eliminar capas existentes definidas por la app si las hay
+        allConfiguredLayerIds.forEach(layerId => {
+            try {
+                // remover listeners asociados para evitar handlers duplicados
+                try { mapboxMap.off && mapboxMap.off('mousemove', layerId); } catch (_) {}
+                try { mapboxMap.off && mapboxMap.off('mouseenter', layerId); } catch (_) {}
+                try { mapboxMap.off && mapboxMap.off('mouseleave', layerId); } catch (_) {}
+                if (mapboxMap.getLayer && mapboxMap.getLayer(layerId)) {
+                    mapboxMap.removeLayer(layerId);
+                }
+            } catch (e) { /* silent */ }
+        });
+
+        // Eliminar fuentes correspondientes (usamos convención '<layerId>-src')
+        allConfiguredLayerIds.forEach(layerId => {
+            const sourceId = layerId + '-src';
+            try {
+                if (mapboxMap.getSource && mapboxMap.getSource(sourceId)) {
+                    mapboxMap.removeSource(sourceId);
+                }
+            } catch (e) { /* silent */ }
+        });
         
         // Encontrar una capa de referencia para insertar por debajo de etiquetas (símbolos)
         const beforeLabelId = (() => {
@@ -562,14 +589,19 @@ function showMapOverlay(config) {
                     if (layer.popup) {
                         // Variable para almacenar el popup activo
                         let currentPopup = null;
-                        
+
+                        // Asegurarnos de remover handlers previos para evitar duplicados
+                        try { mapboxMap.off && mapboxMap.off('mousemove', layer.id); } catch(_) {}
+                        try { mapboxMap.off && mapboxMap.off('mouseenter', layer.id); } catch(_) {}
+                        try { mapboxMap.off && mapboxMap.off('mouseleave', layer.id); } catch(_) {}
+
                         // Mostrar popup al pasar el mouse
                         mapboxMap.on('mousemove', layer.id, (e) => {
                             // Remover popup anterior si existe
                             if (currentPopup) {
                                 currentPopup.remove();
                             }
-                            
+
                             const properties = e.features[0].properties;
                             const content = layer.popup(properties);
                             currentPopup = new mapboxgl.Popup({
@@ -580,14 +612,14 @@ function showMapOverlay(config) {
                             .setHTML(content)
                             .addTo(mapboxMap);
                         });
-                        
+
                         // Cambiar cursor al entrar
-                        mapboxMap.on('mouseenter', layer.id, () => { 
-                            mapboxMap.getCanvas().style.cursor = 'pointer'; 
+                        mapboxMap.on('mouseenter', layer.id, () => {
+                            mapboxMap.getCanvas().style.cursor = 'pointer';
                         });
-                        
+
                         // Remover popup y restaurar cursor al salir
-                        mapboxMap.on('mouseleave', layer.id, () => { 
+                        mapboxMap.on('mouseleave', layer.id, () => {
                             mapboxMap.getCanvas().style.cursor = '';
                             if (currentPopup) {
                                 currentPopup.remove();
@@ -1043,14 +1075,14 @@ window.mapboxHelper.updateDimensionesOpacity = function(progress) {
             if (layerId === 'cambio-poblacional-ageb') {
                 showLegend(title);
                 const customStops = [
-                    { color: baseColor,                 label: '-100% – -75% · Pérdida muy intensa de población' },
-                    { color: pairs[0]?.color,           label: '−75 – −50% · Pérdida fuerte' },
-                    { color: pairs[1]?.color,           label: '−50 – −25% · Pérdida moderada' },
-                    { color: pairs[2]?.color,           label: '−25 – 0% · Pérdida ligera / estancamiento' },
-                    { color: pairs[3]?.color,           label: '0 – 25% · Crecimiento ligero' },
-                    { color: pairs[4]?.color,           label: '25 – 50% · Crecimiento moderado' },
-                    { color: pairs[5]?.color,           label: '50 – 75% · Crecimiento fuerte' },
-                    { color: pairs[6]?.color,           label: '75 – 100% · Crecimiento muy fuerte' },
+                    { color: baseColor,                 label: '≤ −75% · Pérdida muy intensa de población' },
+                    { color: pairs[0]?.color,           label: '−75% a −50% · Pérdida fuerte' },
+                    { color: pairs[1]?.color,           label: '−50% a −25% · Pérdida moderada' },
+                    { color: pairs[2]?.color,           label: '−25% a 0% · Pérdida ligera / estancamiento' },
+                    { color: pairs[3]?.color,           label: '0% a 25% · Crecimiento ligero' },
+                    { color: pairs[4]?.color,           label: '25% a 50% · Crecimiento moderado' },
+                    { color: pairs[5]?.color,           label: '50% a 75% · Crecimiento fuerte' },
+                    { color: pairs[6]?.color,           label: '75% a 100% · Crecimiento muy fuerte' },
                     { color: pairs[7]?.color || pairs[pairs.length-1]?.color, label: '≥ 100% · Crecimiento extraordinario / expansión acelerada' }
                 ];
                 customStops.forEach(s => { if (s.color && s.label) addItem(s.color, s.label); });
