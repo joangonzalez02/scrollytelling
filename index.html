@@ -76,7 +76,7 @@
         } else {
         }
     </script>
-    <script src="dist/mapbox-integration.min.js" defer></script>
+    <script src="src/mapbox-integration.js" defer></script>
     <script src="dist/main.min.js" defer></script>
     <style>
         /* Importación de fuentes: Boldonse, Playfair Display, Special Elite, Wix Madefor Text */
@@ -526,6 +526,9 @@
             opacity: 1 !important;
             visibility: visible !important;
         }
+        #map .mapboxgl-popup-content { padding: 8px 10px; line-height: 1.25; }
+        #map .mapboxgl-popup-content h3 { margin: 0 0 6px 0; font-size: 14px; line-height: 1.2; }
+        #map .mapboxgl-popup-content p { margin: 2px 0; font-size: 12px; line-height: 1.25; }
         
         /* Zona de scroll en los bordes del mapa */
         #map::before {

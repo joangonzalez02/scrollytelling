@@ -1043,7 +1043,7 @@ window.mapboxHelper.updateDimensionesOpacity = function(progress) {
             if (layerId === 'cambio-poblacional-ageb') {
                 showLegend(title);
                 const customStops = [
-                    { color: baseColor,                 label: '−100 – −75% · Pérdida muy intensa de población' },
+                    { color: baseColor,                 label: '-100% – -75% · Pérdida muy intensa de población' },
                     { color: pairs[0]?.color,           label: '−75 – −50% · Pérdida fuerte' },
                     { color: pairs[1]?.color,           label: '−50 – −25% · Pérdida moderada' },
                     { color: pairs[2]?.color,           label: '−25 – 0% · Pérdida ligera / estancamiento' },
