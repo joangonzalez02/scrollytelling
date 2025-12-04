@@ -193,6 +193,63 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
 
+                // Si entramos al Step 3 (index 2) desde arriba, fijamos visualmente
+                // el contenido en pantalla usando `position:fixed` y un placeholder
+                // para evitar que el contenido ocupe toda la pantalla o se mueva.
+                try {
+                    if (response.index === 2) {
+                        const stepEl = response.element;
+                        const content = stepEl && stepEl.querySelector && stepEl.querySelector('.step-content');
+                        
+                        // Asegura que la imagen tenga z-index correcto al entrar
+                        const img = document.getElementById('diario-img');
+                        const overlay = img && img.closest('.evidence-overlay');
+                        if (img) {
+                            // Resetear la transformación de la imagen al entrar para asegurar un estado inicial limpio
+                            img.style.transform = '';
+                            img.style.zIndex = '10';
+                            img.style.opacity = '1';
+                            img.style.visibility = 'visible';
+                            img.style.willChange = 'auto'; // Reset will-change
+                        }
+                        if (overlay) {
+                            overlay.style.zIndex = '10';
+                        }
+                        
+                        if (content && !stepEl.dataset._pinned) {
+                            const rect = content.getBoundingClientRect();
+                            const desiredTop = Math.round(window.innerHeight * 0.15); // 15% desde el top
+                            const isScrollingDown = response.direction === 'down';
+                            
+                            // Fijar si se entra desde arriba (scrolling down) y el elemento está más abajo de lo deseado,
+                            // O si se entra desde abajo (scrolling up), para asegurar que el texto se reposicione.
+                            if ((isScrollingDown && (rect.top - desiredTop) > 12) || !isScrollingDown) {
+                                try {
+                                    // Crear placeholder para mantener el flujo del layout
+                                    const placeholder = document.createElement('div');
+                                    placeholder.className = 'step-content-placeholder';
+                                    placeholder.style.width = rect.width + 'px';
+                                    placeholder.style.height = rect.height + 'px';
+                                    placeholder.style.display = getComputedStyle(content).display || 'block';
+                                    content.parentNode.insertBefore(placeholder, content);
+
+                                    // Aplicar estilos fijos al contenido
+                                    content.style.position = 'fixed';
+                                    content.style.top = desiredTop + 'px';
+                                    content.style.left = rect.left + 'px';
+                                    content.style.width = rect.width + 'px';
+                                    content.style.zIndex = '1'; // Bajo para que la imagen esté por encima
+                                    content.style.transition = 'none';
+
+                                    // Marcar estado pin para gestionarlo en onStepProgress
+                                    stepEl.dataset._pinned = '1';
+                                    stepEl.dataset._placeholderId = '';
+                                } catch (e) { console.warn('pin step3 failed', e); }
+                            }
+                        }
+                    }
+                } catch (e) { console.warn('step3 pin error', e); }
+
                 if (currentStep === 4) {
                     const step5 = response.element;
                     try { step5.classList.remove('animate-up', 'animate-down'); } catch {}
@@ -227,6 +284,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (response.index === 3) {
                 }
 
+
                 // Si entramos a cualquier otro paso, ocultar/desfijar la gráfica de Step 4 si quedó visible
                 if (response.index !== 3) {
                     try {
@@ -253,6 +311,46 @@ document.addEventListener('DOMContentLoaded', function() {
                         clearTypingStep1(response.element);
                     }
                 } catch (e) { console.warn('Error limpiando typing al salir de step 1:', e); }
+
+                // Limpiar cualquier pin/nudge aplicado al Step 3 al salir
+                if (response.index === 2) {
+                    try {
+                        const stepEl = response.element;
+                        const content = stepEl && stepEl.querySelector && stepEl.querySelector('.step-content');
+                        if (content) {
+                            // Restaurar estilos por si quedaron inline
+                            content.style.transition = '';
+                            content.style.transform = '';
+                            content.style.position = '';
+                            content.style.top = '';
+                            content.style.left = '';
+                            content.style.width = '';
+                            content.style.zIndex = '';
+                            // Remover placeholder si existe
+                            try {
+                                const ph = content.parentNode && content.parentNode.querySelector('.step-content-placeholder');
+                                if (ph && ph.parentNode) ph.parentNode.removeChild(ph);
+                            } catch (e) {}
+                        }
+                        try { delete stepEl.dataset._pinned; } catch (e) {}
+                        try { delete stepEl.dataset._nudgeDone; } catch (e) {}
+                        try { delete stepEl.dataset._nudgeActive; } catch (e) {}
+
+                        // Adicional: resetear la imagen a su estado inicial
+                        try {
+                            const img = document.getElementById('diario-img');
+                            const overlay = img && img.closest('.evidence-overlay');
+                            if (img) {
+                                img.style.transform = '';
+                                img.style.zIndex = '10';
+                                img.style.willChange = '';
+                            }
+                            if (overlay) {
+                                overlay.style.zIndex = '10';
+                            }
+                        } catch (e) { /* silent */ }
+                    } catch (e) { /* silent */ }
+                }
 
                 // Reset de animaciones para step 29 al salir, para que pueda reanimarse al re-entrar
                 if (response.index === 28) {
@@ -382,6 +480,65 @@ document.addEventListener('DOMContentLoaded', function() {
         // Manejo de progreso dentro de steps (Step 4: usar umbrales para visibilidad)
         scroller.onStepProgress(response => {
             const p = response.progress;
+            // ===== Animación Focus & Zoom para imagen del Diario (Step 3, index 2)
+            // Implementa un retraso inicial (0% - 15%) sin movimiento, luego anima
+            // en el rango 15% - 85% y revierte suavemente al final. Solo para pantallas
+            // con layout de dos columnas (desktop).
+            if (response.index === 2) {
+                try {
+                        const img = document.getElementById('diario-img');
+                        const overlay = img && img.closest('.evidence-overlay');
+                    if (img) {
+                        // Si hay un nudge activo, respetamos el umbral de scroll para
+                        // iniciar la animación: mientras el progreso sea <= startProgress
+                        // mantenemos la animación parada (sin transforms). Cuando el usuario
+                        // avance el scroll y supere startProgress, se eliminará el nudge
+                        // y la animación continuará normalmente.
+                        const progress = Math.max(0, Math.min(1, p));
+                        const isDesktop = window.matchMedia('(min-width: 768px)').matches;
+                        const startProgress = 0.0; // Iniciar la animación inmediatamente
+                        const endProgress = 1.0;   // Animar durante todo el step
+
+                        let t = 0;
+                        if (progress <= startProgress) {
+                            t = 0;
+                        } else if (progress >= endProgress) {
+                            t = 1;
+                        } else {
+                            t = (progress - startProgress) / (endProgress - startProgress);
+                        }
+
+                        // wave: 0 -> 1 -> 0 a lo largo de t=0..1 usando seno (pico en t=0.5)
+                        const wave = Math.sin(t * Math.PI);
+
+                        // Asegura visibilidad permanente
+                        img.style.opacity = '1';
+                        img.style.visibility = 'visible';
+                        img.style.willChange = 'transform';
+
+                        // Elevar por encima del texto durante el foco con z-index muy alto
+                        // Aplicar z-index tanto a la imagen como al contenedor overlay
+                        // Mantener siempre un z-index alto, aumentando durante la animación
+                        const highZIndex = wave > 0 ? '9999' : '10';
+                        img.style.zIndex = highZIndex;
+                        if (overlay) overlay.style.zIndex = highZIndex;
+
+                        if (isDesktop) {
+                            // Traslado horizontal hacia el centro y zoom progresivo, ambos con retraso
+                            const translateVw = wave * 30; // 0..30
+                            const scale = 1 + wave * 0.5; // 1..1.5
+                            img.style.transform = `translate(-${translateVw}vw, 0) scale(${scale})`;
+                        } else {
+                            // Zoom ligero en móviles
+                            const mwave = Math.sin(progress * Math.PI);
+                            const scale = 1 + mwave * 0.08;
+                            img.style.transform = `scale(${scale})`;
+                        }
+                    }
+                } catch (e) {
+                    console.warn('[onStepProgress] diario-img animation error:', e);
+                }
+            }
             // Con substeps activos, controlamos visibilidad por umbrales
             if (response.index === 3 && USE_DISCRETE_SUBSTEPS) {
                 const step4 = response.element;
@@ -1026,6 +1183,20 @@ document.addEventListener('DOMContentLoaded', function() {
                     container.style.opacity = '0';
                     container.style.visibility = 'hidden';
                     container.style.zIndex = '-9999';
+                }
+
+                // Limpiar transformaciones al salir del Step 3 (index 2)
+                if (response.index === 2) {
+                    try {
+                        const img = document.getElementById('diario-img');
+                        const overlay = img && img.closest('.evidence-overlay');
+                        if (img) {
+                            img.style.transform = '';
+                            img.style.zIndex = '10';
+                            img.style.willChange = '';
+                            if (overlay) overlay.style.zIndex = '10';
+                        }
+                    } catch (e) { /* silent */ }
                 }
             });
         }, 500); // Verificación final después de medio segundo

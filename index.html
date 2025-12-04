@@ -97,17 +97,12 @@
             color: white;
         }
 
-        /* Contenedor de líneas */
-        .step[data-step="1"] h1 .line,
         .step[data-step="1"] h1 .sline {
             display: inline;
             white-space: normal;
             word-wrap: break-word;
             overflow-wrap: break-word;
         }
-
-        /* Visualización según tamaño de pantalla */
-        .title-lg { display: block; }
         .title-sm { display: none; }
 
         /* Caret blinking durante typing */
@@ -171,16 +166,63 @@
         }
 
         /* MÓVILES Y PANTALLAS PEQUEÑAS (< 768px) */
-        @media (max-width: 767px) {
-            .step[data-step="1"] h1 {
-                font-size: clamp(1.1rem, 4vw, 1.5rem);
-                margin-bottom: 20px;
-                padding: 15px 12px;
-                line-height: 1.25;
+        /* Step 3: centrar título, justificar párrafos y equilibrar columnas */
+        @media (min-width: 768px) {
+            section[data-step="3"] {
+                min-height: auto;
+                height: auto;
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                gap: 16px;
+                width: 90%;
+                max-width: 1400px;
+                margin: 0 auto;
+                padding: 3vh 0 !important;
             }
-
-            /* Mostrar versión mobile */
-            .title-lg { display: none; }
+                section[data-step="3"] .step-content {
+                    position: -webkit-sticky;
+                    position: sticky;
+                    top: 10vh;
+                    flex: 0 0 58%;
+                    max-width: 800px;
+                    text-align: left;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: flex-start;
+                    padding-right: 2rem;
+                    z-index: 1 !important; /* Base z-index para el contenido de texto */
+                }
+            section[data-step="3"] .step-content h2 {
+                text-align: left;
+                width: 100%;
+                white-space: normal;
+            }
+            section[data-step="3"] .step-content p {
+                text-align: left;
+                width: 100%;
+            }
+            /* Columna de imagen centrada y equilibrada */
+            section[data-step="3"] .evidence-overlay {
+                flex: 0 0 40%;
+                max-width: 640px;
+                height: auto;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0;
+                position: relative; /* Crear contexto de apilamiento */
+                z-index: 10 !important; /* Siempre por encima del texto */
+            }
+            section[data-step="3"] .evidence-overlay .evidence-img {
+                max-height: 60vh;
+                margin: 0 auto;
+                position: relative; /* Permitir que z-index funcione en la animación */
+            }
+        }
+        
+        @media (max-width: 767px) {
             .title-sm { display: block; }
 
             /* Cada línea en su propia fila */
@@ -1534,6 +1576,128 @@
                 max-height: none;
             }
         }
+
+        /* =====  Step 3 fijado en pantalla y transición de salida ===== */
+        /* Desktop/Tablet: extender duración del Step 3 para permitir foco prolongado del diario */
+        @media (min-width: 768px) {
+            section[data-step="3"] {
+                min-height: 100vh;
+                margin-bottom: 0 !important;
+                padding-bottom: 0 !important;
+            }
+        }
+        /* Se extiende en móvil para evitar scroll de vacío excesivo */
+        @media (max-width: 767px) {
+            section[data-step="3"] {
+                min-height: 100vh;
+                margin-bottom: 0 !important;
+                padding-bottom: 0 !important;
+            }
+        }
+        /* Transición de salida controlada por clase*/
+        #diario-img.is-exiting {
+            transform: scale(0.97) translateY(-8px);
+            filter: blur(0px);
+            transition: transform 0.6s ease-in-out;
+        }
+
+        /* --- 1. FIJAR EL TEXTO A LA IZQUIERDA (Step 3) --- */
+        @media (min-width: 768px) {
+            /* Layout de dos columnas para Step 3: texto a la izquierda, imagen a la derecha */
+            section[data-step="3"] {
+                display: flex;
+                align-items: flex-start;
+                justify-content: flex-start;
+                gap: 0.6rem;
+                padding-top: 3vh;
+            }
+
+            /* Texto sticky para lectura */
+            section[data-step="3"] .step-content {
+                position: -webkit-sticky;
+                position: sticky;
+                top: 10vh;
+                flex: 0 0 66%;
+                max-width: 1200px;
+                text-align: left;
+                margin-right: 0;
+                padding-right: 0.5rem;
+                line-height: 1.6; 
+                font-size: 20px;
+            }
+
+            /* Imagen/overlay: se mantiene en su columna y visible */
+            section[data-step="3"] .evidence-overlay {
+                position: sticky;
+                top: 12vh;
+                flex: 0 0 32%;
+                max-width: none;
+                align-items: center;
+                justify-content: center;
+                display: flex;
+                gap: 6px !important;
+                padding: 6px !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+                pointer-events: auto !important;
+            }
+
+            /* Ajustes directos a los párrafos dentro del Step 3 */
+            section[data-step="3"] .step-content p {
+                margin-bottom: 0.6rem;
+                font-size: 20px;
+                line-height: 1.6;
+                max-width: none;
+            }
+
+            /* Garantiza que la imagen del diario tenga buen tamaño */
+            section[data-step="3"] .evidence-overlay .evidence-img {
+                max-width: 100%;
+                max-height: 76vh;
+                height: auto;
+                width: auto;
+                opacity: 1 !important;
+                will-change: transform;
+            }
+        }
+
+        section[data-step="4"] {
+            margin-top: 6vh !important;
+            padding-top: 50px;
+        }
+        .step[data-step="4"] .step-content {
+            padding-top: 14vh;
+        }
+        /* === Step 3: centrar texto fijado y elevar diario sobre el texto === */
+        @media (min-width: 768px) {
+            .step[data-step="3"] .step-content._pinned {
+                position: fixed !important;
+                top: 50vh !important;
+                transform: translateY(-50%);
+                left: 5vw !important;
+                max-width: 800px !important;
+                width: 58% !important;
+                z-index: 1 !important; /* debajo de la imagen del diario */
+            }
+            /* Cuando el texto está pinned, fija la imagen en su posición correcta */
+            .step[data-step="3"]._pinned .evidence-overlay {
+                position: fixed !important;
+                right: 5vw !important;
+                top: 50vh !important;
+                transform: translateY(-50%);
+                max-width: 640px !important;
+                width: 40% !important;
+                z-index: 9999 !important;
+            }
+            .step[data-step="3"] .evidence-overlay {
+                position: relative !important;
+                z-index: 9999 !important;
+            }
+            .step[data-step="3"] .evidence-overlay .evidence-img {
+                z-index: 9999 !important;
+                position: relative !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1774,7 +1938,7 @@
                 <p>El Plan Maestro original codificó intencionalmente la tensión que vemos hoy: una dualidad urbana que separaba funcional y físicamente la isla de 19 km para el turismo de clase mundial de la zona continental, diseñada como el centro de apoyo logístico y residencial para la fuerza laboral.</p>
             </div>
             <div class="evidence-overlay" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; padding: 20px; flex-direction: column; gap:12px;">
-                <img src="assets/diario.jpg" alt="Documento histórico, diario de 1975" class="evidence-img" style="max-width: 100%; max-height: 80vh; width: auto; height: auto; object-fit: contain; display:block;">
+                <img id="diario-img" src="assets/diario.jpg" alt="Documento histórico, diario de 1975" class="evidence-img" style="max-width: 100%; max-height: 50vh; width: auto; height: auto; object-fit: contain; display:block; will-change: transform;">
                 <div class="photo-credit" style="background: rgba(0, 0, 0, 0.5); color: #fff; padding: 6px 10px; border-radius: 6px; font-size: 12px; line-height: 1.3;">
                     Fuente: <a href="https://cgc.qroo.gob.mx/cjg/wp-content/uploads/2019/11/Cap-09-OK-Mayo-7.pdf" target="_blank" rel="noopener" title="Capítulo 9 - cgc.qroo.gob.mx" style="color:#fff; text-decoration:underline;">cgc.qroo.gob.mx</a>
                 </div>
@@ -1823,9 +1987,9 @@
             </div>
             <style>
                 /* Step 5 siempre ocupa exactamente el viewport */
-                section[data-step="5"] {
-                    display: block !important;
-                    padding: 0 !important;
+                section[data-step="4"] {
+                    margin-top: 0 !important; /* conectar inmediatamente con Step 3 */
+                    padding-top: 0 !important; /* sin agregar aire extra */
                     position: relative !important;
                     min-height: 100vh !important;
                     isolation: isolate; /* evitar conflictos de stacking con otros steps */
@@ -2440,6 +2604,27 @@
             window.addEventListener('scroll', updateOpacity, { passive: true });
             window.addEventListener('resize', updateOpacity);
             updateOpacity();
+        })();
+    </script>
+    <script>
+        // Fijar y centrar el texto del Step 3 cuando esté activo; restaurar al salir
+        (function(){
+            const step3 = document.querySelector('section.step[data-step="3"]');
+            if (!step3) return;
+            const content = step3.querySelector('.step-content');
+            const overlay = step3.querySelector('.evidence-overlay');
+            const applyPinned = () => { if (content) content.classList.add('_pinned'); };
+            const removePinned = () => { if (content) content.classList.remove('_pinned'); };
+            const observer = new MutationObserver(() => {
+                if (step3.classList.contains('is-active')) {
+                    applyPinned();
+                    if (overlay) overlay.style.zIndex = '1006';
+                } else {
+                    removePinned();
+                    if (overlay) overlay.style.zIndex = '';
+                }
+            });
+            observer.observe(step3, { attributes: true, attributeFilter: ['class'] });
         })();
     </script>
 </body>
